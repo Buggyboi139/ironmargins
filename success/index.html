@@ -1,0 +1,299 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IronMargins | Success</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B4SVKQ06BW"></script>
+    <script>
+      window.dataLayer = window.dataLayer ||[];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-B4SVKQ06BW');
+      gtag('config', 'AW-000000000');
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        :root {
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(56, 189, 248, 0.3);
+            --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #34d399 100%);
+            --gradient-text: linear-gradient(to right, #34d399, #38bdf8);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+            background-color: #05070a;
+            min-height: 100vh;
+        }
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0, transparent 40%), 
+                              radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0, transparent 40%), 
+                              radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
+        }
+        .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; }
+        nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
+        .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .container { max-width: 800px; width: 100%; padding: 60px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .success-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); backdrop-filter: blur(20px); border: 1px solid var(--border-highlight); border-radius: 32px; padding: 50px; width: 100%; max-width: 500px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+        .check-circle { width: 80px; height: 80px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-size: 2.5rem; color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+        .progress-container { width: 100%; background: rgba(0,0,0,0.5); border-radius: 10px; height: 8px; overflow: hidden; margin-bottom: 30px; border: 1px solid var(--border-glass); }
+        .progress-bar { height: 100%; width: 0%; background: var(--gradient-text); transition: width 0.3s ease; }
+        .status-text { font-size: 0.9rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; }
+        .actions { display: flex; gap: 15px; justify-content: center; opacity: 0; transition: 0.5s; pointer-events: none; margin-top: 20px; }
+        .actions.show { opacity: 1; pointer-events: all; }
+        .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; }
+        .secondary-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-glass); padding: 16px 32px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        #pdf-wrapper { display: none; }
+        @media print {
+            @page { size: letter portrait; margin: 0; }
+            body { 
+                background: #ffffff !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                color: #0f172a !important; 
+            }
+            .app-wrapper { display: none !important; }
+            #pdf-wrapper { 
+                display: block !important; 
+                width: 100% !important; 
+                padding: 40pt 50pt !important; 
+                background: transparent !important; 
+            }
+            .pdf-header { display: flex; justify-content: space-between; border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; align-items: center; }
+            .pdf-brand h2 { font-size: 26pt; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1pt; }
+            .pdf-brand p { margin: 6pt 0 0 0; color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; }
+            .pdf-meta { text-align: right; }
+            .meta-grid { display: grid; grid-template-columns: auto auto; column-gap: 20pt; row-gap: 6pt; text-align: right; justify-content: end; }
+            .meta-label { font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase; align-self: center; }
+            .meta-val { font-size: 12pt; color: #0f172a; font-weight: 700; }
+            .pdf-quote-box { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; }
+            .quote-col { display: flex; flex-direction: column; }
+            .quote-label { font-size: 11pt; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 4pt; }
+            .quote-val-grand { font-size: 32pt; font-weight: 800; color: #0f172a; letter-spacing: -1pt; line-height: 1; }
+            .quote-val-dep { font-size: 22pt; font-weight: 800; color: #10b981; line-height: 1; }
+            .section-header { font-size: 14pt; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; display: inline-block; }
+            .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 30pt; }
+            .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; color: #334155; }
+            .pdf-table tr:last-child td { border-bottom: none; }
+            .pdf-table td.item-name { width: 75%; font-weight: 500; }
+            .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
+            .table-total-row td { padding-top: 15pt; border-top: 2pt solid #e2e8f0; font-weight: 800 !important; color: #0f172a !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper" id="ui-container">
+        <div class="ui-layer">
+            <nav><div class="logo">IronMargins</div></nav>
+            <div class="container">
+                <div class="success-card">
+                    <div class="check-circle">✓</div>
+                    <h1 id="mainHeader">Processing...</h1>
+                    <p class="subtitle" id="subHeader">Preparing your professional bid.</p>
+                    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+                    <div class="status-text" id="statusText">Initializing...</div>
+                    <div class="actions" id="actionButtons">
+                        <button class="secondary-btn" onclick="window.location.href='/'">Back to Quote</button>
+                        <button class="primary-btn" id="manualDownloadBtn">Save as PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="pdf-wrapper">
+        <div class="pdf-header">
+            <div class="pdf-brand" id="pdf-brand-container"></div>
+            <div class="pdf-meta">
+                <div class="meta-grid">
+                    <div class="meta-label">Proposal For</div>
+                    <div class="meta-val" id="pdf-client">---</div>
+                    <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 10pt; font-weight: 500; color: #64748b; margin-top: -4pt;"></div>
+                    <div class="meta-label">Project</div>
+                    <div class="meta-val" id="pdf-project">---</div>
+                    <div class="meta-label">Date</div>
+                    <div class="meta-val" id="pdf-date">--/--/----</div>
+                </div>
+            </div>
+        </div>
+        <div class="pdf-quote-box">
+            <div class="quote-col">
+                <span class="quote-label">Total Investment</span>
+                <span class="quote-val-grand" id="pdf-total">$0.00</span>
+            </div>
+            <div class="quote-col" style="text-align: right;">
+                <span class="quote-label">Deposit Required to Schedule</span>
+                <span class="quote-val-dep" id="pdf-dep">$0.00</span>
+            </div>
+        </div>
+        
+        <div class="section-header">Scope of Work & Cost Breakdown</div>
+        <table class="pdf-table">
+            <tbody id="pdf-materials-body">
+            </tbody>
+            <tbody id="pdf-labor-body">
+            </tbody>
+        </table>
+
+        <div class="signature-section" style="margin-top: 50pt; page-break-inside: avoid;">
+            <p style="font-size: 10pt; color: #64748b; line-height: 1.5; margin-bottom: 30pt;">
+                <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
+            </p>
+            <div style="display: flex; justify-content: space-between; gap: 40pt;">
+                <div style="flex: 1; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
+                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Contractor Signature</p>
+                </div>
+                <div style="flex: 1; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
+                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
+                </div>
+                <div style="width: 100pt; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
+                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
+                if (window.gtag) {
+                    gtag('event', 'conversion', {
+                        'send_to': 'AW-000000000/DUMMY_CONVERSION_LABEL',
+                        'value': 1.0,
+                        'currency': 'USD'
+                    });
+                }
+                
+                localStorage.setItem('im_single_pass_expiry', Date.now() + 3600000); 
+
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            const bar = document.getElementById('progressBar');
+            const status = document.getElementById('statusText');
+            const btns = document.getElementById('actionButtons');
+            const format = (n) => '$' + parseFloat(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            const client = localStorage.getItem('im_clientName');
+            const project = localStorage.getItem('im_projectName');
+            const clientAddress = localStorage.getItem('im_clientAddress') || '';
+            const costs = JSON.parse(localStorage.getItem('im_costs') || '{}');
+            const cons = parseFloat(localStorage.getItem('im_cons')) || 0;
+            const raw = parseFloat(localStorage.getItem('im_raw')) || 0;
+            const markupPct = parseFloat(localStorage.getItem('im_markupPct')) || 0;
+            const baseLabor = parseFloat(localStorage.getItem('im_baseLabor')) || 0;
+            const laborBurden = parseFloat(localStorage.getItem('im_laborBurden')) || 0;
+            
+            const taxRate = parseFloat(localStorage.getItem('im_taxRate')) || 0;
+            const taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
+
+            if(!client) {
+                status.textContent = "Error: No Data Found";
+                status.style.color = "#fb7185";
+                document.getElementById('mainHeader').textContent = "Data Missing";
+                document.getElementById('subHeader').textContent = "Please go back and click 'Calculate' first.";
+                btns.classList.add('show');
+                return;
+            }
+
+            const logoData = localStorage.getItem('im_logo');
+            const compName = localStorage.getItem('im_global_company');
+            const compPhone = localStorage.getItem('im_global_phone') || '';
+            const compAddress = localStorage.getItem('im_global_address') || '';
+
+            let brandHtml = '';
+            if (logoData) {
+                brandHtml += `<img src="${logoData}" style="max-height: 60px; max-width: 250px; display: block; margin-bottom: 8px;">`;
+            }
+            if (compName) {
+                brandHtml += `<h2>${compName}</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">Official Project Proposal</p>`;
+            } else {
+                brandHtml += `<h2>Official Proposal</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">IronMargins.com</p>`;
+            }
+
+            let contactStr = [compPhone, compAddress].filter(Boolean).join(' • ');
+            if (contactStr) {
+                brandHtml += `<p style="color: #64748b; font-size: 10pt; margin-top: 4px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
+            }
+            document.getElementById('pdf-brand-container').innerHTML = brandHtml;
+
+            const mult = 1 + markupPct;
+            const totalLabor = (baseLabor + laborBurden) * mult;
+            const totalMaterials = (raw + cons) * mult;
+            
+            const grandTotal = totalLabor + totalMaterials + taxAmount;
+
+            document.getElementById('pdf-client').textContent = client;
+            if (clientAddress) {
+                document.getElementById('pdf-client-address').textContent = clientAddress;
+            } else {
+                document.getElementById('pdf-client-address').style.display = 'none';
+            }
+            
+            document.getElementById('pdf-project').textContent = project;
+            document.getElementById('pdf-date').textContent = new Date().toLocaleDateString();
+            
+            document.getElementById('pdf-total').textContent = format(grandTotal);
+            document.getElementById('pdf-dep').textContent = format(grandTotal * 0.5);
+
+            const categoryNames = {
+                wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
+            };
+
+            let matsHTML = '';
+            for (const [key, val] of Object.entries(costs)) {
+                if (val > 0) {
+                    matsHTML += `<tr><td class="item-name">• ${categoryNames[key]}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
+                }
+            }
+            
+            if (cons > 0) {
+                matsHTML += `<tr><td class="item-name">• Shop Consumables & Supplies</td><td class="item-cost">${format(cons * mult)}</td></tr>`;
+            }
+            
+            if (taxAmount > 0) {
+                matsHTML += `<tr>
+                    <td class="item-name" style="color: #64748b; font-weight: 500;">Estimated Sales Tax (${taxRate}%)</td>
+                    <td class="item-cost" style="color: #64748b; font-weight: 500;">${format(taxAmount)}</td>
+                </tr>`;
+            }
+
+            document.getElementById('pdf-materials-body').innerHTML = matsHTML;
+
+            if (baseLabor > 0) {
+                let lHtml = `<tr><td class="item-name">• Base Labor & Equipment</td><td class="item-cost">${format(baseLabor * mult)}</td></tr>`;
+                if (laborBurden > 0) {
+                    lHtml += `<tr><td class="item-name" style="color: #64748b; font-weight: 500;">Labor Burden (Taxes, Ins, W-Comp)</td><td class="item-cost" style="color: #64748b; font-weight: 500;">${format(laborBurden * mult)}</td></tr>`;
+                }
+                document.getElementById('pdf-labor-body').innerHTML = lHtml;
+            }
+
+            function triggerPrint() {
+                status.textContent = "Document Ready!";
+                status.style.color = "#10b981";
+                document.getElementById('mainHeader').textContent = "Success!";
+                btns.classList.add('show');
+                setTimeout(() => window.print(), 300);
+            }
+
+            let p = 0;
+            const iv = setInterval(() => {
+                p += Math.random() * 15;
+                if (p >= 100) { p = 100; clearInterval(iv); triggerPrint(); }
+                bar.style.width = p + '%';
+            }, 150);
+
+            document.getElementById('manualDownloadBtn').onclick = triggerPrint;
+        });
+    </script>
+</body>
+</html>
