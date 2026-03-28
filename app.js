@@ -1,4 +1,3 @@
-javascript
 document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('im_cookies_accepted')) {
         document.getElementById('cookieBanner').style.display = 'block';
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function saveState() {
-        const state = { categories: {}, labor:[], meta: {} };
+        const state = { categories: {}, labor: [], meta: {} };
         
         document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view input[type="checkbox"], #setup-view input[type="radio"], #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
@@ -464,8 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
         
-        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
-        ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
+        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
             const wasteBtn = document.getElementById(`${cat}-waste-check`);
             if(wasteBtn) {
                 wasteBtn.addEventListener('change', () => {
