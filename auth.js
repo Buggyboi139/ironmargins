@@ -1,4 +1,4 @@
-const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
+\const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcmVmdWdmenRld2doaWFtYmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDc1MDMsImV4cCI6MjA5MDA4MzUwM30.QncelfMky_DyIFV_7aq-NUlM9TBsxFAdj8TyLZcrD64'; 
 
 window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -29,6 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.currentUser = session.user;
                 authBtn.textContent = 'Sign Out';
                 if(document.getElementById('manualSaveBtn')) document.getElementById('manualSaveBtn').style.display = 'block';
+
+                if (session.user.user_metadata && session.user.user_metadata.pwa_dismissed) {
+                    localStorage.setItem('im_pwa_dismissed', 'true');
+                    const pwaPrompt = document.getElementById('pwa-prompt');
+                    if (pwaPrompt) pwaPrompt.style.display = 'none';
+                }
             } else {
                 window.currentUser = null;
                 authBtn.textContent = 'Sign In';
@@ -108,6 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.currentUser = data.user;
                 authBtn.textContent = 'Sign Out';
                 if(document.getElementById('manualSaveBtn')) document.getElementById('manualSaveBtn').style.display = 'block';
+
+                if (data.user.user_metadata && data.user.user_metadata.pwa_dismissed) {
+                    localStorage.setItem('im_pwa_dismissed', 'true');
+                    const pwaPrompt = document.getElementById('pwa-prompt');
+                    if (pwaPrompt) pwaPrompt.style.display = 'none';
+                }
+
                 authModal.classList.remove('show');
                 authEmail.value = '';
                 authPassword.value = '';
