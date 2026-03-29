@@ -1,4 +1,4 @@
-\const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
+const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcmVmdWdmenRld2doaWFtYmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDc1MDMsImV4cCI6MjA5MDA4MzUwM30.QncelfMky_DyIFV_7aq-NUlM9TBsxFAdj8TyLZcrD64'; 
 
 window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
