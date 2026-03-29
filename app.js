@@ -3,27 +3,35 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.serviceWorker.register('sw.js');
     }
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 
-    if (!isStandalone) {
+    if (isMobile && !isStandalone) {
         const prompt = document.getElementById('pwa-prompt');
         if (prompt && !localStorage.getItem('im_pwa_dismissed')) {
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            prompt.style.display = 'block';
+            
             if (isChrome) {
-                prompt.style.display = 'block';
-                prompt.querySelector('p').innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>.';
+                prompt.querySelector('p').innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
             } else {
-                prompt.style.display = 'block';
-                prompt.querySelector('p').innerHTML = 'To install the app, please open this site in <strong>Google Chrome</strong> and select "Add to Home Screen".';
+                prompt.querySelector('p').innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
             }
         }
     }
 
     const closePwaBtn = document.querySelector('.close-pwa');
     if (closePwaBtn) {
-        closePwaBtn.addEventListener('click', (e) => {
+        closePwaBtn.addEventListener('click', async (e) => {
             e.target.closest('.pwa-prompt').style.display = 'none';
             localStorage.setItem('im_pwa_dismissed', 'true');
+            if (window.currentUser && window.supabaseClient) {
+                try {
+                    await window.supabaseClient.auth.updateUser({
+                        data: { pwa_dismissed: true }
+                    });
+                } catch(err) {}
+            }
         });
     }
 
