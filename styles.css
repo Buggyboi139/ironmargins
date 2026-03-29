@@ -35,7 +35,9 @@ input[type="text"], input[type="number"], input[type="date"], input[type="file"]
 
 #left-color-bar { position: fixed; top: 0; left: 0; bottom: 0; width: 4px; background: var(--gradient-primary); z-index: 200; box-shadow: 2px 0 15px rgba(16, 185, 129, 0.5); }
 nav { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); position: sticky; top: 0; z-index: 100; width: 100%; }
-.logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; user-select: none; }
+
+.logo { height: 40px; object-fit: contain; cursor: pointer; user-select: none; }
+
 .nav-actions { display: flex; gap: 15px; }
 .nav-link { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.95rem; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-glass); transition: 0.2s; background: rgba(255,255,255,0.05); cursor: pointer;}
 .nav-link.neutral { color: var(--text-muted); border-color: var(--border-glass); }
@@ -250,6 +252,32 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
 }
 .cookie-btn:hover { transform: translateY(-2px); }
 
+.pwa-prompt {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 1px solid var(--border-highlight);
+    border-radius: 12px;
+    padding: 15px 35px 15px 15px;
+    color: var(--text-main);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    z-index: 9999;
+    font-size: 0.85rem;
+    max-width: 320px;
+    animation: fadeIn 0.5s ease;
+}
+.pwa-prompt strong { color: #38bdf8; }
+.close-pwa {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+.close-pwa:hover { color: var(--text-main); }
+
 @keyframes fadeInCookie { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -257,7 +285,7 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
     body { padding-left: 0; padding-top: 4px; }
     #left-color-bar { width: 100%; height: 4px; bottom: auto; }
     nav { padding: 15px; flex-wrap: wrap; justify-content: center; gap: 15px; }
-    .logo { font-size: 1.4rem; width: 100%; text-align: center; }
+    .logo { height: 35px; width: 100%; object-fit: contain; }
     .nav-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 10px; }
     .nav-link { font-size: 0.85rem; padding: 8px 14px; flex: none; }
     .container { padding: 30px 15px; }
