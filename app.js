@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
+    if (!isStandalone) {
+        const prompt = document.getElementById('pwa-prompt');
+        if (prompt && !localStorage.getItem('im_pwa_dismissed')) {
+            if (isChrome) {
+                prompt.style.display = 'block';
+                prompt.querySelector('p').innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>.';
+            } else {
+                prompt.style.display = 'block';
+                prompt.querySelector('p').innerHTML = 'To install the app, please open this site in <strong>Google Chrome</strong> and select "Add to Home Screen".';
+            }
+        }
+    }
+
+    const closePwaBtn = document.querySelector('.close-pwa');
+    if (closePwaBtn) {
+        closePwaBtn.addEventListener('click', (e) => {
+            e.target.closest('.pwa-prompt').style.display = 'none';
+            localStorage.setItem('im_pwa_dismissed', 'true');
+        });
+    }
+
     if (!localStorage.getItem('im_cookies_accepted')) {
         document.getElementById('cookieBanner').style.display = 'block';
     }
@@ -20,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isQuickMode = true;
 
     let currentBidId = null;
+    let autoSaveTimer = null;
 
     window.refreshSavedBids = async function() {
         const container = document.getElementById('savedBidsContainer');
@@ -104,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function saveState() {
-        const state = { categories: {}, labor: [], meta: {} };
+    function saveState(skipAutosave = false) {
+        const state = { categories: {}, labor:[], meta: {} };
         
         document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view input[type="checkbox"], #setup-view input[type="radio"], #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
@@ -149,14 +178,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         localStorage.setItem('im_v5_data', JSON.stringify(state));
+
+        if (!skipAutosave && window.currentUser && currentBidId) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const manualSaveBtn = document.getElementById('manualSaveBtn');
+                if (manualSaveBtn) manualSaveBtn.textContent = 'Autosaving...';
+                window.saveBidToCloud(0, true).then((success) => {
+                    if (manualSaveBtn && success) {
+                        manualSaveBtn.textContent = 'Saved!';
+                        setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
+                    }
+                });
+            }, 3000);
+        }
     }
 
-    window.saveBidToCloud = async function(totalAmount = 0) {
+    window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
         if (!window.currentUser || !window.supabaseClient) {
             return false;
         }
 
-        saveState();
+        if (!isAutosaving) {
+            saveState(true);
+        }
+
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
 
@@ -180,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data) currentBidId = data.id;
                 if (window.refreshSavedBids) window.refreshSavedBids();
             }
-            if (window.gtag) window.gtag('event', 'save_bid');
+            if (window.gtag && !isAutosaving) window.gtag('event', 'save_bid');
             return true;
         } catch (error) {
             return false;
@@ -206,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (manualSaveBtn) {
         manualSaveBtn.addEventListener('click', async () => {
             manualSaveBtn.textContent = 'Saving...';
-            await window.saveBidToCloud();
+            await window.saveBidToCloud(0, false);
             manualSaveBtn.textContent = 'Saved!';
             setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
         });
@@ -340,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -696,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 downloadBtn.onclick = async () => {
                     saveDataForPdf();
-                    await window.saveBidToCloud(total);
+                    await window.saveBidToCloud(total, false);
                     window.location.href = './success';
                 };
             }
@@ -736,7 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 4.99, items:[{item_id: 'single_pdf'}] });
                                 saveDataForPdf();
-                                await window.saveBidToCloud(total);
+                                await window.saveBidToCloud(total, false);
                                 const checkoutUrl = new URL('https://buy.stripe.com/7sY14pdldbz71Dc5g60co02');
                                 checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
                                 window.location.href = checkoutUrl.toString();
@@ -749,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
                                 saveDataForPdf();
-                                await window.saveBidToCloud(total);
+                                await window.saveBidToCloud(total, false);
                                 const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
                                 checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
                                 window.location.href = checkoutUrl.toString();
