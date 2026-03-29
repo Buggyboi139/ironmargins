@@ -20,7 +20,10 @@
 <body>
     <div id="left-color-bar"></div>
     <nav>
-        <img src="logo_nb.png" alt="IronMargins" class="logo" id="logoBtn">
+        <a href="/" class="logo-container" id="logoBtn">
+            <img src="logo_nb.png" alt="IronMargins Logo" class="logo-img">
+            <span class="logo-text">IronMargins</span>
+        </a>
         <div class="nav-actions">
             <button id="manualSaveBtn" class="nav-link neutral" style="display: none; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Save Bid</button>
             <div class="dropdown-container" id="savedBidsContainer" style="display: none; position: relative;">
@@ -201,6 +204,7 @@
                 [CITY],[PROVINCE/STATE] [ZIP/POSTAL]
             </p>
             <div class="footer-links">
+                <a href="/pwa">Install App</a>
                 <a href="/contact">Contact Us</a>
                 <a href="/terms">Terms of Service</a>
                 <a href="/privacy">Privacy Policy</a>
