@@ -9,13 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMobile && !isStandalone) {
         const prompt = document.getElementById('pwa-prompt');
         if (prompt && !localStorage.getItem('im_pwa_dismissed')) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
             prompt.style.display = 'block';
             
-            if (isChrome) {
+            if (isIOS) {
+                prompt.querySelector('p').innerHTML = 'Install IronMargins! Tap the <strong>Share</strong> icon at the bottom of Safari, then select <strong>Add to Home Screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
+            } else if (isChrome) {
                 prompt.querySelector('p').innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
             } else {
-                prompt.querySelector('p').innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
+                prompt.querySelector('p').innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong> or Safari. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
             }
         }
     }
@@ -44,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let materialsDb = {};
-    const categories = ['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
+    const categories =['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
     
     const categoryNames = {
         wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Hauls'
@@ -144,13 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveState(skipAutosave = false) {
         const state = { categories: {}, labor:[], meta: {} };
         
-        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view input[type="checkbox"], #setup-view input[type="radio"], #markupSlider').forEach(el => {
+        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
-            state.meta[key] = el.type === 'checkbox' || el.type === 'radio' ? el.checked : el.value;
+            state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
 
         categories.forEach(cat => {
-            state.categories[cat] = [];
+            state.categories[cat] =[];
             const container = document.getElementById(`${cat}-rows-container`);
             if (container) {
                 container.querySelectorAll('.calc-row').forEach(row => {
@@ -158,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const customName = row.querySelector('.custom-mat-input').value;
                     const qty = row.querySelector('.qty-input').value;
                     const price = row.querySelector('.price-input').value;
-                    const shapes = [];
+                    const shapes =[];
                     row.querySelectorAll('.shape-row').forEach(s => {
                         shapes.push({
                             l: s.querySelector('.d-l')?.value || '',
@@ -390,11 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addMaterialRow(cat, containerId) {
         if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
-        const items = materialsDb[cat] || [];
+        const items = materialsDb[cat] ||[];
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -517,8 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
         
-        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
-        ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
+        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
             const wasteBtn = document.getElementById(`${cat}-waste-check`);
             if(wasteBtn) {
                 wasteBtn.addEventListener('change', () => {
@@ -526,8 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveState();
                 });
             }
-        });
-        ['gravel-compaction-check', 'topsoil-settling-check', 'mulch-settling-check'].forEach(id => {
+        });['gravel-compaction-check', 'topsoil-settling-check', 'mulch-settling-check'].forEach(id => {
             const btn = document.getElementById(id);
             if(btn) {
                 btn.addEventListener('change', (e) => {
@@ -568,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 d.classList.toggle('show'); 
             }
             if (e.target.closest('.custom-option')) {
-                const o = e.target.closest('.custom-option'), c = o.closest('.custom-select-container'), row = o.closest('.calc-row');
+                const o = e.target.closest('.custom-option'), c = o.closest('.custom-select-container');
                 c.querySelector('.custom-select-text').textContent = o.textContent; 
                 c.querySelector('.item-select').value = o.dataset.value;
                 if (o.dataset.value === 'CUSTOM') { 
