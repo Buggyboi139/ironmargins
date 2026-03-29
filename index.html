@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IronMargins | Professional Bids</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#05070a">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
     <script>
       window.dataLayer = window.dataLayer ||[];
@@ -16,7 +20,7 @@
 <body>
     <div id="left-color-bar"></div>
     <nav>
-        <div class="logo" id="logoBtn">IronMargins</div>
+        <img src="logo_nb.png" alt="IronMargins" class="logo" id="logoBtn">
         <div class="nav-actions">
             <button id="manualSaveBtn" class="nav-link neutral" style="display: none; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Save Bid</button>
             <div class="dropdown-container" id="savedBidsContainer" style="display: none; position: relative;">
@@ -182,6 +186,11 @@
             <p>We use cookies and local storage to save your estimates and improve your experience. <a href="/cookies">Learn more</a>.</p>
             <button id="acceptCookiesBtn" class="cookie-btn">Got it!</button>
         </div>
+    </div>
+
+    <div id="pwa-prompt" class="pwa-prompt" style="display: none;">
+        <span class="close-pwa">&times;</span>
+        <p></p>
     </div>
 
     <footer class="site-footer">
