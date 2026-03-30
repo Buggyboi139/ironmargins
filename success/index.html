@@ -164,15 +164,15 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
+                let purchaseValue = parseFloat(localStorage.getItem('im_pending_purchase_value')) || 4.99;
+                let purchaseItem = localStorage.getItem('im_pending_purchase_item') || 'single_pdf';
+
                 if (window.gtag) {
                     gtag('event', 'conversion', {
                         'send_to': 'AW-000000000/DUMMY_CONVERSION_LABEL',
                         'value': 1.0,
                         'currency': 'USD'
                     });
-
-                    let purchaseValue = parseFloat(localStorage.getItem('im_pending_purchase_value')) || 4.99;
-                    let purchaseItem = localStorage.getItem('im_pending_purchase_item') || 'single_pdf';
 
                     gtag('event', 'purchase', {
                         transaction_id: 'TXN_' + Date.now(),
@@ -187,12 +187,16 @@
                             }
                         ]
                     });
-
-                    localStorage.removeItem('im_pending_purchase_value');
-                    localStorage.removeItem('im_pending_purchase_item');
                 }
                 
-                localStorage.setItem('im_single_pass_expiry', Date.now() + 3600000); 
+                if (purchaseItem === 'single_pdf') {
+                    localStorage.setItem('im_single_pass_expiry', Date.now() + 3600000); 
+                } else if (purchaseItem === 'pro_sub') {
+                    localStorage.setItem('im_temp_sub_active', 'true'); 
+                }
+
+                localStorage.removeItem('im_pending_purchase_value');
+                localStorage.removeItem('im_pending_purchase_item');
 
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
