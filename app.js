@@ -760,7 +760,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (window.supabaseClient && window.currentUser) {
                 window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).single().then(({data}) => {
-                    const hasActivePass = data && data.subscription_status === 'active';
+                    const isDbActive = data && data.subscription_status === 'active';
+                    const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+                    const hasActivePass = isDbActive || isTempActive;
+
                     const singlePassExpiry = parseInt(localStorage.getItem('im_single_pass_expiry') || '0');
                     const isSinglePassActive = Date.now() < singlePassExpiry;
 
