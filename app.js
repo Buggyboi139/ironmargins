@@ -796,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 await window.saveBidToCloud(total, false);
                                 localStorage.setItem('im_pending_purchase_value', '4.99');
                                 localStorage.setItem('im_pending_purchase_item', 'single_pdf');
-                                const checkoutUrl = new URL('https://buy.stripe.com/7sY14pdldbz71Dc5g60co02');
+                                const checkoutUrl = new URL('https://buy.stripe.com/test_3cI4gB94XcDba9I7oe0co00');
                                 checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
                                 window.location.href = checkoutUrl.toString();
                             };
