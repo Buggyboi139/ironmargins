@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
+                downloadBtn.textContent = "Subscribe to Download ($12.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
