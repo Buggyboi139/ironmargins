@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('im_clientName', selectedOption.textContent);
             localStorage.setItem('im_clientAddress', selectedOption.dataset.address || '');
         }
+        saveState();
     });
 
     document.getElementById('openClientModalBtn').addEventListener('click', () => {
@@ -208,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function saveState(skipAutosave = false) {
-        const state = { categories: {}, labor: [], meta: {} };
+        const state = { categories: {}, labor:[], meta: {} };
         
         document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
@@ -253,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('im_v5_data', JSON.stringify(state));
 
-        if (!skipAutosave && window.currentUser && currentBidId) {
+        if (!skipAutosave && window.currentUser) {
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
                 const manualSaveBtn = document.getElementById('manualSaveBtn');
@@ -281,11 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const bidData = JSON.parse(stateStr);
 
         const clientId = document.getElementById('client-select').value;
+        const parsedClientId = parseInt(clientId, 10);
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
 
         const payload = {
             user_id: window.currentUser.id,
-            client_id: parseInt(clientId, 10) || null,
+            client_id: isNaN(parsedClientId) ? null : parsedClientId,
             project_name: projectName,
             total_amount: totalAmount,
             bid_data: bidData
@@ -460,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -586,7 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
         
-        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
+        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
+        ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
             const wasteBtn = document.getElementById(`${cat}-waste-check`);
             if(wasteBtn) {
                 wasteBtn.addEventListener('change', () => {
