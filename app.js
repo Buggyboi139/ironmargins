@@ -792,18 +792,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('progress-payments').addEventListener('input', updatePaymentSchedule);
 
     const canvas = document.getElementById('signature-pad');
-    const ctx = canvas.getContext('2d');
+    let ctx = null;
     let isDrawing = false;
-
+    
+    if (canvas) {
+        ctx = canvas.getContext('2d');
+    }
+    
     function resizeCanvas() {
-        if(!canvas || !canvas.parentElement) return;
+        if(!canvas || !canvas.parentElement || !ctx) return;
         const rect = canvas.parentElement.getBoundingClientRect();
         canvas.width = rect.width;
         canvas.height = 150;
         ctx.strokeStyle = '#f8fafc';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
-    }
+    }}
 
     const startDrawing = (e) => { 
         isDrawing = true; 
