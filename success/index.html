@@ -164,9 +164,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
-                let purchaseValue = parseFloat(localStorage.getItem('im_pending_purchase_value')) || 4.99;
-                let purchaseItem = localStorage.getItem('im_pending_purchase_item') || 'single_pdf';
-
                 if (window.gtag) {
                     gtag('event', 'conversion', {
                         'send_to': 'AW-000000000/DUMMY_CONVERSION_LABEL',
@@ -176,25 +173,20 @@
 
                     gtag('event', 'purchase', {
                         transaction_id: 'TXN_' + Date.now(),
-                        value: purchaseValue,
+                        value: 29.99,
                         currency: 'USD',
-                        items: [
+                        items:[
                             {
-                                item_id: purchaseItem,
-                                item_name: purchaseItem === 'pro_sub' ? 'Unlimited PDFs Subscription' : 'Single PDF Download',
-                                price: purchaseValue,
+                                item_id: 'pro_sub',
+                                item_name: 'Unlimited PDFs Subscription',
+                                price: 29.99,
                                 quantity: 1
                             }
                         ]
                     });
                 }
                 
-                if (purchaseItem === 'single_pdf') {
-                    localStorage.setItem('im_single_pass_expiry', Date.now() + 3600000); 
-                } else if (purchaseItem === 'pro_sub') {
-                    localStorage.setItem('im_temp_sub_active', 'true'); 
-                }
-
+                localStorage.setItem('im_temp_sub_active', 'true'); 
                 localStorage.removeItem('im_pending_purchase_value');
                 localStorage.removeItem('im_pending_purchase_item');
 
@@ -243,7 +235,7 @@
                 brandHtml += `<h2>Official Proposal</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">IronMargins.com</p>`;
             }
 
-            let contactStr = [compPhone, compAddress].filter(Boolean).join(' • ');
+            let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
             if (contactStr) {
                 brandHtml += `<p style="color: #64748b; font-size: 10pt; margin-top: 4px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
             }
@@ -268,12 +260,23 @@
             document.getElementById('pdf-total').textContent = format(grandTotal);
             document.getElementById('pdf-dep').textContent = format(grandTotal * 0.5);
 
+            const venmoHandle = localStorage.getItem('im_venmo_handle');
+            if (venmoHandle) {
+                const depositAmount = (grandTotal * 0.5).toFixed(2);
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=venmo://paycharge?txn=pay&recipients=${venmoHandle}&amount=${depositAmount}`;
+                const qrImg = document.createElement('img');
+                qrImg.src = qrUrl;
+                qrImg.style.width = '100px';
+                qrImg.style.height = '100px';
+                document.querySelector('.pdf-quote-box').appendChild(qrImg);
+            }
+
             const categoryNames = {
                 wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
             };
 
             let matsHTML = '';
-            for (const [key, val] of Object.entries(costs)) {
+            for (const[key, val] of Object.entries(costs)) {
                 if (val > 0) {
                     matsHTML += `<tr><td class="item-name">• ${categoryNames[key]}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
                 }
