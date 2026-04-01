@@ -235,7 +235,7 @@
                 brandHtml += `<h2>Official Proposal</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">IronMargins.com</p>`;
             }
 
-            let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
+            let contactStr = [compPhone, compAddress].filter(Boolean).join(' • ');
             if (contactStr) {
                 brandHtml += `<p style="color: #64748b; font-size: 10pt; margin-top: 4px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
             }
@@ -260,15 +260,13 @@
             document.getElementById('pdf-total').textContent = format(grandTotal);
             document.getElementById('pdf-dep').textContent = format(grandTotal * 0.5);
 
-            const venmoHandle = localStorage.getItem('im_venmo_handle');
-            if (venmoHandle) {
-                const depositAmount = (grandTotal * 0.5).toFixed(2);
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=venmo://paycharge?txn=pay&recipients=${venmoHandle}&amount=${depositAmount}`;
-                const qrImg = document.createElement('img');
-                qrImg.src = qrUrl;
-                qrImg.style.width = '100px';
-                qrImg.style.height = '100px';
-                document.querySelector('.pdf-quote-box').appendChild(qrImg);
+            const paymentLink = localStorage.getItem('im_payment_link');
+            if (paymentLink) {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
+                const qrContainer = document.createElement('div');
+                qrContainer.style.textAlign = 'right';
+                qrContainer.innerHTML = `<div style="font-size: 9pt; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 80px; height: 80px; border-radius: 8px;">`;
+                document.querySelector('.pdf-quote-box').appendChild(qrContainer);
             }
 
             const categoryNames = {
@@ -276,7 +274,7 @@
             };
 
             let matsHTML = '';
-            for (const[key, val] of Object.entries(costs)) {
+            for (const [key, val] of Object.entries(costs)) {
                 if (val > 0) {
                     matsHTML += `<tr><td class="item-name">• ${categoryNames[key]}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
                 }
