@@ -84,6 +84,17 @@
         .pdf-table td.item-name { width: 75%; font-weight: 500; }
         .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
 
+        @media (max-width: 768px) {
+            #pdf-wrapper { padding: 24px; }
+            .pdf-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .pdf-meta { text-align: left; width: 100%; }
+            .meta-grid { justify-content: start; text-align: left; grid-template-columns: 100px 1fr; }
+            .pdf-quote-box { flex-direction: column; align-items: flex-start; gap: 15px; padding: 20px; }
+            .quote-col { text-align: left !important; width: 100%; }
+            .quote-val-grand { font-size: 32px; }
+            .signature-section > div { flex-direction: column; gap: 30px !important; }
+        }
+
         @media print {
             @page { size: letter portrait; margin: 0; }
             body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #0f172a !important; }
@@ -180,7 +191,7 @@
                         <div class="sig-col" style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
                         </div>
-                        <div class="sig-col" style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                        <div class="sig-col" style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;" id="client-date-line">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
                         </div>
                     </div>
@@ -444,6 +455,19 @@
                         sigImg.style.bottom = '15px';
                         sigImg.style.left = '0';
                         sigLine.appendChild(sigImg);
+
+                        const dateLine = document.getElementById('client-date-line');
+                        const existingDate = dateLine.querySelector('.sig-timestamp');
+                        if (existingDate) existingDate.remove();
+                        
+                        const dateEl = document.createElement('p');
+                        dateEl.className = 'sig-timestamp';
+                        dateEl.textContent = new Date().toLocaleDateString();
+                        dateEl.style.fontSize = '16px';
+                        dateEl.style.fontWeight = '700';
+                        dateEl.style.color = '#0f172a';
+                        dateEl.style.marginTop = '25px';
+                        dateLine.appendChild(dateEl);
                     }
 
                     setTimeout(() => {
