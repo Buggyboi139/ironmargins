@@ -1065,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Generate ($19.99/mo)";
+                downloadBtn.textContent = "Subscribe to Generate ($12.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -1077,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if(pm) pm.classList.add('show');
                         return;
                     }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
                     saveDataForPdf();
                     const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
                     await window.saveBidToCloud(totalAmount, false);
