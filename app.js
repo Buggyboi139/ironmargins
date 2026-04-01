@@ -58,16 +58,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBidId = null;
     let autoSaveTimer = null;
 
-    fetch('materials.json').then(res => res.json()).then(async data => { 
-        materialsDb = data; 
-        if (window.currentUser) await fetchCustomMaterials();
-        initApp(); 
-    }).catch(() => initApp());
+    fetch('materials.json')
+        .then(res => res.json())
+        .then(data => { 
+            materialsDb = data; 
+            initApp(); 
+        })
+        .catch(() => initApp());
 
     const markupSlider = document.getElementById('markupSlider');
     const markupDisplay = document.getElementById('markupDisplay');
 
-    async function fetchCustomMaterials() {
+    window.fetchCustomMaterials = async function() {
         if (!window.supabaseClient || !window.currentUser) return;
         const { data, error } = await window.supabaseClient
             .from('custom_materials')
@@ -87,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-    }
+    };
 
     async function saveCustomMaterialToCloud(category, name, price, unit) {
         if (!window.currentUser || !window.supabaseClient) return;
