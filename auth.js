@@ -1,4 +1,4 @@
-@@ -22,42 +22,37 @@ document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     let isSignUpMode = false;
 
