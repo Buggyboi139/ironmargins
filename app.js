@@ -188,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.getElementById('saveProfileBtn').addEventListener('click', () => {
-        const venmoInput = document.getElementById('venmo-handle');
-        if (venmoInput) localStorage.setItem('im_venmo_handle', venmoInput.value);
+        const paymentLinkInput = document.getElementById('payment-link');
+        if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
         
         document.getElementById('profileModal').classList.remove('show');
         if (typeof window.renderDownloadOptions === 'function') {
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function saveState(skipAutosave = false) {
-        const state = { categories: {}, labor:[], meta: {} };
+        const state = { categories: {}, labor: [], meta: {} };
         
         document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -498,13 +498,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
         const compAddressInput = document.getElementById('meta-company-address');
-        const venmoInput = document.getElementById('venmo-handle');
+        const paymentLinkInput = document.getElementById('payment-link');
         const appTitle = document.getElementById('app-main-title');
         
         const globalComp = localStorage.getItem('im_global_company');
         const globalPhone = localStorage.getItem('im_global_phone');
         const globalAddress = localStorage.getItem('im_global_address');
-        const savedVenmo = localStorage.getItem('im_venmo_handle');
+        const savedPaymentLink = localStorage.getItem('im_payment_link');
 
         if (globalComp) {
             compInput.value = globalComp;
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (globalPhone) compPhoneInput.value = globalPhone;
         if (globalAddress) compAddressInput.value = globalAddress;
-        if (savedVenmo && venmoInput) venmoInput.value = savedVenmo;
+        if (savedPaymentLink && paymentLinkInput) paymentLinkInput.value = savedPaymentLink;
 
         compInput.addEventListener('input', (e) => {
             const val = e.target.value.trim();
@@ -821,11 +821,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data, error } = await window.supabaseClient
                 .from('users')
-                .select('subscription_status')
+                .select('subscription_active')
                 .eq('id', window.currentUser.id)
                 .single();
 
-            const isDbActive = data && data.subscription_status === 'active';
+            const isDbActive = data && data.subscription_active;
             const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
 
             if (isDbActive || isTempActive) {
@@ -915,7 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('focus', () => {
         if (window.currentUser && window.supabaseClient && typeof window.renderDownloadOptions === 'function') {
-            window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).single()
+            window.supabaseClient.from('users').select('subscription_active').eq('id', window.currentUser.id).single()
                 .then(({data, error}) => {
                     if (!error && data) {
                         window.renderDownloadOptions();
