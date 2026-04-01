@@ -84,7 +84,7 @@
         .pdf-table td.item-name { width: 75%; font-weight: 500; }
         .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
 
-        @media (max-width: 768px) {
+        @media screen and (max-width: 768px) {
             #pdf-wrapper { padding: 24px; }
             .pdf-header { flex-direction: column; align-items: flex-start; gap: 20px; }
             .pdf-meta { text-align: left; width: 100%; }
@@ -92,7 +92,8 @@
             .pdf-quote-box { flex-direction: column; align-items: flex-start; gap: 15px; padding: 20px; }
             .quote-col { text-align: left !important; width: 100%; }
             .quote-val-grand { font-size: 32px; }
-            .signature-section > div { flex-direction: column; gap: 30px !important; }
+            .signature-section > div { flex-direction: column; justify-content: flex-start !important; gap: 40px !important; }
+            .sig-col { width: 100% !important; }
         }
 
         @media print {
@@ -101,13 +102,16 @@
             .app-wrapper, .no-print { display: none !important; }
             #preview-container { padding: 0 !important; margin: 0 !important; display: block !important; }
             #pdf-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; padding: 40pt 50pt !important; }
-            .pdf-header { border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; }
+            .pdf-header { border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
+            .pdf-meta { text-align: right !important; width: auto !important; }
             .pdf-brand h2 { font-size: 26pt; letter-spacing: -1pt; }
             .pdf-brand p { margin: 6pt 0 0 0; font-size: 11pt; letter-spacing: 1pt; }
-            .meta-grid { column-gap: 20pt; row-gap: 6pt; }
+            .meta-grid { column-gap: 20pt; row-gap: 6pt; display: grid !important; grid-template-columns: auto auto !important; justify-content: end !important; text-align: right !important; }
             .meta-label { font-size: 9pt; }
             .meta-val { font-size: 12pt; }
-            .pdf-quote-box { background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; }
+            .pdf-quote-box { background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
+            .quote-col { text-align: right !important; width: auto !important; }
+            .quote-col:first-child { text-align: left !important; }
             .quote-label { font-size: 11pt; letter-spacing: 1pt; margin-bottom: 4pt; }
             .quote-val-grand { font-size: 32pt; letter-spacing: -1pt; }
             .quote-val-dep { font-size: 22pt; }
@@ -116,8 +120,10 @@
             .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; }
             .signature-section { margin-top: 50pt !important; }
             .signature-section p { font-size: 10pt !important; margin-bottom: 30pt !important; }
-            .sig-col { padding-top: 8pt !important; border-top: 1pt solid #cbd5e1 !important; }
-            .sig-col p { font-size: 9pt !important; margin-bottom: 0 !important; }
+            .signature-section > div { display: flex !important; flex-direction: row !important; justify-content: flex-end !important; gap: 60px !important; }
+            .sig-col { padding-top: 8pt !important; border-top: 1pt solid #cbd5e1 !important; width: 300px !important; }
+            #client-date-line { width: 150px !important; }
+            .sig-col p { font-size: 9pt !important; margin-bottom: 0 !important; position: static !important; }
         }
     </style>
 </head>
@@ -184,14 +190,11 @@
                     <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
                         <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
                     </p>
-                    <div style="display: flex; justify-content: space-between; gap: 50px;">
-                        <div class="sig-col" style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px;">
-                            <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Contractor Signature</p>
-                        </div>
-                        <div class="sig-col" style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
+                    <div style="display: flex; justify-content: flex-end; gap: 60px;">
+                        <div class="sig-col" style="width: 300px; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
                         </div>
-                        <div class="sig-col" style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;" id="client-date-line">
+                        <div class="sig-col" style="width: 150px; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-date-line">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
                         </div>
                     </div>
@@ -452,7 +455,7 @@
                         sigImg.src = tempCanvas.toDataURL('image/png');
                         sigImg.style.maxHeight = '60px';
                         sigImg.style.position = 'absolute';
-                        sigImg.style.bottom = '15px';
+                        sigImg.style.bottom = '30px';
                         sigImg.style.left = '0';
                         sigLine.appendChild(sigImg);
 
@@ -466,7 +469,9 @@
                         dateEl.style.fontSize = '16px';
                         dateEl.style.fontWeight = '700';
                         dateEl.style.color = '#0f172a';
-                        dateEl.style.marginTop = '25px';
+                        dateEl.style.position = 'absolute';
+                        dateEl.style.bottom = '30px';
+                        dateEl.style.left = '0';
                         dateLine.appendChild(dateEl);
                     }
 
