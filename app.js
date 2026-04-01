@@ -918,4 +918,32 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     document.getElementById('editBtn').onclick = () => { 
-        document.getElementById('results-view').classList.repl
+        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
+        setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
+    };
+
+    document.getElementById('exportCSVBtn').onclick = () => {
+        if(window.gtag) window.gtag('event', 'file_download', { file_extension: 'csv', file_name: 'Material_Run_List' });
+        const csv = localStorage.getItem('im_csvData') || 'No data generated';
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'Material_Run_List.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    window.addEventListener('focus', () => {
+        if (window.currentUser && window.supabaseClient && typeof window.renderDownloadOptions === 'function') {
+            window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).single()
+                .then(({data, error}) => {
+                    if (!error && data) {
+                        window.renderDownloadOptions();
+                    }
+                });
+        }
+    });
+});
