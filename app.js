@@ -902,12 +902,19 @@ document.addEventListener('DOMContentLoaded', () => {
             let c = 0; const el = document.getElementById(catId);
             if (el && el.closest('.module-container').classList.contains('active')) { 
                 el.querySelectorAll('.calc-row').forEach(r => {
-                    const isCustom = r.querySelector('.item-select').value === 'CUSTOM';
+                    const itemSelect = r.querySelector('.item-select').value;
+                    const isCustom = itemSelect === 'CUSTOM';
                     const name = isCustom ? r.querySelector('.custom-mat-input').value : r.querySelector('.custom-select-text').textContent;
                     const qty = parseFloat(r.querySelector('.qty-input').value)||0;
                     const price = parseFloat(r.querySelector('.price-input').value)||0;
                     
-                    if (isCustom && name && price > 0) {
+                    let defaultPrice = 0;
+                    if (!isCustom && materialsDb[catKey]) {
+                        const defaultItem = materialsDb[catKey].find(i => i.id === itemSelect);
+                        if (defaultItem) defaultPrice = parseFloat(defaultItem.price);
+                    }
+                    
+                    if ((isCustom && name && price > 0) || (!isCustom && price > 0 && price !== defaultPrice)) {
                         saveCustomMaterialToCloud(catKey, name, price, 'qty');
                     }
 
