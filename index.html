@@ -44,13 +44,18 @@
                     <div class="module-header collapsible"><span style="color: #f8fafc;">Project Details</span><span class="chevron">▼</span></div>
                     <div class="module-content">
                         <div class="input-row" style="background: transparent; border: none; padding: 0;">
-                            <div class="input-group"><label>Client Name</label><input type="text" id="meta-client" class="glass-input" placeholder="e.g. Jane Doe"></div>
+                            <div class="input-group">
+                                <label>Client</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <select id="client-select" class="glass-input" style="flex: 1;">
+                                        <option value="">Select a Client...</option>
+                                    </select>
+                                    <button id="openClientModalBtn" class="secondary-btn" style="padding: 0 15px; border-radius: 10px; font-size: 1.2rem;">+</button>
+                                </div>
+                            </div>
                             <div class="input-group"><label>Project Name</label><input type="text" id="meta-project" class="glass-input" placeholder="e.g. Full Master Remodel"></div>
                             <div class="input-group"><label>Date</label><input type="date" id="meta-date" class="glass-input" style="color-scheme: dark;"></div>
                             <div class="input-group"><label>Sales Tax (%)</label><input type="number" id="meta-tax" class="glass-input" placeholder="0" value="0" step="0.1"></div>
-                        </div>
-                        <div class="input-row" style="background: transparent; border: none; padding: 0; margin-top: 15px;">
-                            <div class="input-group" style="flex-basis: 100%;"><label>Customer Address</label><input type="text" id="meta-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST 12345"></div>
                         </div>
                     </div>
                 </div>
@@ -132,6 +137,27 @@
         </div>
     </div>
     
+    <div id="clientModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
+            <button id="closeClientModal" class="close-btn">&times;</button>
+            <h2>Client Management</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Add a new client to your CRM.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Client Name</label>
+                <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Address</label>
+                <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST">
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>Phone Number</label>
+                <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+            </div>
+            <button class="primary-btn" id="btn-save-client" style="margin-top: 0; padding: 15px; width: 100%;">Save Client</button>
+        </div>
+    </div>
+
     <div id="profileModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeProfileModal" class="close-btn">&times;</button>
@@ -140,6 +166,10 @@
             <div class="input-group" style="margin-bottom: 15px;">
                 <label>Your Company Name</label>
                 <input type="text" id="meta-company" class="glass-input" placeholder="e.g. Apex Builders">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Venmo Handle</label>
+                <input type="text" id="venmo-handle" class="glass-input" placeholder="e.g. @your-handle">
             </div>
             <div class="input-group" style="margin-bottom: 15px;">
                 <label>Phone Number</label>
