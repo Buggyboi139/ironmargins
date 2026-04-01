@@ -791,54 +791,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('deposit-pct').addEventListener('input', updatePaymentSchedule);
     document.getElementById('progress-payments').addEventListener('input', updatePaymentSchedule);
 
-    const canvas = document.getElementById('signature-pad');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-
-    function resizeCanvas() {
-        const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = 150;
-        ctx.strokeStyle = '#f8fafc';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-    }
-
-    const startDrawing = (e) => { 
-        isDrawing = true; 
-        draw(e); 
-    };
-    
-    const stopDrawing = () => { 
-        isDrawing = false; 
-        ctx.beginPath(); 
-    };
-    
-    const draw = (e) => {
-        if (!isDrawing) return;
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-    };
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-
-    canvas.addEventListener('touchstart', startDrawing, {passive: false});
-    canvas.addEventListener('touchmove', draw, {passive: false});
-    canvas.addEventListener('touchend', stopDrawing);
-
-    document.getElementById('clear-signature').onclick = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
-
     document.getElementById('calculateBtn').onclick = () => {
         let raw = 0, cons = 0;
         let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
@@ -949,7 +901,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { 
             document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); 
             window.scrollTo(0,0); 
-            resizeCanvas();
         }, 300);
 
         window.renderDownloadOptions = async function() {
@@ -973,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!window.currentUser) {
-                downloadBtn.textContent = "Sign in to Generate PDF";
+                downloadBtn.textContent = "Sign in to Generate Proposal";
                 downloadBtn.style.background = "transparent";
                 downloadBtn.style.border = "1px solid var(--border-glass)";
                 downloadBtn.style.color = "var(--text-main)";
@@ -994,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
 
             if (isDbActive || isTempActive) {
-                downloadBtn.textContent = "Sign & Generate PDF";
+                downloadBtn.textContent = "Review & Generate Proposal";
                 downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -1006,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
+                downloadBtn.textContent = "Subscribe to Generate ($19.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -1043,19 +994,6 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('im_laborBurden', laborBurden);
             localStorage.setItem('im_taxRate', taxRate);
             localStorage.setItem('im_taxAmount', taxAmount);
-
-            const isCanvasEmpty = () => {
-                const blank = document.createElement('canvas');
-                blank.width = canvas.width;
-                blank.height = canvas.height;
-                return canvas.toDataURL() === blank.toDataURL();
-            };
-
-            if (!isCanvasEmpty()) {
-                localStorage.setItem('im_client_signature', canvas.toDataURL('image/png'));
-            } else {
-                localStorage.removeItem('im_client_signature');
-            }
         }
     };
     
@@ -1099,12 +1037,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.renderDownloadOptions();
                     }
                 });
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        if (document.getElementById('results-view').classList.contains('active-view')) {
-            resizeCanvas();
         }
     });
 });
