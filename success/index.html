@@ -51,42 +51,37 @@
         .actions.show { opacity: 1; pointer-events: all; }
         .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; }
         .secondary-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-glass); padding: 16px 32px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        #pdf-wrapper { display: none; }
-        @media print {
-            @page { size: letter portrait; margin: 0; }
-            body { 
-                background: #ffffff !important; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-                color: #0f172a !important; 
-            }
-            .app-wrapper { display: none !important; }
-            #pdf-wrapper { 
-                display: block !important; 
-                width: 100% !important; 
-                padding: 40pt 50pt !important; 
-                background: transparent !important; 
-            }
-            .pdf-header { display: flex; justify-content: space-between; border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; align-items: center; }
-            .pdf-brand h2 { font-size: 26pt; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1pt; }
-            .pdf-brand p { margin: 6pt 0 0 0; color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; }
-            .pdf-meta { text-align: right; }
-            .meta-grid { display: grid; grid-template-columns: auto auto; column-gap: 20pt; row-gap: 6pt; text-align: right; justify-content: end; }
-            .meta-label { font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase; align-self: center; }
-            .meta-val { font-size: 12pt; color: #0f172a; font-weight: 700; }
-            .pdf-quote-box { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; }
-            .quote-col { display: flex; flex-direction: column; }
-            .quote-label { font-size: 11pt; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 4pt; }
-            .quote-val-grand { font-size: 32pt; font-weight: 800; color: #0f172a; letter-spacing: -1pt; line-height: 1; }
-            .quote-val-dep { font-size: 22pt; font-weight: 800; color: #10b981; line-height: 1; }
-            .section-header { font-size: 14pt; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; display: inline-block; }
-            .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 30pt; }
-            .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; color: #334155; }
-            .pdf-table tr:last-child td { border-bottom: none; }
-            .pdf-table td.item-name { width: 75%; font-weight: 500; }
-            .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
-            .table-total-row td { padding-top: 15pt; border-top: 2pt solid #e2e8f0; font-weight: 800 !important; color: #0f172a !important; }
+        
+        #pdf-wrapper {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 816px; 
+            min-height: 1056px; 
+            background: #ffffff;
+            color: #0f172a;
+            padding: 48px;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
+        .pdf-header { display: flex; justify-content: space-between; border-bottom: 4px solid #10b981; padding-bottom: 24px; margin-bottom: 32px; align-items: center; }
+        .pdf-brand h2 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1px; }
+        .pdf-brand p { margin: 8px 0 0 0; color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .pdf-meta { text-align: right; }
+        .meta-grid { display: grid; grid-template-columns: auto auto; column-gap: 24px; row-gap: 8px; text-align: right; justify-content: end; }
+        .meta-label { font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; align-self: center; }
+        .meta-val { font-size: 16px; color: #0f172a; font-weight: 700; }
+        .pdf-quote-box { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 48px; }
+        .quote-col { display: flex; flex-direction: column; }
+        .quote-label { font-size: 14px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+        .quote-val-grand { font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: -1px; line-height: 1; }
+        .quote-val-dep { font-size: 28px; font-weight: 800; color: #10b981; line-height: 1; display: block; }
+        .section-header { font-size: 18px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid #10b981; padding-bottom: 10px; margin-bottom: 16px; display: inline-block; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .pdf-table td { padding: 16px 0; border-bottom: 1px solid #f1f5f9; font-size: 16px; color: #334155; }
+        .pdf-table tr:last-child td { border-bottom: none; }
+        .pdf-table td.item-name { width: 75%; font-weight: 500; }
+        .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
     </style>
 </head>
 <body>
@@ -102,7 +97,7 @@
                     <div class="status-text" id="statusText">Initializing...</div>
                     <div class="actions" id="actionButtons">
                         <button class="secondary-btn" onclick="window.location.href='/'">Back to Quote</button>
-                        <button class="primary-btn" id="manualDownloadBtn">Save as PDF</button>
+                        <button class="primary-btn" id="manualDownloadBtn">Download Again</button>
                     </div>
                 </div>
             </div>
@@ -115,7 +110,7 @@
                 <div class="meta-grid">
                     <div class="meta-label">Proposal For</div>
                     <div class="meta-val" id="pdf-client">---</div>
-                    <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 10pt; font-weight: 500; color: #64748b; margin-top: -4pt;"></div>
+                    <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 14px; font-weight: 500; color: #64748b; margin-top: -6px;"></div>
                     <div class="meta-label">Project</div>
                     <div class="meta-val" id="pdf-project">---</div>
                     <div class="meta-label">Date</div>
@@ -128,9 +123,7 @@
                 <span class="quote-label">Total Investment</span>
                 <span class="quote-val-grand" id="pdf-total">$0.00</span>
             </div>
-            <div class="quote-col" style="text-align: right;">
-                <span class="quote-label">Deposit Required to Schedule</span>
-                <span class="quote-val-dep" id="pdf-dep">$0.00</span>
+            <div class="quote-col" style="text-align: right;" id="pdf-schedule-box">
             </div>
         </div>
         
@@ -142,24 +135,25 @@
             </tbody>
         </table>
 
-        <div class="signature-section" style="margin-top: 50pt; page-break-inside: avoid;">
-            <p style="font-size: 10pt; color: #64748b; line-height: 1.5; margin-bottom: 30pt;">
+        <div class="signature-section" style="margin-top: 60px; page-break-inside: avoid;">
+            <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
                 <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
             </p>
-            <div style="display: flex; justify-content: space-between; gap: 40pt;">
-                <div style="flex: 1; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
-                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Contractor Signature</p>
+            <div style="display: flex; justify-content: space-between; gap: 50px;">
+                <div style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Contractor Signature</p>
                 </div>
-                <div style="flex: 1; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
-                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
+                <div style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
+                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
                 </div>
-                <div style="width: 100pt; border-top: 1pt solid #cbd5e1; padding-top: 8pt;">
-                    <p style="font-size: 9pt; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
+                <div style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
                 </div>
             </div>
         </div>
     </div>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -211,6 +205,11 @@
             const taxRate = parseFloat(localStorage.getItem('im_taxRate')) || 0;
             const taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
 
+            const grandTotal = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+            const depAmt = parseFloat(localStorage.getItem('im_depAmt')) || 0;
+            const progQty = parseInt(localStorage.getItem('im_progQty')) || 0;
+            const progAmt = parseFloat(localStorage.getItem('im_progAmt')) || 0;
+
             if(!client) {
                 status.textContent = "Error: No Data Found";
                 status.style.color = "#fb7185";
@@ -227,25 +226,19 @@
 
             let brandHtml = '';
             if (logoData) {
-                brandHtml += `<img src="${logoData}" style="max-height: 60px; max-width: 250px; display: block; margin-bottom: 8px;">`;
+                brandHtml += `<img src="${logoData}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
             }
             if (compName) {
-                brandHtml += `<h2>${compName}</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">Official Project Proposal</p>`;
+                brandHtml += `<h2>${compName}</h2><p>Official Project Proposal</p>`;
             } else {
-                brandHtml += `<h2>Official Proposal</h2><p style="color: #64748b; font-size: 11pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; margin-top: 4px;">IronMargins.com</p>`;
+                brandHtml += `<h2>Official Proposal</h2><p>IronMargins.com</p>`;
             }
 
             let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
             if (contactStr) {
-                brandHtml += `<p style="color: #64748b; font-size: 10pt; margin-top: 4px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
+                brandHtml += `<p style="font-size: 13px; margin-top: 5px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
             }
             document.getElementById('pdf-brand-container').innerHTML = brandHtml;
-
-            const mult = 1 + markupPct;
-            const totalLabor = (baseLabor + laborBurden) * mult;
-            const totalMaterials = (raw + cons) * mult;
-            
-            const grandTotal = totalLabor + totalMaterials + taxAmount;
 
             document.getElementById('pdf-client').textContent = client;
             if (clientAddress) {
@@ -256,19 +249,26 @@
             
             document.getElementById('pdf-project').textContent = project;
             document.getElementById('pdf-date').textContent = new Date().toLocaleDateString();
-            
             document.getElementById('pdf-total').textContent = format(grandTotal);
-            document.getElementById('pdf-dep').textContent = format(grandTotal * 0.5);
+
+            let scheduleHtml = `<span class="quote-label">Deposit Required</span><span class="quote-val-dep" style="color: #10b981;">${format(depAmt)}</span>`;
+            if (progQty > 0) {
+                scheduleHtml += `<span class="quote-label" style="margin-top:10px; font-size:12px;">+ ${progQty} Progress Payment(s) of ${format(progAmt)}</span>`;
+            } else if (grandTotal - depAmt > 0) {
+                scheduleHtml += `<span class="quote-label" style="margin-top:10px; font-size:12px;">+ Final Balance of ${format(grandTotal - depAmt)}</span>`;
+            }
+            document.getElementById('pdf-schedule-box').innerHTML = scheduleHtml;
 
             const paymentLink = localStorage.getItem('im_payment_link');
-            if (paymentLink) {
+            if (paymentLink && depAmt > 0) {
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
                 const qrContainer = document.createElement('div');
                 qrContainer.style.textAlign = 'right';
-                qrContainer.innerHTML = `<div style="font-size: 9pt; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 80px; height: 80px; border-radius: 8px;">`;
+                qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
                 document.querySelector('.pdf-quote-box').appendChild(qrContainer);
             }
 
+            const mult = 1 + markupPct;
             const categoryNames = {
                 wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
             };
@@ -301,18 +301,48 @@
                 document.getElementById('pdf-labor-body').innerHTML = lHtml;
             }
 
+            const sigData = localStorage.getItem('im_client_signature');
+            if (sigData) {
+                const sigImg = document.createElement('img');
+                sigImg.src = sigData;
+                sigImg.style.maxHeight = '60px';
+                sigImg.style.position = 'absolute';
+                sigImg.style.bottom = '15px';
+                sigImg.style.left = '0';
+                sigImg.style.filter = 'invert(1) contrast(200%)';
+                document.getElementById('client-sig-line').appendChild(sigImg);
+            }
+
             function triggerPrint() {
-                status.textContent = "Document Ready!";
+                status.textContent = "Generating PDF...";
                 status.style.color = "#10b981";
                 document.getElementById('mainHeader').textContent = "Success!";
                 btns.classList.add('show');
-                setTimeout(() => window.print(), 300);
+
+                const element = document.getElementById('pdf-wrapper');
+                const cleanProjectName = (project || 'bid').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                
+                const opt = {
+                    margin: 0,
+                    filename: `${cleanProjectName}_quote.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    status.textContent = "Download Complete!";
+                });
             }
 
             let p = 0;
             const iv = setInterval(() => {
                 p += Math.random() * 15;
-                if (p >= 100) { p = 100; clearInterval(iv); triggerPrint(); }
+                if (p >= 100) { 
+                    p = 100; 
+                    clearInterval(iv); 
+                    setTimeout(triggerPrint, 500); 
+                }
                 bar.style.width = p + '%';
             }, 150);
 
