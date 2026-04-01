@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.strokeStyle = '#f8fafc';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
-    }}
+    };
 
     const startDrawing = (e) => { 
         isDrawing = true; 
