@@ -78,14 +78,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
         if (data && !error) {
             data.forEach(mat => {
-                if (!materialsDb[mat.category]) materialsDb[mat.category] =[];
-                if (!materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
-                    materialsDb[mat.category].push({
-                        id: `custom_${mat.id}`,
-                        name: `⭐ ${mat.name}`,
-                        unit: mat.unit,
-                        price: parseFloat(mat.price)
-                    });
+                if (!materialsDb[mat.category]) materialsDb[mat.category] = [];
+                
+                // 1. Check if this saved price belongs to a default item (exact name match)
+                const existingDefault = materialsDb[mat.category].find(m => m.name === mat.name);
+                
+                if (existingDefault) {
+                    // 2. It's a default item overwrite! Update the price in memory.
+                    existingDefault.price = parseFloat(mat.price);
+                } else {
+                    // 3. It's a brand new custom item. Add it to the list with the star.
+                    if (!materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
+                        materialsDb[mat.category].push({
+                            id: `custom_${mat.id}`,
+                            name: `⭐ ${mat.name}`,
+                            unit: mat.unit,
+                            price: parseFloat(mat.price)
+                        });
+                    }
                 }
             });
         }
