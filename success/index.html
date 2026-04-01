@@ -54,7 +54,8 @@
         
         #pdf-wrapper {
             position: relative;
-            width: 816px; 
+            width: 100%;
+            max-width: 816px; 
             min-height: 1056px; 
             background: #ffffff;
             color: #0f172a;
@@ -62,7 +63,7 @@
             box-sizing: border-box;
             font-family: 'Plus Jakarta Sans', sans-serif;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            margin: 0 auto;
+            text-align: left;
         }
         .pdf-header { display: flex; justify-content: space-between; border-bottom: 4px solid #10b981; padding-bottom: 24px; margin-bottom: 32px; align-items: center; }
         .pdf-brand h2 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1px; }
@@ -82,6 +83,31 @@
         .pdf-table tr:last-child td { border-bottom: none; }
         .pdf-table td.item-name { width: 75%; font-weight: 500; }
         .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
+
+        @media print {
+            @page { size: letter portrait; margin: 0; }
+            body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #0f172a !important; }
+            .app-wrapper, .no-print { display: none !important; }
+            #preview-container { padding: 0 !important; margin: 0 !important; display: block !important; }
+            #pdf-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; padding: 40pt 50pt !important; }
+            .pdf-header { border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; }
+            .pdf-brand h2 { font-size: 26pt; letter-spacing: -1pt; }
+            .pdf-brand p { margin: 6pt 0 0 0; font-size: 11pt; letter-spacing: 1pt; }
+            .meta-grid { column-gap: 20pt; row-gap: 6pt; }
+            .meta-label { font-size: 9pt; }
+            .meta-val { font-size: 12pt; }
+            .pdf-quote-box { background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; }
+            .quote-label { font-size: 11pt; letter-spacing: 1pt; margin-bottom: 4pt; }
+            .quote-val-grand { font-size: 32pt; letter-spacing: -1pt; }
+            .quote-val-dep { font-size: 22pt; }
+            .section-header { font-size: 14pt; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; }
+            .pdf-table { margin-bottom: 30pt; }
+            .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; }
+            .signature-section { margin-top: 50pt !important; }
+            .signature-section p { font-size: 10pt !important; margin-bottom: 30pt !important; }
+            .sig-col { padding-top: 8pt !important; border-top: 1pt solid #cbd5e1 !important; }
+            .sig-col p { font-size: 9pt !important; margin-bottom: 0 !important; }
+        }
     </style>
 </head>
 <body>
@@ -104,12 +130,13 @@
     </div>
 
     <div id="preview-container" style="display: none; padding-top: 40px; padding-bottom: 100px;">
-        <div style="text-align: center; padding: 0 20px 20px;">
+        <div class="no-print" style="text-align: center; padding: 0 20px 20px;">
             <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Review & Sign</h2>
             <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 1.1rem;">Review your proposal below. Draw your signature to accept.</p>
         </div>
         
-        <div style="width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 20px; margin-bottom: 30px;">
+        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px;">
+            
             <div id="pdf-wrapper">
                 <div class="pdf-header">
                     <div class="pdf-brand" id="pdf-brand-container"></div>
@@ -147,32 +174,32 @@
                         <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
                     </p>
                     <div style="display: flex; justify-content: space-between; gap: 50px;">
-                        <div style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                        <div class="sig-col" style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px;">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Contractor Signature</p>
                         </div>
-                        <div style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
+                        <div class="sig-col" style="flex: 1; border-top: 1px solid #cbd5e1; padding-top: 10px; position: relative;" id="client-sig-line">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Client Acceptance Signature</p>
                         </div>
-                        <div style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                        <div class="sig-col" style="width: 130px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
                             <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Date</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); max-width: 600px; margin: 0 auto 40px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
-                <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
+            <div class="no-print" style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); width: 100%; max-width: 816px; margin-top: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
+                    <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
+                </div>
+                <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
+                <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
+                <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
             </div>
-            <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
-            <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
-            <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
+
         </div>
     </div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -419,34 +446,9 @@
                         sigLine.appendChild(sigImg);
                     }
 
-                    document.getElementById('signAndDownloadBtn').textContent = "Generating PDF...";
-                    document.getElementById('signAndDownloadBtn').disabled = true;
-
-                    const element = document.getElementById('pdf-wrapper');
-                    const cleanProjectName = (project || 'bid').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                    
-                    element.style.boxShadow = 'none';
-                    element.style.margin = '0';
-                    
-                    const opt = {
-                        margin: 0,
-                        filename: `${cleanProjectName}_quote.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                    };
-
                     setTimeout(() => {
-                        html2pdf().set(opt).from(element).save().then(() => {
-                            document.getElementById('signAndDownloadBtn').textContent = "Download Complete!";
-                            element.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
-                            element.style.margin = '0 auto';
-                            setTimeout(() => {
-                                document.getElementById('signAndDownloadBtn').disabled = false;
-                                document.getElementById('signAndDownloadBtn').textContent = "Accept & Download PDF";
-                            }, 3000);
-                        });
-                    }, 100);
+                        window.print();
+                    }, 300);
                 };
             }
         });
