@@ -104,22 +104,12 @@
     </div>
 
     <div id="preview-container" style="display: none; padding-top: 40px; padding-bottom: 100px;">
-        <div style="text-align: center; padding: 0 20px 40px;">
+        <div style="text-align: center; padding: 0 20px 20px;">
             <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Review & Sign</h2>
-            <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 1.1rem;">Review your proposal below. Draw your signature to accept.</p>
-            
-            <div style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); max-width: 600px; margin: 0 auto 40px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
-                    <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
-                </div>
-                <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
-                <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
-                <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
-            </div>
+            <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 1.1rem;">Review your proposal below. Draw your signature to accept.</p>
         </div>
         
-        <div style="width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 20px;">
+        <div style="width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 20px; margin-bottom: 30px;">
             <div id="pdf-wrapper">
                 <div class="pdf-header">
                     <div class="pdf-brand" id="pdf-brand-container"></div>
@@ -169,6 +159,16 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); max-width: 600px; margin: 0 auto 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
+                <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
+            </div>
+            <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
+            <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
+            <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
         </div>
     </div>
     
@@ -366,8 +366,8 @@
                     if (!isDrawing) return;
                     e.preventDefault();
                     const rect = canvas.getBoundingClientRect();
-                    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-                    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+                    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
                     ctx.lineTo(x, y);
                     ctx.stroke();
                     ctx.beginPath();
@@ -395,15 +395,28 @@
                         return canvas.toDataURL() === blank.toDataURL();
                     };
 
+                    const sigLine = document.getElementById('client-sig-line');
+                    const existingSig = sigLine.querySelector('img');
+                    if (existingSig) existingSig.remove();
+
                     if (!isCanvasEmpty()) {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        tempCtx.drawImage(canvas, 0, 0);
+                        tempCtx.globalCompositeOperation = 'source-in';
+                        tempCtx.fillStyle = '#0f172a';
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
                         const sigImg = document.createElement('img');
-                        sigImg.src = canvas.toDataURL('image/png');
+                        sigImg.src = tempCanvas.toDataURL('image/png');
                         sigImg.style.maxHeight = '60px';
                         sigImg.style.position = 'absolute';
                         sigImg.style.bottom = '15px';
                         sigImg.style.left = '0';
-                        sigImg.style.filter = 'invert(1) contrast(200%)';
-                        document.getElementById('client-sig-line').appendChild(sigImg);
+                        sigLine.appendChild(sigImg);
                     }
 
                     document.getElementById('signAndDownloadBtn').textContent = "Generating PDF...";
@@ -423,15 +436,17 @@
                         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
                     };
 
-                    html2pdf().set(opt).from(element).save().then(() => {
-                        document.getElementById('signAndDownloadBtn').textContent = "Download Complete!";
-                        element.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
-                        element.style.margin = '0 auto';
-                        setTimeout(() => {
-                            document.getElementById('signAndDownloadBtn').disabled = false;
-                            document.getElementById('signAndDownloadBtn').textContent = "Accept & Download PDF";
-                        }, 3000);
-                    });
+                    setTimeout(() => {
+                        html2pdf().set(opt).from(element).save().then(() => {
+                            document.getElementById('signAndDownloadBtn').textContent = "Download Complete!";
+                            element.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                            element.style.margin = '0 auto';
+                            setTimeout(() => {
+                                document.getElementById('signAndDownloadBtn').disabled = false;
+                                document.getElementById('signAndDownloadBtn').textContent = "Accept & Download PDF";
+                            }, 3000);
+                        });
+                    }, 100);
                 };
             }
         });
