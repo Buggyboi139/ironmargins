@@ -33,6 +33,11 @@ body {
 
 input[type="text"], input[type="number"], input[type="date"], input[type="file"], select, textarea, .glass-input { font-size: 16px !important; }
 
+select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+}
+
 #left-color-bar { position: fixed; top: 0; left: 0; bottom: 0; width: 4px; background: var(--gradient-primary); z-index: 200; box-shadow: 2px 0 15px rgba(16, 185, 129, 0.5); }
 nav { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); position: sticky; top: 0; z-index: 100; width: 100%; }
 
