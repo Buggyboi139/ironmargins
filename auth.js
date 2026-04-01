@@ -4,11 +4,49 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.currentUser = null;
 
+function updateAuthUI() {
+    const authBtn = document.getElementById('authBtn');
+    const manualSaveBtn = document.getElementById('manualSaveBtn');
+    const pwaPrompt = document.getElementById('pwa-prompt');
+    
+    if (window.currentUser) {
+        if (authBtn) authBtn.textContent = 'Sign Out';
+        if (manualSaveBtn) manualSaveBtn.style.display = 'block';
+
+        if (window.currentUser.user_metadata && window.currentUser.user_metadata.pwa_dismissed) {
+            localStorage.setItem('im_pwa_dismissed', 'true');
+            if (pwaPrompt) pwaPrompt.style.display = 'none';
+        }
+    } else {
+        if (authBtn) authBtn.textContent = 'Sign In';
+        if (manualSaveBtn) manualSaveBtn.style.display = 'none';
+    }
+    
+    if (typeof window.refreshSavedBids === 'function') window.refreshSavedBids();
+    if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
+    if (window.currentUser && typeof window.fetchCustomMaterials === 'function') window.fetchCustomMaterials();
+}
+
+window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session && session.user) {
+        window.currentUser = session.user;
+        updateAuthUI();
+    }
+});
+
+window.supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+        window.currentUser = session.user;
+    } else {
+        window.currentUser = null;
+    }
+    updateAuthUI();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const authBtn = document.getElementById('authBtn');
     const authModal = document.getElementById('authModal');
     const closeAuthModal = document.getElementById('closeAuthModal');
-    
     const authEmail = document.getElementById('authEmail');
     const authPassword = document.getElementById('authPassword');
     const authSubmitBtn = document.getElementById('authSubmitBtn');
@@ -16,39 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const authSwitchText = document.getElementById('authSwitchText');
     const authTitle = document.getElementById('authTitle');
 
-    if (!authBtn || !authModal || !authSubmitBtn) {
-        return;
-    }
+    if (!authBtn || !authModal || !authSubmitBtn) return;
 
     let isSignUpMode = false;
-
-    window.supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (session && session.user) {
-            window.currentUser = session.user;
-            authBtn.textContent = 'Sign Out';
-            if(document.getElementById('manualSaveBtn')) document.getElementById('manualSaveBtn').style.display = 'block';
-
-            if (session.user.user_metadata && session.user.user_metadata.pwa_dismissed) {
-                localStorage.setItem('im_pwa_dismissed', 'true');
-                const pwaPrompt = document.getElementById('pwa-prompt');
-                if (pwaPrompt) pwaPrompt.style.display = 'none';
-            }
-        } else {
-            window.currentUser = null;
-            authBtn.textContent = 'Sign In';
-            if(document.getElementById('manualSaveBtn')) document.getElementById('manualSaveBtn').style.display = 'none';
-        }
-        
-        if (window.refreshSavedBids) window.refreshSavedBids();
-        
-        if (typeof window.renderDownloadOptions === 'function') {
-            window.renderDownloadOptions();
-        }
-        
-        if (window.currentUser && typeof window.fetchCustomMaterials === 'function') {
-            window.fetchCustomMaterials();
-        }
-    });
 
     authBtn.addEventListener('click', async () => {
         if (window.currentUser) {
@@ -95,17 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isSignUpMode) {
                 const { error } = await window.supabaseClient.auth.signUp({ email, password });
                 if (error) throw error;
-                
-                if(window.gtag) window.gtag('event', 'sign_up');
-                
+                if (window.gtag) window.gtag('event', 'sign_up');
                 alert("Account created! You can now log in.");
                 authToggleMode.click();
             } else {
                 const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                
-                if(window.gtag) window.gtag('event', 'login');
-                
+                if (window.gtag) window.gtag('event', 'login');
                 authModal.classList.remove('show');
                 authEmail.value = '';
                 authPassword.value = '';
