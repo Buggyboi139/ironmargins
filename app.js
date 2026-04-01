@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const sessionCustomSaved = new Set();
-    let isQuickMode = true;
     let currentBidId = null;
     let autoSaveTimer = null;
 
@@ -78,16 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
         if (data && !error) {
             data.forEach(mat => {
-                if (!materialsDb[mat.category]) materialsDb[mat.category] = [];
+                if (!materialsDb[mat.category]) materialsDb[mat.category] =[];
                 
-                // 1. Check if this saved price belongs to a default item (exact name match)
                 const existingDefault = materialsDb[mat.category].find(m => m.name === mat.name);
                 
                 if (existingDefault) {
-                    // 2. It's a default item overwrite! Update the price in memory.
                     existingDefault.price = parseFloat(mat.price);
                 } else {
-                    // 3. It's a brand new custom item. Add it to the list with the star.
                     if (!materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
                         materialsDb[mat.category].push({
                             id: `custom_${mat.id}`,
@@ -299,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveState(skipAutosave = false) {
         const state = { categories: {}, labor:[], meta: {} };
         
-        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
+        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
             state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
@@ -424,9 +420,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.meta) {
             Object.keys(state.meta).forEach(key => {
-                const el = document.getElementById(key) || document.querySelector(`input[name="${key}"][value="${state.meta[key]}"]`) || document.querySelector(`input[value="${key}"]`);
+                const el = document.getElementById(key) || document.querySelector(`input[value="${key}"]`);
                 if (el) {
-                    if (el.type === 'checkbox' || el.type === 'radio') el.checked = state.meta[key];
+                    if (el.type === 'checkbox') el.checked = state.meta[key];
                     else el.value = state.meta[key];
                 }
             });
@@ -464,9 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             row.querySelector('.custom-select-container').style.display = 'none';
                             row.querySelector('.custom-mat-wrapper').style.display = 'flex';
                             row.querySelector('.custom-mat-input').value = c.customName;
-                            row.querySelector('.price-input').disabled = false;
-                        } else {
-                            row.querySelector('.price-input').disabled = document.querySelector('input[name="est_mode"]:checked').value === 'quick';
                         }
                         
                         row.querySelector('.qty-input').value = c.qty;
@@ -554,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="custom-mat-wrapper" style="display:none;"><input type="text" class="glass-input custom-mat-input" placeholder="Name..."><button class="reset-mat-btn">↺</button></div>
                     </div>
                     <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
-                    <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}" ${isQuickMode ? 'disabled' : ''}></div></div>
+                    <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}"></div></div>
                     <button class="remove-row-btn">×</button>
                 </div>${shapes}
             </div>`);
@@ -606,8 +599,6 @@ document.addEventListener('DOMContentLoaded', () => {
         compPhoneInput.addEventListener('input', (e) => localStorage.setItem('im_global_phone', e.target.value.trim()));
         compAddressInput.addEventListener('input', (e) => localStorage.setItem('im_global_address', e.target.value.trim()));
 
-        isQuickMode = document.querySelector('input[name="est_mode"]:checked').value === 'quick';
-
         const savedLogo = localStorage.getItem('im_logo');
         const logoPreview = document.getElementById('logo-preview');
         if (savedLogo) {
@@ -646,34 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 reader.readAsDataURL(file);
             }
-        });
-
-        document.querySelectorAll('input[name="est_mode"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                isQuickMode = e.target.value === 'quick';
-                if (window.gtag) window.gtag('event', 'select_content', { content_type: 'mode', item_id: e.target.value });
-                document.querySelectorAll('.calc-row').forEach(row => {
-                    const priceInput = row.querySelector('.price-input');
-                    const itemSelect = row.querySelector('.item-select');
-                    const cat = row.dataset.category;
-                    
-                    if (priceInput) {
-                        if (itemSelect && itemSelect.value === 'CUSTOM') {
-                            priceInput.disabled = false;
-                        } else {
-                            priceInput.disabled = isQuickMode;
-                            if (isQuickMode && cat && materialsDb[cat]) {
-                                const def = materialsDb[cat].find(i => i.id === itemSelect.value);
-                                if (def) {
-                                    priceInput.value = parseFloat(def.price).toFixed(2);
-                                }
-                            }
-                        }
-                    }
-                    if (cat) calculateRowQuantity(row, cat);
-                });
-                saveState();
-            });
         });
 
         document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
@@ -733,11 +696,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (o.dataset.value === 'CUSTOM') { 
                     c.style.display = 'none'; 
                     row.querySelector('.custom-mat-wrapper').style.display = 'flex'; 
-                    row.querySelector('.price-input').disabled = false; 
                 } else { 
                     row.querySelector('.price-input').value = parseFloat(o.dataset.price).toFixed(2); 
                     row.querySelector('.unit').textContent = o.dataset.unit + 's'; 
-                    row.querySelector('.price-input').disabled = isQuickMode; 
                 }
                 calculateRowQuantity(row, row.dataset.category); 
                 o.parentElement.classList.remove('show'); 
