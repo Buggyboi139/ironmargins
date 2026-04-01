@@ -1059,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveDataForPdf();
                     const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
                     await window.saveBidToCloud(totalAmount, false);
-                    const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
+                    const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
                     checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
                     window.location.href = checkoutUrl.toString();
                 };
