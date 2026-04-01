@@ -53,13 +53,51 @@ document.addEventListener('DOMContentLoaded', () => {
         wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Hauls'
     };
 
-    fetch('materials.json').then(res => res.json()).then(data => { materialsDb = data; initApp(); }).catch(() => initApp());
-    const markupSlider = document.getElementById('markupSlider');
-    const markupDisplay = document.getElementById('markupDisplay');
+    const sessionCustomSaved = new Set();
     let isQuickMode = true;
-
     let currentBidId = null;
     let autoSaveTimer = null;
+
+    fetch('materials.json').then(res => res.json()).then(async data => { 
+        materialsDb = data; 
+        if (window.currentUser) await fetchCustomMaterials();
+        initApp(); 
+    }).catch(() => initApp());
+
+    const markupSlider = document.getElementById('markupSlider');
+    const markupDisplay = document.getElementById('markupDisplay');
+
+    async function fetchCustomMaterials() {
+        if (!window.supabaseClient || !window.currentUser) return;
+        const { data, error } = await window.supabaseClient
+            .from('custom_materials')
+            .select('*')
+            .eq('user_id', window.currentUser.id);
+            
+        if (data && !error) {
+            data.forEach(mat => {
+                if (!materialsDb[mat.category]) materialsDb[mat.category] =[];
+                if (!materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
+                    materialsDb[mat.category].push({
+                        id: `custom_${mat.id}`,
+                        name: `⭐ ${mat.name}`,
+                        unit: mat.unit,
+                        price: parseFloat(mat.price)
+                    });
+                }
+            });
+        }
+    }
+
+    async function saveCustomMaterialToCloud(category, name, price, unit) {
+        if (!window.currentUser || !window.supabaseClient) return;
+        const uniqueKey = `${category}_${name}_${price}`;
+        if (sessionCustomSaved.has(uniqueKey)) return;
+
+        const payload = { user_id: window.currentUser.id, category, name, price, unit };
+        const { error } = await window.supabaseClient.from('custom_materials').insert([payload]);
+        if (!error) sessionCustomSaved.add(uniqueKey);
+    }
 
     async function fetchClients() {
         if (!window.currentUser || !window.supabaseClient) return;
@@ -67,7 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data, error } = await window.supabaseClient
             .from('clients')
             .select('id, name, address, phone')
-            .eq('user_id', window.currentUser.id);
+            .eq('user_id', window.currentUser.id)
+            .order('name');
 
         if (data && !error) {
             const clientSelect = document.getElementById('client-select');
@@ -93,13 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
     });
 
-    document.getElementById('openClientModalBtn').addEventListener('click', () => {
-        document.getElementById('clientModal').classList.add('show');
-    });
-
-    document.getElementById('closeClientModal').addEventListener('click', () => {
-        document.getElementById('clientModal').classList.remove('show');
-    });
+    document.getElementById('openClientModalBtn').addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
+    document.getElementById('closeClientModal').addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
 
     document.getElementById('btn-save-client').addEventListener('click', async () => {
         const name = document.getElementById('new-client-name').value;
@@ -180,32 +214,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('savedBidsDropdown').classList.toggle('show');
     });
 
-    document.getElementById('profileBtn').addEventListener('click', () => {
-        document.getElementById('profileModal').classList.add('show');
-    });
-
-    document.getElementById('closeProfileModal').addEventListener('click', () => {
-        document.getElementById('profileModal').classList.remove('show');
-    });
+    document.getElementById('profileBtn').addEventListener('click', () => document.getElementById('profileModal').classList.add('show'));
+    document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
     
     document.getElementById('saveProfileBtn').addEventListener('click', () => {
         const paymentLinkInput = document.getElementById('payment-link');
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
         
         document.getElementById('profileModal').classList.remove('show');
-        if (typeof window.renderDownloadOptions === 'function') {
-            window.renderDownloadOptions();
-        }
+        if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('savedBidsDropdown');
-        if (dropdown && dropdown.classList.contains('show') && !e.target.closest('#savedBidsContainer')) {
-            dropdown.classList.remove('show');
-        }
-        if (!e.target.closest('.custom-select-container')) {
-            document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el.classList.remove('show'));
-        }
+        if (dropdown && dropdown.classList.contains('show') && !e.target.closest('#savedBidsContainer')) dropdown.classList.remove('show');
+        if (!e.target.closest('.custom-select-container')) document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el.classList.remove('show'));
     });
 
     function saveState(skipAutosave = false) {
@@ -270,13 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
-        if (!window.currentUser || !window.supabaseClient) {
-            return false;
-        }
+        if (!window.currentUser || !window.supabaseClient) return false;
 
-        if (!isAutosaving) {
-            saveState(true);
-        }
+        if (!isAutosaving) saveState(true);
 
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
@@ -319,9 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('client-select').value = data.client_id || '';
         document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
 
-        if (data.bid_data) {
-            loadState(data.bid_data);
-        }
+        if (data.bid_data) loadState(data.bid_data);
     };
 
     const manualSaveBtn = document.getElementById('manualSaveBtn');
@@ -462,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -588,8 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
         
-        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
-        ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
+        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
             const wasteBtn = document.getElementById(`${cat}-waste-check`);
             if(wasteBtn) {
                 wasteBtn.addEventListener('change', () => {
@@ -701,6 +717,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const price = parseFloat(r.querySelector('.price-input').value)||0;
                     const unit = r.querySelector('.unit').textContent.replace('s', ''); 
                     
+                    if (isCustom && name && price > 0) {
+                        saveCustomMaterialToCloud(catKey, name, price, unit);
+                    }
+
                     if (qty > 0) csvData += `${categoryNames[catKey]},${csvEscape(name)},${qty},${unit},${price},${qty*price}\n`;
                     c += qty * price;
                 }); 
@@ -776,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 5px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
         
-        for (const [key, val] of Object.entries(costs)) {
+        for (const[key, val] of Object.entries(costs)) {
             if (val > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>${format(val * mult)}</span></div>`;
         }
         if (cons > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Shop Consumables</span> <span>${format(cons * mult)}</span></div>`;
