@@ -123,6 +123,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.fetchUserProfile = async function() {
+        if (!window.currentUser || !window.supabaseClient) return;
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('company_name, phone, address, payment_link, logo_data')
+            .eq('id', window.currentUser.id)
+            .single();
+
+        if (data && !error) {
+            if (data.company_name) localStorage.setItem('im_global_company', data.company_name);
+            if (data.phone) localStorage.setItem('im_global_phone', data.phone);
+            if (data.address) localStorage.setItem('im_global_address', data.address);
+            if (data.payment_link) localStorage.setItem('im_payment_link', data.payment_link);
+            if (data.logo_data) localStorage.setItem('im_logo', data.logo_data);
+
+            const compInput = document.getElementById('meta-company');
+            const compPhoneInput = document.getElementById('meta-company-phone');
+            const compAddressInput = document.getElementById('meta-company-address');
+            const paymentLinkInput = document.getElementById('payment-link');
+            const appTitle = document.getElementById('app-main-title');
+            const logoPreview = document.getElementById('logo-preview');
+
+            if (compInput && data.company_name) compInput.value = data.company_name;
+            if (appTitle && data.company_name) appTitle.textContent = data.company_name + ' Estimates';
+            if (compPhoneInput && data.phone) compPhoneInput.value = data.phone;
+            if (compAddressInput && data.address) compAddressInput.value = data.address;
+            if (paymentLinkInput && data.payment_link) paymentLinkInput.value = data.payment_link;
+            if (logoPreview && data.logo_data) {
+                logoPreview.src = data.logo_data;
+                logoPreview.style.display = 'block';
+            }
+        }
+    };
+
     document.getElementById('client-select').addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if(selectedOption) {
@@ -163,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        await window.fetchUserProfile();
         await fetchClients();
 
         container.style.display = 'block';
@@ -217,9 +252,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('profileBtn').addEventListener('click', () => document.getElementById('profileModal').classList.add('show'));
     document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
     
-    document.getElementById('saveProfileBtn').addEventListener('click', () => {
+    document.getElementById('saveProfileBtn').addEventListener('click', async () => {
         const paymentLinkInput = document.getElementById('payment-link');
+        const compInput = document.getElementById('meta-company');
+        const compPhoneInput = document.getElementById('meta-company-phone');
+        const compAddressInput = document.getElementById('meta-company-address');
+
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
+        if (compInput) localStorage.setItem('im_global_company', compInput.value);
+        if (compPhoneInput) localStorage.setItem('im_global_phone', compPhoneInput.value);
+        if (compAddressInput) localStorage.setItem('im_global_address', compAddressInput.value);
+
+        if (window.currentUser && window.supabaseClient) {
+            const logoData = localStorage.getItem('im_logo');
+            await window.supabaseClient.from('users').update({
+                company_name: compInput ? compInput.value : '',
+                phone: compPhoneInput ? compPhoneInput.value : '',
+                address: compAddressInput ? compAddressInput.value : '',
+                payment_link: paymentLinkInput ? paymentLinkInput.value : '',
+                logo_data: logoData || ''
+            }).eq('id', window.currentUser.id);
+        }
         
         document.getElementById('profileModal').classList.remove('show');
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
@@ -590,14 +643,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.calc-row').forEach(row => {
                     const priceInput = row.querySelector('.price-input');
                     const itemSelect = row.querySelector('.item-select');
+                    const cat = row.dataset.category;
                     
                     if (priceInput) {
                         if (itemSelect && itemSelect.value === 'CUSTOM') {
                             priceInput.disabled = false;
                         } else {
                             priceInput.disabled = isQuickMode;
+                            if (isQuickMode && cat && materialsDb[cat]) {
+                                const def = materialsDb[cat].find(i => i.id === itemSelect.value);
+                                if (def) {
+                                    priceInput.value = parseFloat(def.price).toFixed(2);
+                                }
+                            }
                         }
                     }
+                    if (cat) calculateRowQuantity(row, cat);
                 });
                 saveState();
             });
