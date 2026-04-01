@@ -763,9 +763,83 @@ document.addEventListener('DOMContentLoaded', () => {
         loadState();
     }
 
+    function updatePaymentSchedule() {
+        const total = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+        const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
+        const progQty = parseInt(document.getElementById('progress-payments').value) || 0;
+        
+        const depAmt = total * (depPct / 100);
+        const remAmt = total - depAmt;
+        const progAmt = progQty > 0 ? remAmt / progQty : 0;
+
+        let text = `Deposit: $${depAmt.toFixed(2)}`;
+        if (progQty > 0) {
+            text += ` • Plus ${progQty} payment(s) of $${progAmt.toFixed(2)}`;
+        } else if (remAmt > 0) {
+            text += ` • Plus Final Balance of $${remAmt.toFixed(2)}`;
+        }
+        
+        document.getElementById('schedule-preview').textContent = text;
+        
+        localStorage.setItem('im_depAmt', depAmt);
+        localStorage.setItem('im_progQty', progQty);
+        localStorage.setItem('im_progAmt', progAmt);
+    }
+
+    document.getElementById('deposit-pct').addEventListener('input', updatePaymentSchedule);
+    document.getElementById('progress-payments').addEventListener('input', updatePaymentSchedule);
+
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = 150;
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+    }
+
+    const startDrawing = (e) => { 
+        isDrawing = true; 
+        draw(e); 
+    };
+    
+    const stopDrawing = () => { 
+        isDrawing = false; 
+        ctx.beginPath(); 
+    };
+    
+    const draw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    };
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', stopDrawing);
+
+    document.getElementById('clear-signature').onclick = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+
     document.getElementById('calculateBtn').onclick = () => {
         let raw = 0, cons = 0;
-        let csvData = "Category,Item/Name,Quantity,Unit,Unit Price,Total Cost\n";
+        let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
         const csvEscape = (text) => `"${(text||'').replace(/"/g, '""')}"`;
 
         const getCost = (catId, catKey) => {
@@ -776,13 +850,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const name = isCustom ? r.querySelector('.custom-mat-input').value : r.querySelector('.custom-select-text').textContent;
                     const qty = parseFloat(r.querySelector('.qty-input').value)||0;
                     const price = parseFloat(r.querySelector('.price-input').value)||0;
-                    const unit = r.querySelector('.unit').textContent.replace('s', ''); 
                     
                     if (isCustom && name && price > 0) {
-                        saveCustomMaterialToCloud(catKey, name, price, unit);
+                        saveCustomMaterialToCloud(catKey, name, price, 'qty');
                     }
 
-                    if (qty > 0) csvData += `${categoryNames[catKey]},${csvEscape(name)},${qty},${unit},${price},${qty*price}\n`;
+                    if (qty > 0) csvData += `Materials,${csvEscape(name)},${qty},${price},${qty*price}\n`;
                     c += qty * price;
                 }); 
             }
@@ -804,8 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = entry.querySelector('.glass-input[type="text"]').value || 'Labor/Vehicle';
                 const qty = parseFloat(entry.querySelector('.qty-input').value)||0;
                 const price = parseFloat(entry.querySelector('.price-input').value)||0;
-                const unit = entry.dataset.type === 'vehicle' ? 'mi' : 'hrs';
-                if (qty > 0) csvData += `Labor,${csvEscape(name)},${qty},${unit},${price},${qty*price}\n`;
+                if (qty > 0) csvData += `Labor,${csvEscape(name)},${qty},${price},${qty*price}\n`;
                 baseLabor += qty * price;
             });
         }
@@ -827,6 +899,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
         const total = breakeven + markup + taxAmount;
+        localStorage.setItem('im_grandTotal', total);
+        
         if(window.gtag) window.gtag('event', 'generate_lead', { currency: 'USD', value: total });
 
         document.getElementById('res-project-title').textContent = document.getElementById('meta-project').value || "Project Estimate";
@@ -838,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (baseLabor > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Total Base Labor & Fleet</span> <span>-${format(baseLabor)}</span></div>`;
         if (laborBurden > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Labor Burden (Taxes/Ins)</span> <span>-${format(laborBurden)}</span></div>`;
-        for (const [key, val] of Object.entries(costs)) {
+        for (const[key, val] of Object.entries(costs)) {
             if (val > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>-${format(val)}</span></div>`;
         }
         if (cons > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Shop Consumables</span> <span>-${format(cons)}</span></div>`;
@@ -848,14 +922,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let clientHTML = '';
         clientHTML += `<div class="item-row" style="font-weight: 700; font-size: 1.15rem; padding-bottom: 5px;"><span>Total Bid</span> <span>${format(total)}</span></div>`;
-        clientHTML += `<div class="item-row" style="color: #38bdf8; font-weight: 700; margin-bottom: 15px; border-bottom: 1px dashed var(--border-glass); padding-bottom: 15px;"><span>50% Deposit Due</span> <span>${format(total * 0.5)}</span></div>`;
         
         if (laborTotal > 0) {
-            clientHTML += `<div class="item-row" style="font-weight: 600;"><span>Project Labor & Fleet</span> <span>${format(baseLabor * mult)}</span></div>`;
+            clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px; border-top: 1px dashed var(--border-glass);"><span>Project Labor & Fleet</span> <span>${format(baseLabor * mult)}</span></div>`;
             if (laborBurden > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Burden & Insurance</span> <span>${format(laborBurden * mult)}</span></div>`;
         }
         
-        clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 5px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
+        clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
         
         for (const [key, val] of Object.entries(costs)) {
             if (val > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>${format(val * mult)}</span></div>`;
@@ -868,8 +941,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('client-dynamic-breakdown').innerHTML = clientHTML;
         
+        updatePaymentSchedule();
+        
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
-        setTimeout(() => { document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); window.scrollTo(0,0); }, 300);
+        setTimeout(() => { 
+            document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); 
+            window.scrollTo(0,0); 
+            resizeCanvas();
+        }, 300);
 
         window.renderDownloadOptions = async function() {
             const downloadBtn = document.getElementById('downloadPdfTrigger');
@@ -881,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     warningEl = document.createElement('div');
                     warningEl.id = 'branding-warning';
                     warningEl.innerHTML = `⚠️ <strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
-                    warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: -10px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
+                    warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
                     warningEl.onclick = () => document.getElementById('profileModal').classList.add('show');
                     parent.insertBefore(warningEl, downloadBtn);
                 } else {
@@ -892,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!window.currentUser) {
-                downloadBtn.textContent = "Sign in to Download PDF";
+                downloadBtn.textContent = "Sign in to Generate PDF";
                 downloadBtn.style.background = "transparent";
                 downloadBtn.style.border = "1px solid var(--border-glass)";
                 downloadBtn.style.color = "var(--text-main)";
@@ -905,15 +984,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data, error } = await window.supabaseClient
                 .from('users')
-                .select('subscription_status')
+                .select('subscription_active')
                 .eq('id', window.currentUser.id)
                 .single();
 
-            const isDbActive = data && data.subscription_status === 'active';
+            const isDbActive = data && data.subscription_active;
             const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
 
             if (isDbActive || isTempActive) {
-                downloadBtn.textContent = "Download Official PDF";
+                downloadBtn.textContent = "Sign & Generate PDF";
                 downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -925,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Download ($12.99/mo)";
+                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -936,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('profileModal').classList.add('show');
                         return;
                     }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
                     saveDataForPdf();
                     await window.saveBidToCloud(total, false);
                     const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
@@ -962,6 +1041,19 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('im_laborBurden', laborBurden);
             localStorage.setItem('im_taxRate', taxRate);
             localStorage.setItem('im_taxAmount', taxAmount);
+
+            const isCanvasEmpty = () => {
+                const blank = document.createElement('canvas');
+                blank.width = canvas.width;
+                blank.height = canvas.height;
+                return canvas.toDataURL() === blank.toDataURL();
+            };
+
+            if (!isCanvasEmpty()) {
+                localStorage.setItem('im_client_signature', canvas.toDataURL('image/png'));
+            } else {
+                localStorage.removeItem('im_client_signature');
+            }
         }
     };
     
@@ -984,14 +1076,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('exportCSVBtn').onclick = () => {
-        if(window.gtag) window.gtag('event', 'file_download', { file_extension: 'csv', file_name: 'Material_Run_List' });
+        if(window.gtag) window.gtag('event', 'file_download', { file_extension: 'csv', file_name: 'QuickBooks_Material_List' });
         const csv = localStorage.getItem('im_csvData') || 'No data generated';
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.setAttribute('hidden', '');
         a.setAttribute('href', url);
-        a.setAttribute('download', 'Material_Run_List.csv');
+        a.setAttribute('download', 'QuickBooks_Import.csv');
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -999,12 +1091,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('focus', () => {
         if (window.currentUser && window.supabaseClient && typeof window.renderDownloadOptions === 'function') {
-            window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).single()
+            window.supabaseClient.from('users').select('subscription_active').eq('id', window.currentUser.id).single()
                 .then(({data, error}) => {
                     if (!error && data) {
                         window.renderDownloadOptions();
                     }
                 });
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('results-view').classList.contains('active-view')) {
+            resizeCanvas();
         }
     });
 });
