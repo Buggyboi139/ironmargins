@@ -925,7 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
+                downloadBtn.textContent = "Subscribe to Download ($12.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -936,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('profileModal').classList.add('show');
                         return;
                     }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
                     saveDataForPdf();
                     await window.saveBidToCloud(total, false);
                     const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
