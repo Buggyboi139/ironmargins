@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
         opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
         const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
         document.getElementById(containerId).insertAdjacentHTML('beforeend', `
             <div class="calc-row" data-category="${cat}">
                 <div class="input-row">
@@ -796,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 5px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
         
-        for (const[key, val] of Object.entries(costs)) {
+        for (const [key, val] of Object.entries(costs)) {
             if (val > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>${format(val * mult)}</span></div>`;
         }
         if (cons > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Shop Consumables</span> <span>${format(cons * mult)}</span></div>`;
@@ -844,11 +844,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data, error } = await window.supabaseClient
                 .from('users')
-                .select('subscription_active')
+                .select('subscription_status')
                 .eq('id', window.currentUser.id)
                 .single();
 
-            const isDbActive = data && data.subscription_active;
+            const isDbActive = data && data.subscription_status === 'active';
             const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
 
             if (isDbActive || isTempActive) {
@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = './success';
                 };
             } else {
-                downloadBtn.textContent = "Subscribe to Download ($12.99/mo)";
+                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
                 downloadBtn.style.background = "var(--gradient-primary)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
@@ -875,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('profileModal').classList.add('show');
                         return;
                     }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
                     saveDataForPdf();
                     await window.saveBidToCloud(total, false);
                     const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
@@ -918,32 +918,4 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     document.getElementById('editBtn').onclick = () => { 
-        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-        setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
-    };
-
-    document.getElementById('exportCSVBtn').onclick = () => {
-        if(window.gtag) window.gtag('event', 'file_download', { file_extension: 'csv', file_name: 'Material_Run_List' });
-        const csv = localStorage.getItem('im_csvData') || 'No data generated';
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'Material_Run_List.csv');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-
-    window.addEventListener('focus', () => {
-        if (window.currentUser && window.supabaseClient && typeof window.renderDownloadOptions === 'function') {
-            window.supabaseClient.from('users').select('subscription_active').eq('id', window.currentUser.id).single()
-                .then(({data, error}) => {
-                    if (!error && data) {
-                        window.renderDownloadOptions();
-                    }
-                });
-        }
-    });
-});
+        document.getElementById('results-view').classList.repl
