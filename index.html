@@ -121,8 +121,8 @@
                 <button class="secondary-btn" id="editBtn" style="width: 100%; max-width: 200px;">← Edit Inputs</button>
             </div>
 
-            <div id="payment-signature-section" class="dash-card" style="margin-bottom: 30px;">
-                <div class="gt-label" style="margin-bottom: 15px;">Payment Schedule & Client Sign-Off</div>
+            <div id="payment-schedule-section" class="dash-card" style="margin-bottom: 30px;">
+                <div class="gt-label" style="margin-bottom: 15px;">Payment Schedule</div>
                 <div class="input-row" style="margin-bottom: 20px;">
                     <div class="input-group">
                         <label>Deposit (%)</label>
@@ -135,15 +135,10 @@
                 </div>
                 <div id="schedule-preview" style="margin-bottom: 20px; font-size: 0.95rem; color: #38bdf8; font-weight: 600;"></div>
                 
-                <div class="input-group" style="margin-bottom: 25px;">
-                    <label style="display:flex; justify-content:space-between; align-items:center;">
-                        Client Signature
-                        <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.8rem; text-transform:none;">Clear</span>
-                    </label>
-                    <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
+                <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+                    <button class="secondary-btn" id="signProposalBtn" style="flex: 1; padding: 15px; font-size: 1rem; border-color: #38bdf8; color: #38bdf8;">Sign</button>
+                    <button class="primary-btn" id="downloadPdfTrigger" style="flex: 2; margin-top: 0; padding: 15px; font-size: 1rem;">Generate PDF</button>
                 </div>
-
-                <button class="primary-btn" id="downloadPdfTrigger" style="margin-top: 0; padding: 15px; font-size: 1.1rem; width: 100%;">Sign & Generate PDF</button>
             </div>
 
             <div class="dashboard-grid">
@@ -162,6 +157,22 @@
         </div>
     </div>
     
+    <div id="signatureModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
+            <button id="closeSignatureModal" class="close-btn">&times;</button>
+            <h2>Client Signature</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Please sign below to accept the proposal.</p>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label style="display:flex; justify-content:space-between; align-items:center;">
+                    Signature
+                    <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.8rem; text-transform:none;">Clear</span>
+                </label>
+                <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
+            </div>
+            <button class="primary-btn" id="saveSignatureBtn" style="margin-top: 0; padding: 15px; width: 100%;">Save Signature</button>
+        </div>
+    </div>
+
     <div id="clientModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeClientModal" class="close-btn">&times;</button>
