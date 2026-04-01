@@ -61,6 +61,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBidId = null;
     let autoSaveTimer = null;
 
+    async function fetchClients() {
+        if (!window.currentUser || !window.supabaseClient) return;
+        
+        const { data, error } = await window.supabaseClient
+            .from('clients')
+            .select('id, name, address, phone')
+            .eq('user_id', window.currentUser.id);
+
+        if (data && !error) {
+            const clientSelect = document.getElementById('client-select');
+            const currentValue = clientSelect.value;
+            clientSelect.innerHTML = '<option value="">Select a Client...</option>';
+            data.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = client.name;
+                option.dataset.address = client.address || '';
+                clientSelect.appendChild(option);
+            });
+            if (currentValue) clientSelect.value = currentValue;
+        }
+    }
+
+    document.getElementById('client-select').addEventListener('change', (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        if(selectedOption) {
+            localStorage.setItem('im_clientName', selectedOption.textContent);
+            localStorage.setItem('im_clientAddress', selectedOption.dataset.address || '');
+        }
+    });
+
+    document.getElementById('openClientModalBtn').addEventListener('click', () => {
+        document.getElementById('clientModal').classList.add('show');
+    });
+
+    document.getElementById('closeClientModal').addEventListener('click', () => {
+        document.getElementById('clientModal').classList.remove('show');
+    });
+
+    document.getElementById('btn-save-client').addEventListener('click', async () => {
+        const name = document.getElementById('new-client-name').value;
+        const address = document.getElementById('new-client-address').value;
+        const phone = document.getElementById('new-client-phone').value;
+
+        if (!name) return alert('Client Name is required.');
+
+        const payload = { user_id: window.currentUser.id, name, address, phone };
+        const { error } = await window.supabaseClient.from('clients').insert([payload]);
+
+        if (!error) {
+            document.getElementById('clientModal').classList.remove('show');
+            document.getElementById('new-client-name').value = '';
+            document.getElementById('new-client-address').value = '';
+            document.getElementById('new-client-phone').value = '';
+            await fetchClients(); 
+        }
+    });
+
     window.refreshSavedBids = async function() {
         const container = document.getElementById('savedBidsContainer');
         const dropdown = document.getElementById('savedBidsDropdown');
@@ -70,12 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        await fetchClients();
+
         container.style.display = 'block';
         dropdown.innerHTML = '<div class="dropdown-empty">Loading bids...</div>';
 
         const { data, error } = await window.supabaseClient
             .from('bids')
-            .select('id, client_name, project_name, created_at')
+            .select('id, project_name, created_at, clients(name)')
             .eq('user_id', window.currentUser.id)
             .order('created_at', { ascending: false });
 
@@ -92,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '';
         data.forEach(bid => {
             const dateStr = new Date(bid.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-            const client = bid.client_name || 'Draft Client';
+            const client = (bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client';
             const project = bid.project_name || 'Unnamed Project';
             
             html += `
@@ -128,6 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     document.getElementById('saveProfileBtn').addEventListener('click', () => {
+        const venmoInput = document.getElementById('venmo-handle');
+        if (venmoInput) localStorage.setItem('im_venmo_handle', venmoInput.value);
+        
         document.getElementById('profileModal').classList.remove('show');
         if (typeof window.renderDownloadOptions === 'function') {
             window.renderDownloadOptions();
@@ -147,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveState(skipAutosave = false) {
         const state = { categories: {}, labor:[], meta: {} };
         
-        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
+        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #setup-view input[type="radio"]:checked, #markupSlider').forEach(el => {
             const key = el.id || el.name || el.value;
             state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
         });
@@ -217,12 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
 
-        const clientName = document.getElementById('meta-client').value || 'Draft Client';
+        const clientId = document.getElementById('client-select').value;
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
 
         const payload = {
             user_id: window.currentUser.id,
-            client_name: clientName,
+            client_id: parseInt(clientId, 10) || null,
             project_name: projectName,
             total_amount: totalAmount,
             bid_data: bidData
@@ -251,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error || !data) return;
 
         currentBidId = data.id;
-        document.getElementById('meta-client').value = data.client_name === 'Draft Client' ? '' : data.client_name;
+        document.getElementById('client-select').value = data.client_id || '';
         document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
 
         if (data.bid_data) {
@@ -435,11 +498,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
         const compAddressInput = document.getElementById('meta-company-address');
+        const venmoInput = document.getElementById('venmo-handle');
         const appTitle = document.getElementById('app-main-title');
         
         const globalComp = localStorage.getItem('im_global_company');
         const globalPhone = localStorage.getItem('im_global_phone');
         const globalAddress = localStorage.getItem('im_global_address');
+        const savedVenmo = localStorage.getItem('im_venmo_handle');
 
         if (globalComp) {
             compInput.value = globalComp;
@@ -447,6 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (globalPhone) compPhoneInput.value = globalPhone;
         if (globalAddress) compAddressInput.value = globalAddress;
+        if (savedVenmo && venmoInput) venmoInput.value = savedVenmo;
 
         compInput.addEventListener('input', (e) => {
             const val = e.target.value.trim();
@@ -721,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
         setTimeout(() => { document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); window.scrollTo(0,0); }, 300);
 
-        window.renderDownloadOptions = function() {
+        window.renderDownloadOptions = async function() {
             const downloadBtn = document.getElementById('downloadPdfTrigger');
             const parent = downloadBtn.parentElement;
             
@@ -741,100 +807,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 warningEl.style.display = 'none';
             }
 
-            function allowDownload(btnText) {
-                downloadBtn.textContent = btnText;
+            if (!window.currentUser) {
+                downloadBtn.textContent = "Sign in to Download PDF";
+                downloadBtn.style.background = "transparent";
+                downloadBtn.style.border = "1px solid var(--border-glass)";
+                downloadBtn.style.color = "var(--text-main)";
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => {
+                    document.getElementById('authModal').classList.add('show');
+                };
+                return;
+            }
+
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .select('subscription_status')
+                .eq('id', window.currentUser.id)
+                .single();
+
+            const isDbActive = data && data.subscription_status === 'active';
+            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+
+            if (isDbActive || isTempActive) {
+                downloadBtn.textContent = "Download Official PDF";
                 downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
                 downloadBtn.style.border = "none";
                 downloadBtn.style.color = "#0f172a";
                 downloadBtn.style.display = 'block';
-                
-                const existingDual = document.getElementById('dual-options-container');
-                if(existingDual) existingDual.style.display = 'none';
                 
                 downloadBtn.onclick = async () => {
                     saveDataForPdf();
                     await window.saveBidToCloud(total, false);
                     window.location.href = './success';
                 };
-            }
-            
-            if (window.supabaseClient && window.currentUser) {
-                window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).single().then(({data}) => {
-                    const isDbActive = data && data.subscription_status === 'active';
-                    const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
-                    const hasActivePass = isDbActive || isTempActive;
-
-                    const singlePassExpiry = parseInt(localStorage.getItem('im_single_pass_expiry') || '0');
-                    const isSinglePassActive = Date.now() < singlePassExpiry;
-
-                    if (hasActivePass) {
-                        allowDownload("Download Official PDF");
-                    } else if (isSinglePassActive) {
-                        const minsLeft = Math.ceil((singlePassExpiry - Date.now()) / 60000);
-                        allowDownload(`Download PDF (${minsLeft}m left to edit)`);
-                    } else {
-                        downloadBtn.style.display = 'none';
-                        
-                        let existingDual = document.getElementById('dual-options-container');
-                        if (!existingDual) {
-                            const dualOptionsHTML = `
-                                <div id="dual-options-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 25px;">
-                                    <button id="btn-single-pdf" class="primary-btn" style="margin-top: 0; padding: 15px; background: transparent; border: 2px solid #38bdf8; color: #38bdf8;">
-                                        Download This PDF Only ($4.99)<br><span style="font-size: 0.8rem; font-weight: normal;">Includes 1 hour to make edits</span>
-                                    </button>
-                                    <button id="btn-sub-pdf" class="primary-btn" style="margin-top: 0; padding: 15px; background: var(--gradient-primary); color: #0f172a; border: none;">
-                                        Unlimited PDFs ($19.99/mo)
-                                    </button>
-                                </div>
-                            `;
-                            parent.insertAdjacentHTML('beforeend', dualOptionsHTML);
-                            
-                            document.getElementById('btn-single-pdf').onclick = async () => {
-                                if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
-                                    document.getElementById('profileModal').classList.add('show');
-                                    return;
-                                }
-                                if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 4.99, items:[{item_id: 'single_pdf'}] });
-                                saveDataForPdf();
-                                await window.saveBidToCloud(total, false);
-                                localStorage.setItem('im_pending_purchase_value', '4.99');
-                                localStorage.setItem('im_pending_purchase_item', 'single_pdf');
-                                const checkoutUrl = new URL('https://buy.stripe.com/7sY14pdldbz71Dc5g60co02');
-                                checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                                window.location.href = checkoutUrl.toString();
-                            };
-
-                            document.getElementById('btn-sub-pdf').onclick = async () => {
-                                if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
-                                    document.getElementById('profileModal').classList.add('show');
-                                    return;
-                                }
-                                if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
-                                saveDataForPdf();
-                                await window.saveBidToCloud(total, false);
-                                localStorage.setItem('im_pending_purchase_value', '19.99');
-                                localStorage.setItem('im_pending_purchase_item', 'pro_sub');
-                                const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
-                                checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                                window.location.href = checkoutUrl.toString();
-                            };
-                        } else {
-                            existingDual.style.display = 'flex';
-                        }
-                    }
-                });
             } else {
-                downloadBtn.textContent = "Sign in to Download PDF";
-                downloadBtn.style.background = "transparent";
-                downloadBtn.style.border = "1px solid var(--border-glass)";
-                downloadBtn.style.color = "var(--text-main)";
+                downloadBtn.textContent = "Subscribe to Download ($19.99/mo)";
+                downloadBtn.style.background = "var(--gradient-primary)";
+                downloadBtn.style.border = "none";
+                downloadBtn.style.color = "#0f172a";
                 downloadBtn.style.display = 'block';
                 
-                const existingDual = document.getElementById('dual-options-container');
-                if(existingDual) existingDual.style.display = 'none';
-                
-                downloadBtn.onclick = () => {
-                    document.getElementById('authModal').classList.add('show');
+                downloadBtn.onclick = async () => {
+                    if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
+                        document.getElementById('profileModal').classList.add('show');
+                        return;
+                    }
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 19.99, items:[{item_id: 'pro_sub'}] });
+                    saveDataForPdf();
+                    await window.saveBidToCloud(total, false);
+                    const checkoutUrl = new URL('https://buy.stripe.com/3cI4gB94XcDba9I7oe0co00');
+                    checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
+                    window.location.href = checkoutUrl.toString();
                 };
             }
         };
@@ -842,8 +865,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.renderDownloadOptions();
 
         function saveDataForPdf() {
-            localStorage.setItem('im_clientName', document.getElementById('meta-client').value || 'Client');
-            localStorage.setItem('im_clientAddress', document.getElementById('meta-client-address').value || '');
+            const clientSelect = document.getElementById('client-select');
+            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+            localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
+            localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
             localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
             localStorage.setItem('im_costs', JSON.stringify(costs));
             localStorage.setItem('im_cons', cons);
@@ -860,6 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(confirm("Clear this bid and start fresh?")) { 
             currentBidId = null;
             document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"]').forEach(el => el.value = '');
+            document.getElementById('client-select').value = '';
             categories.concat(['labor']).forEach(c => {
                 const container = document.getElementById(`${c}-rows-container`);
                 if(container) container.innerHTML = '';
