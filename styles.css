@@ -208,17 +208,15 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
 .nav-bid-item { 
     padding: 16px 20px; 
     color: var(--text-main); 
-    cursor: pointer; 
     border-bottom: 1px solid rgba(255,255,255,0.05); 
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    text-align: left;
+    justify-content: space-between;
+    align-items: center;
     transition: background 0.2s;
 }
 .nav-bid-item:last-child { border-bottom: none; }
 .nav-bid-item:hover { background: rgba(56, 189, 248, 0.15); }
-.nav-bid-item .bid-title { font-weight: 700; color: #38bdf8; font-size: 0.95rem; line-height: 1.2; }
+.nav-bid-item .bid-title { font-weight: 700; color: #38bdf8; font-size: 0.95rem; line-height: 1.2; display: block; }
 .nav-bid-item .bid-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 500;}
 .dropdown-empty { padding: 25px; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
 
@@ -301,11 +299,20 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
     h1 { font-size: 2.2rem; }
     .subtitle { font-size: 1.1rem; }
     .dashboard-grid { grid-template-columns: 1fr; } 
-    .control-panel { padding: 25px 15px; border-radius: 24px; }
+    .control-panel { padding: 25px 15px 100px 15px; border-radius: 24px; }
     .module-content { padding: 15px; }
     .calc-row { padding: 15px; }
     .input-row { flex-direction: column; align-items: stretch; width: 100%; } 
     .remove-row-btn { width: 100%; margin-top: 5px; height: 40px; }
+    #calculateBtn {
+        position: fixed;
+        bottom: 20px;
+        left: 5%;
+        width: 90%;
+        z-index: 999;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.6);
+        margin-top: 0;
+    }
     
     .dropdown-menu-nav {
         right: auto;
