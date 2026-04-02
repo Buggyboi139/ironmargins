@@ -28,6 +28,11 @@ function updateAuthUI() {
 }
 
 window.supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        const authModal = document.getElementById('authModal');
+        if (authModal) authModal.classList.remove('show');
+        document.getElementById('updatePasswordModal').classList.add('show');
+    }
     if (session && session.user) {
         window.currentUser = session.user;
     } else {
@@ -114,6 +119,41 @@ document.addEventListener('DOMContentLoaded', () => {
             authSubmitBtn.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
         }
     });
+
+    const authForgotPassword = document.getElementById('authForgotPassword');
+    if (authForgotPassword) {
+        authForgotPassword.addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value.trim();
+            if (!email) {
+                alert("Enter your email address in the field first.");
+                return;
+            }
+            const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin,
+            });
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("Check your inbox for the reset link.");
+            }
+        });
+    }
+
+    const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+    if (updatePasswordBtn) {
+        updatePasswordBtn.addEventListener('click', async () => {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            if (!newPassword) return;
+            
+            const { error } = await window.supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("Password updated.");
+                document.getElementById('updatePasswordModal').classList.remove('show');
+            }
+        });
+    }
 
     window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session && session.user) {
