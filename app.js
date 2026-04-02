@@ -46,6 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cookieBanner').style.display = 'none';
     });
 
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sideMenuOverlay = document.getElementById('sideMenuOverlay');
+    const sideMenu = document.getElementById('sideMenu');
+    const closeSideMenuBtn = document.getElementById('closeSideMenuBtn');
+
+    if(hamburgerBtn) hamburgerBtn.addEventListener('click', () => {
+        sideMenu.classList.add('show');
+        sideMenuOverlay.classList.add('show');
+    });
+
+    const closeSideMenu = () => {
+        sideMenu.classList.remove('show');
+        sideMenuOverlay.classList.remove('show');
+    };
+
+    if(closeSideMenuBtn) closeSideMenuBtn.addEventListener('click', closeSideMenu);
+    if(sideMenuOverlay) sideMenuOverlay.addEventListener('click', closeSideMenu);
+
     let materialsDb = {};
     const categories =['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
     
@@ -197,19 +215,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.refreshSavedBids = async function() {
-        const container = document.getElementById('savedBidsContainer');
-        const dropdown = document.getElementById('savedBidsDropdown');
+        const recentList = document.getElementById('recentBidsList');
+        const moreList = document.getElementById('moreBidsList');
+        const showMoreBtn = document.getElementById('showMoreBidsBtn');
         
         if (!window.currentUser || !window.supabaseClient) {
-            container.style.display = 'none';
+            recentList.innerHTML = '<div class="dropdown-empty">Sign in to see saved bids</div>';
+            showMoreBtn.style.display = 'none';
+            moreList.innerHTML = '';
             return;
         }
 
         await window.fetchUserProfile();
         await fetchClients();
 
-        container.style.display = 'block';
-        dropdown.innerHTML = '<div class="dropdown-empty">Loading bids...</div>';
+        recentList.innerHTML = '<div class="dropdown-empty">Loading bids...</div>';
 
         const { data, error } = await window.supabaseClient
             .from('bids')
@@ -218,36 +238,56 @@ document.addEventListener('DOMContentLoaded', () => {
             .order('created_at', { ascending: false });
 
         if (error) {
-            dropdown.innerHTML = '<div class="dropdown-empty">Failed to load bids.</div>';
+            recentList.innerHTML = '<div class="dropdown-empty">Failed to load bids.</div>';
             return;
         }
 
         if (!data || data.length === 0) {
-            dropdown.innerHTML = '<div class="dropdown-empty">No saved bids yet.</div>';
+            recentList.innerHTML = '<div class="dropdown-empty">No saved bids yet.</div>';
+            showMoreBtn.style.display = 'none';
+            moreList.innerHTML = '';
             return;
         }
 
-        let html = '';
-        data.forEach(bid => {
-            const dateStr = new Date(bid.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-            const client = (bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client';
-            const project = bid.project_name || 'Unnamed Project';
-            
-            html += `
-                <div class="nav-bid-item">
-                    <div onclick="handleLoadBid('${bid.id}')" style="flex:1; cursor:pointer;">
-                        <span class="bid-title">${client} - ${project}</span>
-                        <span class="bid-date">${dateStr}</span>
+        const buildHtml = (bidsArray) => {
+            let html = '';
+            bidsArray.forEach(bid => {
+                const dateStr = new Date(bid.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                const client = (bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client';
+                const project = bid.project_name || 'Unnamed Project';
+                
+                html += `
+                    <div class="nav-bid-item">
+                        <div onclick="handleLoadBid('${bid.id}')" style="flex:1; cursor:pointer;">
+                            <span class="bid-title">${client} - ${project}</span>
+                            <span class="bid-date">${dateStr}</span>
+                        </div>
+                        <button onclick="duplicateBid('${bid.id}'); event.stopPropagation();" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:1.2rem; padding:5px;">⎘</button>
                     </div>
-                    <button onclick="duplicateBid('${bid.id}'); event.stopPropagation();" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:1.2rem; padding:5px;">⎘</button>
-                </div>
-            `;
-        });
-        dropdown.innerHTML = html;
+                `;
+            });
+            return html;
+        };
+
+        recentList.innerHTML = buildHtml(data.slice(0, 3));
+
+        if (data.length > 3) {
+            showMoreBtn.style.display = 'block';
+            moreList.innerHTML = buildHtml(data.slice(3));
+            
+            showMoreBtn.onclick = () => {
+                const isHidden = moreList.style.display === 'none';
+                moreList.style.display = isHidden ? 'block' : 'none';
+                showMoreBtn.textContent = isHidden ? 'Show Less ▴' : 'Show More ▾';
+            };
+        } else {
+            showMoreBtn.style.display = 'none';
+            moreList.innerHTML = '';
+        }
     };
 
     window.handleLoadBid = async function(bidId) {
-        document.getElementById('savedBidsDropdown').classList.remove('show');
+        closeSideMenu();
         await window.loadBidFromCloud(bidId);
         
         document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
@@ -256,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.duplicateBid = async function(bidId) {
-        document.getElementById('savedBidsDropdown').classList.remove('show');
+        closeSideMenu();
         await window.loadBidFromCloud(bidId);
         currentBidId = null; 
         const projInput = document.getElementById('meta-project');
@@ -267,12 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo(0,0);
     };
 
-    document.getElementById('savedBidsBtn').addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        document.getElementById('savedBidsDropdown').classList.toggle('show');
-    });
+    const profileBtn = document.getElementById('profileBtn');
+    if(profileBtn) {
+        profileBtn.addEventListener('click', () => {
+            closeSideMenu();
+            document.getElementById('profileModal').classList.add('show');
+        });
+    }
 
-    document.getElementById('profileBtn').addEventListener('click', () => document.getElementById('profileModal').classList.add('show'));
     document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
     
     document.getElementById('saveProfileBtn').addEventListener('click', async () => {
@@ -308,7 +350,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const materialsManageList = document.getElementById('materials-manage-list');
     const saveMaterialsBtn = document.getElementById('saveMaterialsBtn');
 
-    if(materialsBtn) materialsBtn.addEventListener('click', openMaterialsManager);
+    if(materialsBtn) materialsBtn.addEventListener('click', () => {
+        closeSideMenu();
+        openMaterialsManager();
+    });
+    
     if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal.classList.remove('show'));
 
     function openMaterialsManager() {
@@ -356,8 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', (e) => {
-        const dropdown = document.getElementById('savedBidsDropdown');
-        if (dropdown && dropdown.classList.contains('show') && !e.target.closest('#savedBidsContainer')) dropdown.classList.remove('show');
         if (!e.target.closest('.custom-select-container')) document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el.classList.remove('show'));
     });
 
