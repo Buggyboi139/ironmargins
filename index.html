@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IronMargins | Professional Bids</title>
+    <meta name="description" content="IronMargins is a lightning-fast construction estimating software. Calculate accurate material costs, labor burden, and protect your margins effortlessly.">
+    <meta name="keywords" content="construction estimating software, contractor bidding, material pricing calculator, labor burden, construction margins">
+    <meta property="og:title" content="IronMargins | Professional Bids">
+    <meta property="og:description" content="Never underbid again. Calculate material costs, labor burden, and invisible margins perfectly on any device.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ironmargins.com">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
@@ -19,23 +26,46 @@
 </head>
 <body>
     <div id="left-color-bar"></div>
+    
     <nav>
-        <a href="/" class="logo-container" id="logoBtn">
-            <img src="logo_nb.png" alt="IronMargins Logo" class="logo-img">
-            <span class="logo-text">IronMargins</span>
-        </a>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button id="hamburgerBtn" class="hamburger-btn">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <a href="/" class="logo-container" id="logoBtn">
+                <img src="logo_nb.png" alt="IronMargins Logo" class="logo-img">
+                <span class="logo-text">IronMargins</span>
+            </a>
+        </div>
         <div class="nav-actions">
             <button id="manualSaveBtn" class="nav-link neutral" style="display: none; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Save Bid</button>
-            <div class="dropdown-container" id="savedBidsContainer" style="display: none; position: relative;">
-                <button id="savedBidsBtn" class="nav-link neutral" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Saved Bids ▾</button>
-                <div id="savedBidsDropdown" class="dropdown-menu-nav"></div>
-            </div>
-            <button id="materialsBtn" class="nav-link neutral">Materials</button>
-            <button id="profileBtn" class="nav-link neutral">Profile</button>
             <button id="authBtn" class="nav-link neutral">Sign In</button>
             <button id="resetBidBtn" class="nav-link neutral">Clear Bid</button>
         </div>
     </nav>
+
+    <div id="sideMenuOverlay" class="side-menu-overlay"></div>
+    <div id="sideMenu" class="side-menu">
+        <div class="side-menu-header">
+            <span class="logo-text" style="font-size: 1.4rem;">Menu</span>
+            <button id="closeSideMenuBtn" class="close-btn" style="position: static; font-size: 2rem;">&times;</button>
+        </div>
+        
+        <button id="materialsBtn" class="side-menu-link">Materials Catalog</button>
+        <button id="profileBtn" class="side-menu-link">Company Profile</button>
+        
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-label">Saved Bids</div>
+        
+        <div id="recentBidsList"></div>
+        <button id="showMoreBidsBtn" class="side-menu-more-btn" style="display: none;">Show More ▾</button>
+        <div id="moreBidsList" style="display: none;"></div>
+    </div>
+
     <div class="container">
         <div id="setup-view" class="view-section active-view">
             <h1 id="app-main-title">Never Underbid Again</h1>
