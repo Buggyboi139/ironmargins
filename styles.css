@@ -47,6 +47,21 @@ select option {
 #left-color-bar { position: fixed; top: 0; left: 0; bottom: 0; width: 4px; background: var(--gradient-primary); z-index: 200; box-shadow: 2px 0 15px rgba(16, 185, 129, 0.5); }
 nav { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); position: sticky; top: 0; z-index: 100; width: 100%; }
 
+.hamburger-btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 8px; transition: 0.2s; }
+.hamburger-btn:hover { background: rgba(255,255,255,0.1); }
+
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
+.side-menu-overlay.show { opacity: 1; pointer-events: all; }
+.side-menu { position: fixed; top: 0; left: 0; width: 320px; height: 100%; background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 9, 15, 0.98) 100%); border-right: 1px solid var(--border-highlight); z-index: 2001; transform: translateX(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+.side-menu.show { transform: translateX(0); }
+.side-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.side-menu-link { display: block; width: 100%; text-align: left; background: transparent; border: none; color: var(--text-main); font-size: 1.1rem; padding: 12px 15px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
+.side-menu-link:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.side-menu-divider { height: 1px; background: var(--border-glass); margin: 25px 0; }
+.side-menu-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 15px; }
+.side-menu-more-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); color: #38bdf8; width: calc(100% - 30px); text-align: center; padding: 10px; font-size: 0.9rem; cursor: pointer; font-weight: 600; margin: 15px auto 0; border-radius: 8px; transition: 0.2s; display: block; }
+.side-menu-more-btn:hover { background: rgba(56, 189, 248, 0.1); }
+
 .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
 .logo-img { height: 36px; width: auto; object-fit: contain; }
 .logo-text { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; user-select: none; }
@@ -153,7 +168,7 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(5, 7, 10, 0.85);
     backdrop-filter: blur(10px);
-    z-index: 2000;
+    z-index: 3000;
     display: flex; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none;
     transition: 0.3s ease;
@@ -186,39 +201,22 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
 .auth-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; }
 .auth-switch { text-align: center; margin-top: 25px; font-size: 0.95rem; color: var(--text-muted); }
 
-.dropdown-menu-nav { 
-    position: absolute; 
-    top: calc(100% + 15px); 
-    right: 0; 
-    width: 320px; 
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 9, 15, 0.98) 100%); 
-    backdrop-filter: blur(20px); 
-    border: 1px solid var(--border-highlight); 
-    border-radius: 16px; 
-    box-shadow: 0 15px 50px rgba(0,0,0,0.9); 
-    opacity: 0; 
-    pointer-events: none; 
-    transform: translateY(-10px); 
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    z-index: 1000;
-    max-height: 400px;
-    overflow-y: auto;
-}
-.dropdown-menu-nav.show { opacity: 1; pointer-events: all; transform: translateY(0); }
 .nav-bid-item { 
-    padding: 16px 20px; 
+    padding: 14px 15px; 
     color: var(--text-main); 
-    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    border: 1px solid var(--border-glass); 
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: background 0.2s;
+    margin-bottom: 8px;
 }
-.nav-bid-item:last-child { border-bottom: none; }
-.nav-bid-item:hover { background: rgba(56, 189, 248, 0.15); }
-.nav-bid-item .bid-title { font-weight: 700; color: #38bdf8; font-size: 0.95rem; line-height: 1.2; display: block; }
-.nav-bid-item .bid-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 500;}
-.dropdown-empty { padding: 25px; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
+.nav-bid-item:hover { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3); }
+.nav-bid-item .bid-title { font-weight: 700; color: #38bdf8; font-size: 0.95rem; line-height: 1.3; display: block; }
+.nav-bid-item .bid-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; display: block;}
+.dropdown-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.95rem; border: 1px dashed var(--border-glass); border-radius: 12px; }
 
 .site-footer {
     width: 100%;
@@ -291,8 +289,7 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
 @media (max-width: 768px) { 
     body { padding-left: 0; padding-top: 4px; }
     #left-color-bar { width: 100%; height: 4px; bottom: auto; }
-    nav { padding: 15px; flex-wrap: wrap; justify-content: center; gap: 15px; }
-    .logo-container { width: 100%; justify-content: center; margin-bottom: 5px; }
+    nav { padding: 15px; flex-wrap: wrap; justify-content: space-between; gap: 15px; }
     .nav-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 10px; }
     .nav-link { font-size: 0.85rem; padding: 8px 14px; flex: none; }
     .container { padding: 30px 15px; }
@@ -312,16 +309,5 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
         z-index: 999;
         box-shadow: 0 10px 30px rgba(16, 185, 129, 0.6);
         margin-top: 0;
-    }
-    
-    .dropdown-menu-nav {
-        right: auto;
-        left: 50%;
-        width: 90vw;
-        max-width: 320px;
-        transform: translate(-50%, -10px);
-    }
-    .dropdown-menu-nav.show {
-        transform: translate(-50%, 0);
     }
 }
