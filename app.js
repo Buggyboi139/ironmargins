@@ -234,9 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const project = bid.project_name || 'Unnamed Project';
             
             html += `
-                <div class="nav-bid-item" onclick="handleLoadBid('${bid.id}')">
-                    <span class="bid-title">${client} - ${project}</span>
-                    <span class="bid-date">${dateStr}</span>
+                <div class="nav-bid-item">
+                    <div onclick="handleLoadBid('${bid.id}')" style="flex:1; cursor:pointer;">
+                        <span class="bid-title">${client} - ${project}</span>
+                        <span class="bid-date">${dateStr}</span>
+                    </div>
+                    <button onclick="duplicateBid('${bid.id}'); event.stopPropagation();" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:1.2rem; padding:5px;">⎘</button>
                 </div>
             `;
         });
@@ -247,6 +250,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('savedBidsDropdown').classList.remove('show');
         await window.loadBidFromCloud(bidId);
         
+        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
+        document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
+        window.scrollTo(0,0);
+    };
+
+    window.duplicateBid = async function(bidId) {
+        document.getElementById('savedBidsDropdown').classList.remove('show');
+        await window.loadBidFromCloud(bidId);
+        currentBidId = null; 
+        const projInput = document.getElementById('meta-project');
+        if(projInput.value) projInput.value = projInput.value + ' (Copy)';
+        saveState();
         document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
         document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
         window.scrollTo(0,0);
@@ -284,6 +299,60 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('profileModal').classList.remove('show');
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
+    });
+
+    const materialsBtn = document.getElementById('materialsBtn');
+    const materialsModal = document.getElementById('materialsModal');
+    const closeMaterialsModal = document.getElementById('closeMaterialsModal');
+    const catManageSelect = document.getElementById('cat-manage-select');
+    const materialsManageList = document.getElementById('materials-manage-list');
+    const saveMaterialsBtn = document.getElementById('saveMaterialsBtn');
+
+    if(materialsBtn) materialsBtn.addEventListener('click', openMaterialsManager);
+    if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal.classList.remove('show'));
+
+    function openMaterialsManager() {
+        materialsModal.classList.add('show');
+        catManageSelect.innerHTML = categories.map(c => `<option value="${c}">${categoryNames[c]}</option>`).join('');
+        renderManageList();
+    }
+
+    if(catManageSelect) catManageSelect.addEventListener('change', renderManageList);
+
+    function renderManageList() {
+        const cat = catManageSelect.value;
+        const items = materialsDb[cat] || [];
+        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${i.name}</span>
+                <div class="unit-wrapper icon-prefix" style="max-width:120px;">
+                    <span class="prefix">$</span>
+                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${i.name}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
+        saveMaterialsBtn.textContent = 'Saving...';
+        const inputs = materialsManageList.querySelectorAll('.mat-price-edit');
+        for(let inp of inputs) {
+            const price = parseFloat(inp.value);
+            const name = inp.dataset.name;
+            const cat = inp.dataset.cat;
+            const unit = inp.dataset.unit;
+            
+            const defaultItem = materialsDb[cat].find(i => i.name === name);
+            if(defaultItem && defaultItem.price !== price) {
+                defaultItem.price = price;
+                await saveCustomMaterialToCloud(cat, name, price, unit);
+            }
+        }
+        saveMaterialsBtn.textContent = 'Saved!';
+        setTimeout(() => {
+            saveMaterialsBtn.textContent = 'Save Prices';
+            materialsModal.classList.remove('show');
+        }, 1000);
     });
 
     document.addEventListener('click', (e) => {
@@ -1088,7 +1157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resetBidBtn').onclick = () => { 
         if(confirm("Clear this bid and start fresh?")) { 
             currentBidId = null;
-            document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"]').forEach(el => el.value = '');
+            document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
             document.getElementById('client-select').value = '';
             categories.concat(['labor']).forEach(c => {
                 const container = document.getElementById(`${c}-rows-container`);
