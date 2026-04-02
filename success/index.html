@@ -115,9 +115,11 @@
             .quote-label { font-size: 11pt; letter-spacing: 1pt; margin-bottom: 4pt; }
             .quote-val-grand { font-size: 32pt; letter-spacing: -1pt; }
             .quote-val-dep { font-size: 22pt; }
-            .section-header { font-size: 14pt; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; }
+            .section-header { font-size: 14pt; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; page-break-after: avoid; break-after: avoid; }
             .pdf-table { margin-bottom: 30pt; }
             .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; }
+            tr, .signature-section { page-break-inside: avoid; break-inside: avoid; }
+            h2 { page-break-after: avoid; break-after: avoid; }
             .signature-section { margin-top: 50pt !important; }
             .signature-section p { font-size: 10pt !important; margin-bottom: 30pt !important; }
             .signature-section > div { display: flex !important; flex-direction: row !important; justify-content: flex-end !important; gap: 60px !important; }
@@ -326,6 +328,20 @@
                 qrContainer.style.textAlign = 'right';
                 qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
                 document.querySelector('.pdf-quote-box').appendChild(qrContainer);
+            }
+
+            const stateStr = localStorage.getItem('im_v5_data');
+            let notes = '';
+            if (stateStr) {
+                try {
+                    const state = JSON.parse(stateStr);
+                    if(state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
+                } catch(e){}
+            }
+
+            if (notes) {
+                const notesHtml = `<div class="section-header" style="margin-top:20px;">Project Notes & Exclusions</div><p style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:40px; white-space:pre-wrap;">${notes}</p>`;
+                document.querySelector('.section-header').insertAdjacentHTML('beforebegin', notesHtml);
             }
 
             const mult = 1 + markupPct;
