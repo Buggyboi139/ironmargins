@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#05070a">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
     <script>
-      window.dataLayer = window.dataLayer ||[];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-4WWZ1PYH4Q');
@@ -216,11 +216,25 @@
                 <label>Password</label>
                 <input type="password" id="authPassword" class="glass-input" placeholder="••••••••">
             </div>
+            <div style="text-align: right; margin-top: -15px; margin-bottom: 20px;">
+                <span id="authForgotPassword" style="color: #38bdf8; cursor: pointer; font-size: 0.85rem;">Forgot Password?</span>
+            </div>
             <button id="authSubmitBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Sign In</button>
             <p class="auth-switch">
                 <span id="authSwitchText">Don't have an account? </span>
                 <span id="authToggleMode" style="color: #38bdf8; cursor: pointer; font-weight: 700;">Sign Up</span>
             </p>
+        </div>
+    </div>
+
+    <div id="updatePasswordModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2 id="updatePasswordTitle">Set New Password</h2>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>New Password</label>
+                <input type="password" id="newPasswordInput" class="glass-input" placeholder="••••••••">
+            </div>
+            <button id="updatePasswordBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Update</button>
         </div>
     </div>
 
