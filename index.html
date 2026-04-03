@@ -136,7 +136,10 @@
                     <div class="module-content">
                         <div id="wood-rows-container"></div>
                         <button id="add-wood-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="wood" onclick="window.saveAsTemplate('wood')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="wood" onclick="window.saveAsTemplate('wood')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="wood" onclick="window.loadTemplate('wood')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="wood-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for shop consumables</span></label>
                     </div>
                 </div>
@@ -146,7 +149,10 @@
                     <div class="module-content">
                         <div id="paint-rows-container"></div>
                         <button id="add-paint-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="paint" onclick="window.saveAsTemplate('paint')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="paint" onclick="window.saveAsTemplate('paint')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="paint" onclick="window.loadTemplate('paint')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="paint-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
                     </div>
                 </div>
@@ -156,7 +162,10 @@
                     <div class="module-content">
                         <div id="electrical-rows-container"></div>
                         <button id="add-electrical-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="electrical" onclick="window.saveAsTemplate('electrical')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="electrical" onclick="window.saveAsTemplate('electrical')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="electrical" onclick="window.loadTemplate('electrical')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="electrical-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
                     </div>
                 </div>
@@ -166,7 +175,10 @@
                     <div class="module-content">
                         <div id="plumbing-rows-container"></div>
                         <button id="add-plumbing-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="plumbing" onclick="window.saveAsTemplate('plumbing')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="plumbing" onclick="window.saveAsTemplate('plumbing')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="plumbing" onclick="window.loadTemplate('plumbing')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="plumbing-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
                     </div>
                 </div>
@@ -176,7 +188,10 @@
                     <div class="module-content">
                         <div id="fixtures-rows-container"></div>
                         <button id="add-fixtures-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="fixtures" onclick="window.saveAsTemplate('fixtures')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="fixtures" onclick="window.saveAsTemplate('fixtures')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="fixtures" onclick="window.loadTemplate('fixtures')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="fixtures-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for hardware/consumables</span></label>
                     </div>
                 </div>
@@ -186,7 +201,10 @@
                     <div class="module-content">
                         <div id="concrete-rows-container"></div>
                         <button id="add-concrete-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="concrete" onclick="window.saveAsTemplate('concrete')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="concrete" onclick="window.saveAsTemplate('concrete')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="concrete" onclick="window.loadTemplate('concrete')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="concrete-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste/spillage</span></label>
                     </div>
                 </div>
@@ -196,7 +214,10 @@
                     <div class="module-content">
                         <div id="gravel-rows-container"></div>
                         <button id="add-gravel-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="gravel" onclick="window.saveAsTemplate('gravel')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="gravel" onclick="window.saveAsTemplate('gravel')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="gravel" onclick="window.loadTemplate('gravel')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-compaction-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 20% for compaction</span></label>
@@ -209,7 +230,10 @@
                     <div class="module-content">
                         <div id="mulch-rows-container"></div>
                         <button id="add-mulch-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="mulch" onclick="window.saveAsTemplate('mulch')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="mulch" onclick="window.saveAsTemplate('mulch')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="mulch" onclick="window.loadTemplate('mulch')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
@@ -222,7 +246,10 @@
                     <div class="module-content">
                         <div id="topsoil-rows-container"></div>
                         <button id="add-topsoil-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="topsoil" onclick="window.saveAsTemplate('topsoil')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="topsoil" onclick="window.saveAsTemplate('topsoil')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="topsoil" onclick="window.loadTemplate('topsoil')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                         <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
@@ -235,7 +262,10 @@
                     <div class="module-content">
                         <div id="demo-rows-container"></div>
                         <button id="add-demo-btn" class="add-row-btn">+ Add Item</button>
-                        <button class="save-template-btn add-row-btn template-btn-auth" data-category="demo" onclick="window.saveAsTemplate('demo')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="demo" onclick="window.saveAsTemplate('demo')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">⭐ Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="demo" onclick="window.loadTemplate('demo')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">📂 Load Template</button>
+                        </div>
                     </div>
                 </div>
 
@@ -316,6 +346,15 @@
         </div>
     </div>
 
+    <div id="templateModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button class="close-btn" onclick="document.getElementById('templateModal').classList.remove('show')">&times;</button>
+            <h2>Load Template</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Select a saved template to insert.</p>
+            <div id="template-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
     <div id="profileModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeProfileModal" class="close-btn">&times;</button>
@@ -388,21 +427,38 @@
 
     <div id="closeoutModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
-            <button id="closeCloseoutModal" class="close-btn">&times;</button>
+            <button id="closeCloseoutModal" class="close-btn" onclick="document.getElementById('closeoutModal').classList.remove('show')">&times;</button>
             <h2>Close Out Job</h2>
-            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Enter what you actually spent.</p>
+            <div id="closeout-bid-info" style="margin-bottom: 20px; font-weight: 600; font-size: 1.1rem;"></div>
             
-            <div id="closeout-bid-info" style="margin-bottom: 20px; font-weight: 600; color: #fff; font-size: 1.1rem;"></div>
-            <div id="closeout-categories" style="margin-bottom: 20px;"></div>
-            <div id="closeout-labor" style="margin-bottom: 20px;"></div>
-            
-            <div id="closeout-summary" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; font-weight: 600;"></div>
-            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Total Client Bid:</span>
+                <span id="closeout-est-bid" style="font-weight:bold;">$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <span>Estimated Total Cost:</span>
+                <span id="closeout-est-cost" style="font-weight:bold;">$0.00</span>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Actual Material Cost</label>
+                <div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" id="closeout-actual-mat" class="glass-input" placeholder="0.00"></div>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Actual Labor Cost</label>
+                <div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" id="closeout-actual-lab" class="glass-input" placeholder="0.00"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; font-weight: 600; font-size: 1.2rem;">
+                <span>Actual Profit:</span>
+                <span id="closeout-actual-profit">$0.00</span>
+            </div>
+
             <div class="input-group" style="margin-bottom: 20px;">
-                <textarea id="closeout-notes" class="glass-input" rows="3" placeholder="Any notes about this job? What went over/under and why?"></textarea>
+                <textarea id="closeout-notes" class="glass-input" rows="3" placeholder="Notes..."></textarea>
             </div>
             
-            <button class="primary-btn" id="submitCloseoutBtn" style="margin-top: 0; padding: 15px; width: 100%;">Close Out Job</button>
+            <button class="primary-btn" onclick="window.submitCloseout()" style="margin-top: 0; padding: 15px; width: 100%;">Save Closeout</button>
         </div>
     </div>
 
