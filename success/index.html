@@ -32,6 +32,17 @@
             background-color: #05070a;
             min-height: 100dvh;
         }
+        
+        iframe, object, embed {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+            border: 0;
+            transform: translateX(0);
+        }
+
         .app-wrapper {
             display: flex;
             flex-direction: column;
@@ -52,11 +63,61 @@
         .status-text { font-size: 0.9rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; }
         .actions { display: flex; gap: 15px; justify-content: center; opacity: 0; transition: 0.5s; pointer-events: none; margin-top: 20px; }
         .actions.show { opacity: 1; pointer-events: all; }
-        .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; border: none; outline: none; transition: 0.2s; }
+        .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; outline: none; transition: 0.2s; }
         .secondary-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-glass); padding: 16px 32px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         
-        #preview-container { animation: fadeIn 0.5s ease; }
+        #preview-container { animation: fadeIn 0.5s ease; padding-top: 40px; padding-bottom: 100px; display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .preview-flex-layout {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 40px;
+        }
+
+        .pdf-scroll-area {
+            width: 100%;
+            max-width: 816px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .action-panel {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border-glass);
+            width: 100%;
+            max-width: 816px;
+        }
+
+        @media screen and (min-width: 1024px) {
+            .preview-flex-layout {
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-start;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+            .pdf-scroll-area {
+                height: calc(100vh - 150px);
+                overflow-y: auto;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            .action-panel {
+                max-width: 400px;
+                position: sticky;
+                top: 40px;
+                margin-top: 0;
+            }
+            #pdf-wrapper {
+                box-shadow: none !important;
+            }
+        }
 
         #pdf-wrapper {
             position: relative;
@@ -70,6 +131,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             text-align: left;
+            margin: 0 auto;
         }
         .pdf-header { display: flex; justify-content: space-between; border-bottom: 4px solid #10b981; padding-bottom: 24px; margin-bottom: 32px; align-items: center; }
         .pdf-brand h2 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1px; }
@@ -113,6 +175,7 @@
             body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #0f172a !important; }
             .app-wrapper, .no-print { display: none !important; }
             #preview-container { padding: 0 !important; margin: 0 !important; display: block !important; }
+            .pdf-scroll-area { height: auto !important; overflow: visible !important; box-shadow: none !important; }
             #pdf-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; padding: 40pt 50pt !important; }
             .pdf-header { border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
             .pdf-meta { text-align: right !important; width: auto !important; }
@@ -165,70 +228,72 @@
         </div>
     </div>
 
-    <div id="preview-container" style="display: none; padding-top: 40px; padding-bottom: 100px;">
+    <div id="preview-container">
         <div class="no-print" style="text-align: center; padding: 0 20px 20px;">
             <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Review & Sign</h2>
             <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 1.1rem;">Review your proposal below. Draw your signature to accept.</p>
         </div>
         
-        <div style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px;">
+        <div class="preview-flex-layout">
             
-            <div id="pdf-wrapper">
-                <div class="pdf-header">
-                    <div class="pdf-brand" id="pdf-brand-container"></div>
-                    <div class="pdf-meta">
-                        <div class="meta-grid">
-                            <div class="meta-label">Proposal For</div>
-                            <div class="meta-val" id="pdf-client">---</div>
-                            <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 14px; font-weight: 500; color: #64748b; margin-top: -6px;"></div>
-                            <div class="meta-label">Project</div>
-                            <div class="meta-val" id="pdf-project">---</div>
-                            <div class="meta-label">Date</div>
-                            <div class="meta-val" id="pdf-date">--/--/----</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="pdf-quote-box">
-                    <div class="quote-col">
-                        <span class="quote-label">Total Investment</span>
-                        <span class="quote-val-grand" id="pdf-total">$0.00</span>
-                    </div>
-                    <div class="quote-col" style="text-align: right;" id="pdf-schedule-box">
-                    </div>
-                </div>
-                
-                <div class="section-header">Scope of Work & Cost Breakdown</div>
-                <table class="pdf-table">
-                    <tbody id="pdf-materials-body">
-                    </tbody>
-                    <tbody id="pdf-subs-body">
-                    </tbody>
-                    <tbody id="pdf-labor-body">
-                    </tbody>
-                </table>
-
-                <div class="signature-section" style="margin-top: 60px; page-break-inside: avoid;">
-                    <p id="pdf-terms-text" style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
-                        <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
-                    </p>
-                    <div class="sig-flex-container" style="display: flex; justify-content: flex-end; gap: 60px;">
-                        <div class="sig-col" style="width: 300px; display: flex; flex-direction: column;">
-                            <div id="sig-image-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
-                            <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-                                <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Client Acceptance Signature</p>
+            <div class="pdf-scroll-area">
+                <div id="pdf-wrapper">
+                    <div class="pdf-header">
+                        <div class="pdf-brand" id="pdf-brand-container"></div>
+                        <div class="pdf-meta">
+                            <div class="meta-grid">
+                                <div class="meta-label">Proposal For</div>
+                                <div class="meta-val" id="pdf-client">---</div>
+                                <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 14px; font-weight: 500; color: #64748b; margin-top: -6px;"></div>
+                                <div class="meta-label">Project</div>
+                                <div class="meta-val" id="pdf-project">---</div>
+                                <div class="meta-label">Date</div>
+                                <div class="meta-val" id="pdf-date">--/--/----</div>
                             </div>
                         </div>
-                        <div class="sig-col" style="width: 150px; display: flex; flex-direction: column;">
-                            <div id="sig-date-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
-                            <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-                                <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Date</p>
+                    </div>
+                    <div class="pdf-quote-box">
+                        <div class="quote-col">
+                            <span class="quote-label">Total Investment</span>
+                            <span class="quote-val-grand" id="pdf-total">$0.00</span>
+                        </div>
+                        <div class="quote-col" style="text-align: right;" id="pdf-schedule-box">
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">Scope of Work & Cost Breakdown</div>
+                    <table class="pdf-table">
+                        <tbody id="pdf-materials-body">
+                        </tbody>
+                        <tbody id="pdf-subs-body">
+                        </tbody>
+                        <tbody id="pdf-labor-body">
+                        </tbody>
+                    </table>
+
+                    <div class="signature-section" style="margin-top: 60px; page-break-inside: avoid;">
+                        <p id="pdf-terms-text" style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
+                            <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
+                        </p>
+                        <div class="sig-flex-container" style="display: flex; justify-content: flex-end; gap: 60px;">
+                            <div class="sig-col" style="width: 300px; display: flex; flex-direction: column;">
+                                <div id="sig-image-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
+                                <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+                                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Client Acceptance Signature</p>
+                                </div>
+                            </div>
+                            <div class="sig-col" style="width: 150px; display: flex; flex-direction: column;">
+                                <div id="sig-date-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
+                                <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+                                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Date</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="no-print" style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); width: 100%; max-width: 816px; margin-top: 40px;">
+            <div class="action-panel no-print">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
                     <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
