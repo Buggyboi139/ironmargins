@@ -183,7 +183,9 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
             .from('bids').select('*', { count: 'exact', head: true }).eq('user_id', window.currentUser.id);
         
         const { data: subData } = await window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle();
-        const isActive = (subData && subData.subscription_status === 'active') || localStorage.getItem('im_temp_sub_active') === 'true';
+        
+        const isSubActive = subData && subData.subscription_status && String(subData.subscription_status).toLowerCase().trim() === 'active';
+        const isActive = isSubActive || localStorage.getItem('im_temp_sub_active') === 'true';
 
         if (!countError && count >= 3 && !isActive) {
             if (!isAutosaving) {
