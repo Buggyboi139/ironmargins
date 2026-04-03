@@ -1,4 +1,6 @@
 window.currentBidId = null;
+window.activeCloseoutBidId = null;
+window.activeCloseoutBidData = {};
 
 window.refreshSavedBids = async function() {
     const recentList = document.getElementById('recentBidsList');
@@ -96,20 +98,86 @@ window.deleteBid = async function(bidId) {
     if (!error) {
         if (window.currentBidId === bidId) window.currentBidId = null;
         window.refreshSavedBids();
-    } else {
-        alert("Failed to delete bid: " + error.message);
     }
 };
 
-window.openCloseout = function(bidId) {
-    alert('Closeout functionality coming soon!');
-    // The HTML is wired up in index.html, logic will attach to #closeoutModal
+window.openCloseout = async function(bidId) {
+    document.getElementById('closeoutModal').classList.add('show');
+    const { data, error } = await window.supabaseClient.from('bids').select('*').eq('id', bidId).single();
+    if (error || !data) return;
+
+    window.activeCloseoutBidId = bidId;
+    window.activeCloseoutBidData = data.bid_data || {};
+
+    let estMat = 0;
+    let estLab = 0;
+
+    if (data.bid_data.categories) {
+        Object.values(data.bid_data.categories).forEach(cat => {
+            cat.forEach(item => { estMat += (parseFloat(item.qty)||0) * (parseFloat(item.price)||0); });
+        });
+    }
+    if (data.bid_data.labor) {
+        data.bid_data.labor.forEach(item => { estLab += (parseFloat(item.qty)||0) * (parseFloat(item.price)||0); });
+    }
+
+    const totalBid = data.total_amount || 0;
+    const estTotalCost = estMat + estLab;
+
+    document.getElementById('closeout-bid-info').textContent = data.project_name || 'Unnamed Project';
+    document.getElementById('closeout-est-bid').textContent = `$${totalBid.toFixed(2)}`;
+    document.getElementById('closeout-est-cost').textContent = `$${estTotalCost.toFixed(2)}`;
+
+    const matInput = document.getElementById('closeout-actual-mat');
+    const labInput = document.getElementById('closeout-actual-lab');
+    const profitDisplay = document.getElementById('closeout-actual-profit');
+    const notesInput = document.getElementById('closeout-notes');
+
+    matInput.value = window.activeCloseoutBidData.actuals?.materials || '';
+    labInput.value = window.activeCloseoutBidData.actuals?.labor || '';
+    notesInput.value = window.activeCloseoutBidData.actuals?.notes || '';
+
+    const updateProfit = () => {
+        const actMat = parseFloat(matInput.value) || 0;
+        const actLab = parseFloat(labInput.value) || 0;
+        const actProfit = totalBid - (actMat + actLab);
+        profitDisplay.textContent = `$${actProfit.toFixed(2)}`;
+        profitDisplay.style.color = actProfit >= 0 ? '#10b981' : '#fb7185';
+    };
+
+    matInput.oninput = updateProfit;
+    labInput.oninput = updateProfit;
+    updateProfit();
+};
+
+window.submitCloseout = async function() {
+    if (!window.activeCloseoutBidId) return;
+
+    const actMat = parseFloat(document.getElementById('closeout-actual-mat').value) || 0;
+    const actLab = parseFloat(document.getElementById('closeout-actual-lab').value) || 0;
+    const actNotes = document.getElementById('closeout-notes').value;
+    const totalBid = parseFloat(document.getElementById('closeout-est-bid').textContent.replace('$', '')) || 0;
+    const actProfit = totalBid - (actMat + actLab);
+
+    window.activeCloseoutBidData.actuals = {
+        materials: actMat,
+        labor: actLab,
+        profit: actProfit,
+        notes: actNotes
+    };
+
+    const { error } = await window.supabaseClient.from('bids').update({
+        bid_data: window.activeCloseoutBidData
+    }).eq('id', window.activeCloseoutBidId);
+
+    if (!error) {
+        document.getElementById('closeoutModal').classList.remove('show');
+    }
 };
 
 window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
     if (!window.currentUser || !window.supabaseClient) return false;
 
-    // FREE TIER LIMIT LOGIC
     if (!window.currentBidId) {
         const { count, error: countError } = await window.supabaseClient
             .from('bids').select('*', { count: 'exact', head: true }).eq('user_id', window.currentUser.id);
@@ -119,7 +187,6 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
 
         if (!countError && count >= 3 && !isActive) {
             if (!isAutosaving) {
-                alert("Free Tier Limit Reached: You have 3 saved bids. Upgrade to Pro for unlimited bids and PDF generation.");
                 document.getElementById('profileModal').classList.add('show');
             }
             return false;
