@@ -3,6 +3,7 @@ window.categories = ['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'con
 window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Hauls' };
 window.sessionCustomSaved = new Set();
 window.autoSaveTimer = null;
+window.tempTemplateData = [];
 
 window.calculateRowQuantity = function(row, cat) {
     const shapes = row.querySelectorAll('.shape-row'); 
@@ -75,7 +76,7 @@ window.addLaborRow = function(type) {
         <div class="input-group">
             <label>Phase</label>
             <select class="glass-input phase-select">
-                ${['Demo','Framing','Rough-In','Drywall','Trim/Finish','Paint','Cleanup','Travel','General','Other']
+                ${['Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Travel','General','Other']
                   .map(p => `<option value="${p}" ${p === defaultPhase ? 'selected' : ''}>${p}</option>`).join('')}
             </select>
         </div>`;
@@ -263,4 +264,59 @@ window.saveAsTemplate = async function(category) {
             setTimeout(() => btn.textContent = originalText, 2000);
         }
     }
+}
+
+window.loadTemplate = async function(category) {
+    if (!window.currentUser || !window.supabaseClient) return;
+    const modal = document.getElementById('templateModal');
+    const list = document.getElementById('template-list');
+    list.innerHTML = 'Loading...';
+    modal.classList.add('show');
+
+    const { data, error } = await window.supabaseClient.from('assemblies').select('*').eq('category', category).eq('user_id', window.currentUser.id);
+    
+    if (error || !data || data.length === 0) {
+        list.innerHTML = '<div style="padding: 15px; color: var(--text-muted);">No templates found.</div>';
+        return;
+    }
+
+    list.innerHTML = data.map(t => `
+        <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
+             onclick="window.applyTemplate('${category}', ${t.id})">
+            <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
+        </div>
+    `).join('');
+    
+    window.tempTemplateData = data;
+}
+
+window.applyTemplate = function(category, id) {
+    const template = window.tempTemplateData.find(t => t.id === id);
+    if (!template) return;
+
+    const containerId = `${category}-rows-container`;
+    template.items.forEach(item => {
+        window.addMaterialRow(category, containerId);
+        const container = document.getElementById(containerId);
+        const row = container.lastElementChild;
+
+        const opt = row.querySelector(`.custom-option[data-value="${item.item_id}"]`);
+        if (opt) {
+            row.querySelector('.custom-select-text').textContent = opt.textContent;
+            row.querySelector('.item-select').value = item.item_id;
+            row.querySelector('.unit').textContent = opt.dataset.unit + 's';
+        }
+        if (item.item_id === 'CUSTOM') {
+            row.querySelector('.custom-select-container').style.display = 'none';
+            row.querySelector('.custom-mat-wrapper').style.display = 'flex';
+            row.querySelector('.custom-mat-input').value = item.custom_name;
+        }
+        
+        row.querySelector('.qty-input').value = item.qty;
+        row.querySelector('.price-input').value = item.price;
+        window.calculateRowQuantity(row, category);
+    });
+
+    document.getElementById('templateModal').classList.remove('show');
+    window.saveState();
 }
