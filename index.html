@@ -43,6 +43,7 @@
         </div>
         <div class="nav-actions">
             <button id="manualSaveBtn" class="nav-link neutral" style="display: none; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Save Bid</button>
+            <button id="openStarterTemplatesBtn" class="nav-link neutral">Templates</button>
             <button id="authBtn" class="nav-link neutral">Sign In</button>
             <button id="resetBidBtn" class="nav-link neutral">Clear Bid</button>
         </div>
@@ -108,6 +109,7 @@
                     <div class="category-title-label">Required Modules</div>
                     <div class="toggles-grid">
                         <label><input type="checkbox" value="labor" class="cat-checkbox module-toggle" data-target="module-labor"><div class="cat-label">Labor</div></label>
+                        <label><input type="checkbox" value="subs" class="cat-checkbox module-toggle" data-target="module-subs"><div class="cat-label">Subcontractors</div></label>
                         <label><input type="checkbox" value="wood" class="cat-checkbox module-toggle" data-target="module-wood"><div class="cat-label">Lumber</div></label>
                         <label><input type="checkbox" value="paint" class="cat-checkbox module-toggle" data-target="module-paint"><div class="cat-label">Paint</div></label>
                         <label><input type="checkbox" value="electrical" class="cat-checkbox module-toggle" data-target="module-electrical"><div class="cat-label">Electrical</div></label>
@@ -128,6 +130,14 @@
                         <div id="labor-rows-container"></div>
                         <button id="add-laborer-btn" class="add-row-btn" style="margin-bottom: 10px;">+ Add Laborer (Crew Member)</button>
                         <button id="add-vehicle-btn" class="add-row-btn" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);">+ Add Vehicle / Travel Run</button>
+                    </div>
+                </div>
+
+                <div id="module-subs" class="module-container">
+                    <div class="module-header collapsible"><span>Subcontractors</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="subs-rows-container"></div>
+                        <button id="add-sub-btn" class="add-row-btn" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%); border-color: rgba(52, 211, 153, 0.3);">+ Add Subcontractor Quote</button>
                     </div>
                 </div>
                 
@@ -355,6 +365,15 @@
         </div>
     </div>
 
+    <div id="starterTemplateModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button class="close-btn" onclick="document.getElementById('starterTemplateModal').classList.remove('show')">&times;</button>
+            <h2>Starter Templates</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Start fresh with a pre-built bid kit.</p>
+            <div id="starter-template-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
     <div id="profileModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeProfileModal" class="close-btn">&times;</button>
@@ -375,6 +394,10 @@
             <div class="input-group" style="margin-bottom: 15px;">
                 <label>Business Address / Email</label>
                 <input type="text" id="meta-company-address" class="glass-input" placeholder="e.g. 100 Builder Ln | info@apex.com">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Terms & Conditions (PDF Footer)</label>
+                <textarea id="profile-custom-terms" class="glass-input" rows="4" placeholder="e.g. This estimate is valid for 30 days..."></textarea>
             </div>
             <div class="input-group" style="margin-bottom: 25px;">
                 <label>Company Logo</label>
