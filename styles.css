@@ -57,8 +57,11 @@ nav { padding: 20px 40px; display: flex; justify-content: space-between; align-i
 .side-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .side-menu-link { display: block; width: 100%; text-align: left; background: transparent; border: none; color: var(--text-main); font-size: 1.1rem; padding: 12px 15px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
 .side-menu-link:hover { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-.side-menu-divider { height: 1px; background: var(--border-glass); margin: 25px 0; }
-.side-menu-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 15px; }
+
+.menu-tabs { display: flex; gap: 10px; margin: 20px 0 15px 0; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+.menu-tab-btn { flex: 1; padding: 8px; background: transparent; border: none; color: var(--text-muted); font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+.menu-tab-btn.active { background: rgba(255,255,255,0.1); color: #f8fafc; }
+
 .side-menu-more-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); color: #38bdf8; width: calc(100% - 30px); text-align: center; padding: 10px; font-size: 0.9rem; cursor: pointer; font-weight: 600; margin: 15px auto 0; border-radius: 8px; transition: 0.2s; display: block; }
 .side-menu-more-btn:hover { background: rgba(56, 189, 248, 0.1); }
 
@@ -85,6 +88,9 @@ nav { padding: 20px 40px; display: flex; justify-content: space-between; align-i
 #setup-view { text-align: center; width: 100%; }
 h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.1; letter-spacing: -1.5px; }
 .subtitle { color: var(--text-muted); font-size: 1.25rem; margin-bottom: 3rem; }
+
+.closed-banner { display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 16px; margin-bottom: 30px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+
 .control-panel { background: linear-gradient(145deg, rgba(30, 41, 59, 0.15) 0%, rgba(15, 23, 42, 0.4) 100%); backdrop-filter: blur(30px); text-align: left; padding: 40px; border-radius: 32px; border: 1px solid var(--border-glass); box-shadow: 0 30px 60px rgba(0,0,0,0.5); width: 100%; margin: 0 auto; box-sizing: border-box; }
 
 .category-selector { margin-bottom: 40px; text-align: center; width: 100%; }
