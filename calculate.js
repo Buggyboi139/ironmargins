@@ -20,6 +20,107 @@ window.updatePaymentSchedule = function() {
     localStorage.setItem('im_progAmt', progAmt);
 }
 
+window.saveDataForPdf = function() {
+    const clientSelect = document.getElementById('client-select');
+    const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+    localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
+    localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
+    localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
+}
+
+window.renderDownloadOptions = async function() {
+    const downloadBtn = document.getElementById('downloadPdfTrigger');
+    if(!downloadBtn) return;
+    const parent = downloadBtn.parentElement;
+
+    if (!window.currentUser) {
+        downloadBtn.textContent = "Sign in to Generate Proposal";
+        downloadBtn.style.background = "transparent";
+        downloadBtn.style.border = "1px solid var(--border-glass)";
+        downloadBtn.style.color = "var(--text-main)";
+        downloadBtn.style.display = 'block';
+        downloadBtn.onclick = () => {
+            const am = document.getElementById('authModal');
+            if(am) am.classList.add('show');
+        };
+        return;
+    }
+
+    let subStatus = '';
+    let metaSubStatus = '';
+    if (window.supabaseClient) {
+        const { data } = await window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle();
+        subStatus = data && data.subscription_status ? String(data.subscription_status).toLowerCase().trim() : '';
+    }
+    metaSubStatus = window.currentUser.user_metadata?.subscription_status ? String(window.currentUser.user_metadata.subscription_status).toLowerCase().trim() : '';
+    
+    const isSubActive = ['active', 'trialing'].includes(subStatus) || ['active', 'trialing'].includes(metaSubStatus);
+    const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+    const isPro = isSubActive || isTempActive;
+
+    localStorage.setItem('im_is_pro', isPro ? 'true' : 'false');
+
+    let warningEl = document.getElementById('branding-warning');
+    if (isPro && !localStorage.getItem('im_global_company')) {
+        if (!warningEl) {
+            warningEl = document.createElement('div');
+            warningEl.id = 'branding-warning';
+            warningEl.innerHTML = `<strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
+            warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
+            warningEl.onclick = () => {
+                const pm = document.getElementById('profileModal');
+                if(pm) pm.classList.add('show');
+            };
+            parent.insertBefore(warningEl, downloadBtn);
+        } else {
+            warningEl.style.display = 'block';
+        }
+    } else if (warningEl) {
+        warningEl.style.display = 'none';
+    }
+
+    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
+    downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
+    downloadBtn.style.border = "none";
+    downloadBtn.style.color = "#0f172a";
+    downloadBtn.style.display = 'block';
+    
+    downloadBtn.onclick = async () => {
+        window.saveDataForPdf();
+        const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+        const saveResult = await window.saveBidToCloud(totalAmount, false);
+        if (saveResult === 'LIMIT_REACHED') return;
+        
+        if (window.currentBidId) {
+            localStorage.setItem('im_current_bid_id', window.currentBidId);
+        }
+        window.location.href = './success';
+    };
+
+    let upgradeBtn = document.getElementById('upgradeProBtn');
+    if (!isPro) {
+        if (!upgradeBtn) {
+            upgradeBtn = document.createElement('button');
+            upgradeBtn.id = 'upgradeProBtn';
+            upgradeBtn.className = 'secondary-btn';
+            upgradeBtn.style.width = '100%';
+            upgradeBtn.style.marginTop = '15px';
+            upgradeBtn.textContent = 'Upgrade to Pro (Remove Watermark & Add Logo)';
+            upgradeBtn.onclick = () => {
+                if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
+                window.saveDataForPdf();
+                const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
+                checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
+                window.location.href = checkoutUrl.toString();
+            };
+            downloadBtn.parentNode.insertBefore(upgradeBtn, downloadBtn.nextSibling);
+        }
+        upgradeBtn.style.display = 'block';
+    } else if (upgradeBtn) {
+        upgradeBtn.style.display = 'none';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('deposit-pct').addEventListener('input', window.updatePaymentSchedule);
     document.getElementById('progress-payments').addEventListener('input', window.updatePaymentSchedule);
@@ -109,6 +210,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const total = breakeven + markup + taxAmount;
         localStorage.setItem('im_grandTotal', total);
+
+        localStorage.setItem('im_costs', JSON.stringify(costs));
+        localStorage.setItem('im_cons', cons);
+        localStorage.setItem('im_raw', raw);
+        localStorage.setItem('im_markupPct', markupPct);
+        localStorage.setItem('im_baseLabor', baseLabor);
+        localStorage.setItem('im_laborBurden', laborBurden);
+        localStorage.setItem('im_taxRate', taxRate);
+        localStorage.setItem('im_taxAmount', taxAmount);
         
         document.getElementById('res-project-title').textContent = document.getElementById('meta-project').value || "Project Estimate";
         document.getElementById('res-contractor-profit').textContent = format(markup);
@@ -158,115 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
         setTimeout(() => { document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); window.scrollTo(0,0); }, 300);
-
-        window.renderDownloadOptions = async function() {
-            const downloadBtn = document.getElementById('downloadPdfTrigger');
-            if(!downloadBtn) return;
-            const parent = downloadBtn.parentElement;
-
-            if (!window.currentUser) {
-                downloadBtn.textContent = "Sign in to Generate Proposal";
-                downloadBtn.style.background = "transparent";
-                downloadBtn.style.border = "1px solid var(--border-glass)";
-                downloadBtn.style.color = "var(--text-main)";
-                downloadBtn.style.display = 'block';
-                downloadBtn.onclick = () => {
-                    const am = document.getElementById('authModal');
-                    if(am) am.classList.add('show');
-                };
-                return;
-            }
-
-            let subStatus = '';
-            let metaSubStatus = '';
-            if (window.supabaseClient) {
-                const { data } = await window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle();
-                subStatus = data && data.subscription_status ? String(data.subscription_status).toLowerCase().trim() : '';
-            }
-            metaSubStatus = window.currentUser.user_metadata?.subscription_status ? String(window.currentUser.user_metadata.subscription_status).toLowerCase().trim() : '';
-            
-            const isSubActive = ['active', 'trialing'].includes(subStatus) || ['active', 'trialing'].includes(metaSubStatus);
-            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
-            const isPro = isSubActive || isTempActive;
-
-            localStorage.setItem('im_is_pro', isPro ? 'true' : 'false');
-
-            let warningEl = document.getElementById('branding-warning');
-            if (isPro && !localStorage.getItem('im_global_company')) {
-                if (!warningEl) {
-                    warningEl = document.createElement('div');
-                    warningEl.id = 'branding-warning';
-                    warningEl.innerHTML = `<strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
-                    warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
-                    warningEl.onclick = () => {
-                        const pm = document.getElementById('profileModal');
-                        if(pm) pm.classList.add('show');
-                    };
-                    parent.insertBefore(warningEl, downloadBtn);
-                } else {
-                    warningEl.style.display = 'block';
-                }
-            } else if (warningEl) {
-                warningEl.style.display = 'none';
-            }
-
-            downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
-            downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
-            downloadBtn.style.border = "none";
-            downloadBtn.style.color = "#0f172a";
-            downloadBtn.style.display = 'block';
-            
-            downloadBtn.onclick = async () => {
-                saveDataForPdf();
-                const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-                const saveResult = await window.saveBidToCloud(totalAmount, false);
-                if (saveResult === 'LIMIT_REACHED') return;
-                
-                if (window.currentBidId) {
-                    localStorage.setItem('im_current_bid_id', window.currentBidId);
-                }
-                window.location.href = './success';
-            };
-
-            let upgradeBtn = document.getElementById('upgradeProBtn');
-            if (!isPro) {
-                if (!upgradeBtn) {
-                    upgradeBtn = document.createElement('button');
-                    upgradeBtn.id = 'upgradeProBtn';
-                    upgradeBtn.className = 'secondary-btn';
-                    upgradeBtn.style.width = '100%';
-                    upgradeBtn.style.marginTop = '15px';
-                    upgradeBtn.textContent = 'Upgrade to Pro (Remove Watermark & Add Logo)';
-                    upgradeBtn.onclick = () => {
-                        if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
-                        saveDataForPdf();
-                        const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
-                        checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                        window.location.href = checkoutUrl.toString();
-                    };
-                    downloadBtn.parentNode.insertBefore(upgradeBtn, downloadBtn.nextSibling);
-                }
-                upgradeBtn.style.display = 'block';
-            } else if (upgradeBtn) {
-                upgradeBtn.style.display = 'none';
-            }
-        };
-
-        function saveDataForPdf() {
-            const clientSelect = document.getElementById('client-select');
-            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
-            localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
-            localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
-            localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
-            localStorage.setItem('im_costs', JSON.stringify(costs));
-            localStorage.setItem('im_cons', cons);
-            localStorage.setItem('im_raw', raw);
-            localStorage.setItem('im_markupPct', markupPct);
-            localStorage.setItem('im_baseLabor', baseLabor);
-            localStorage.setItem('im_laborBurden', laborBurden);
-            localStorage.setItem('im_taxRate', taxRate);
-            localStorage.setItem('im_taxAmount', taxAmount);
-        }
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     };
