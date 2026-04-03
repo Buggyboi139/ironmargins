@@ -138,7 +138,7 @@
             <nav><div class="logo">IronMargins</div></nav>
             <div class="container">
                 <div class="success-card">
-                    <div class="check-circle">✓</div>
+                    <div class="check-circle">Done</div>
                     <h1 id="mainHeader">Processing...</h1>
                     <p class="subtitle" id="subHeader" style="margin-bottom: 20px;">Preparing your professional bid.</p>
                     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
@@ -390,7 +390,7 @@
 
             const mult = 1 + markupPct;
             const categoryNames = {
-                wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
+                wood: 'Construction Lumber', paint: 'Paint & Finishes', electrical: 'Electrical & Wire', plumbing: 'Plumbing & Pipe', fixtures: 'Fixtures & Cabinetry', concrete: 'Concrete & Flatwork', gravel: 'Gravel & Rock', mulch: 'Mulch & Landscape', topsoil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
             };
 
             let matsHTML = '';
@@ -543,7 +543,7 @@
                             margin:       0,
                             filename:     `${project.replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, useCORS: true },
+                            html2canvas:  { scale: 2, useCORS: true, windowWidth: 816 },
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
 
