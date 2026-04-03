@@ -22,13 +22,16 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: var(--text-main);
     background-color: #05070a;
-    min-height: 100vh; padding-left: 20px; display: flex; flex-direction: column;
+    min-height: 100dvh;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 body::before {
     content: '';
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0; left: 0; width: 100%; height: 100dvh;
     background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0, transparent 40%), 
                       radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0, transparent 40%), 
                       radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
@@ -50,9 +53,9 @@ nav { padding: 20px 40px; display: flex; justify-content: space-between; align-i
 .hamburger-btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 8px; transition: 0.2s; }
 .hamburger-btn:hover { background: rgba(255,255,255,0.1); }
 
-.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
 .side-menu-overlay.show { opacity: 1; pointer-events: all; }
-.side-menu { position: fixed; top: 0; left: 0; width: 320px; height: 100%; background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 9, 15, 0.98) 100%); border-right: 1px solid var(--border-highlight); z-index: 2001; transform: translateX(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+.side-menu { position: fixed; top: 0; left: 0; width: 320px; height: 100dvh; background: linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 9, 15, 0.98) 100%); border-right: 1px solid var(--border-highlight); z-index: 2001; transform: translateX(-100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
 .side-menu.show { transform: translateX(0); }
 .side-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .side-menu-link { display: block; width: 100%; text-align: left; background: transparent; border: none; color: var(--text-main); font-size: 1.1rem; padding: 12px 15px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
@@ -171,7 +174,7 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
 
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0; left: 0; width: 100%; height: 100dvh;
     background: rgba(5, 7, 10, 0.85);
     backdrop-filter: blur(10px);
     z-index: 3000;
