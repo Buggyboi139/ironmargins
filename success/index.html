@@ -185,12 +185,14 @@
                 <table class="pdf-table">
                     <tbody id="pdf-materials-body">
                     </tbody>
+                    <tbody id="pdf-subs-body">
+                    </tbody>
                     <tbody id="pdf-labor-body">
                     </tbody>
                 </table>
 
                 <div class="signature-section" style="margin-top: 60px; page-break-inside: avoid;">
-                    <p style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
+                    <p id="pdf-terms-text" style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
                         <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
                     </p>
                     <div class="sig-flex-container" style="display: flex; justify-content: flex-end; gap: 60px;">
@@ -261,6 +263,8 @@
             const btns = document.getElementById('actionButtons');
             const format = (n) => '$' + parseFloat(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
+            const isPro = localStorage.getItem('im_is_pro') === 'true';
+
             const client = localStorage.getItem('im_clientName');
             const project = localStorage.getItem('im_projectName');
             const clientAddress = localStorage.getItem('im_clientAddress') || '';
@@ -271,6 +275,8 @@
             const baseLabor = parseFloat(localStorage.getItem('im_baseLabor')) || 0;
             const laborBurden = parseFloat(localStorage.getItem('im_laborBurden')) || 0;
             
+            const subsList = JSON.parse(localStorage.getItem('im_subs') || '[]');
+            
             const taxRate = parseFloat(localStorage.getItem('im_taxRate')) || 0;
             const taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
 
@@ -278,6 +284,11 @@
             const depAmt = parseFloat(localStorage.getItem('im_depAmt')) || 0;
             const progQty = parseInt(localStorage.getItem('im_progQty')) || 0;
             const progAmt = parseFloat(localStorage.getItem('im_progAmt')) || 0;
+
+            const customTerms = localStorage.getItem('im_custom_terms');
+            if (customTerms) {
+                document.getElementById('pdf-terms-text').innerHTML = `<strong>Terms & Conditions:</strong> ` + customTerms;
+            }
 
             if(!client) {
                 status.textContent = "Error: No Data Found";
@@ -288,25 +299,38 @@
                 return;
             }
 
-            const logoData = localStorage.getItem('im_logo');
-            const compName = localStorage.getItem('im_global_company');
-            const compPhone = localStorage.getItem('im_global_phone') || '';
-            const compAddress = localStorage.getItem('im_global_address') || '';
-
             let brandHtml = '';
-            if (logoData) {
-                brandHtml += `<img src="${logoData}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
-            }
-            if (compName) {
-                brandHtml += `<h2>${compName}</h2><p>Official Project Proposal</p>`;
-            } else {
-                brandHtml += `<h2>Official Proposal</h2><p>IronMargins.com</p>`;
-            }
+            if (isPro) {
+                const logoData = localStorage.getItem('im_logo');
+                const compName = localStorage.getItem('im_global_company');
+                const compPhone = localStorage.getItem('im_global_phone') || '';
+                const compAddress = localStorage.getItem('im_global_address') || '';
 
-            let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
-            if (contactStr) {
-                brandHtml += `<p style="font-size: 13px; margin-top: 5px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
+                if (logoData) {
+                    brandHtml += `<img src="${logoData}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
+                }
+                if (compName) {
+                    brandHtml += `<h2>${compName}</h2><p>Official Project Proposal</p>`;
+                } else {
+                    brandHtml += `<h2>Official Proposal</h2><p>IronMargins.com</p>`;
+                }
+                let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
+                if (contactStr) {
+                    brandHtml += `<p style="font-size: 13px; margin-top: 5px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
+                }
+            } else {
+                brandHtml += `<h2 style="margin:0; font-size: 28px; color: #0f172a; font-weight:800;">Official Proposal</h2>`;
+                const watermark = document.createElement('div');
+                watermark.style.textAlign = 'center';
+                watermark.style.fontSize = '12px';
+                watermark.style.color = '#94a3b8';
+                watermark.style.marginTop = '40px';
+                watermark.style.borderTop = '1px solid #e2e8f0';
+                watermark.style.paddingTop = '15px';
+                watermark.textContent = 'Generated with IronMargins - Professional Estimating Software';
+                document.querySelector('.signature-section').appendChild(watermark);
             }
+            
             document.getElementById('pdf-brand-container').innerHTML = brandHtml;
 
             document.getElementById('pdf-client').textContent = client;
@@ -328,13 +352,15 @@
             }
             document.getElementById('pdf-schedule-box').innerHTML = scheduleHtml;
 
-            const paymentLink = localStorage.getItem('im_payment_link');
-            if (paymentLink && depAmt > 0) {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
-                const qrContainer = document.createElement('div');
-                qrContainer.style.textAlign = 'right';
-                qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
-                document.querySelector('.pdf-quote-box').appendChild(qrContainer);
+            if (isPro) {
+                const paymentLink = localStorage.getItem('im_payment_link');
+                if (paymentLink && depAmt > 0) {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
+                    const qrContainer = document.createElement('div');
+                    qrContainer.style.textAlign = 'right';
+                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
+                    document.querySelector('.pdf-quote-box').appendChild(qrContainer);
+                }
             }
 
             const stateStr = localStorage.getItem('im_v5_data');
@@ -342,8 +368,8 @@
             if (stateStr) {
                 try {
                     const state = JSON.parse(stateStr);
-                    if(state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
-                } catch(e){}
+                    if (state && state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
+                } catch(e) {}
             }
 
             if (notes) {
@@ -373,8 +399,15 @@
                     <td class="item-cost" style="color: #64748b; font-weight: 500;">${format(taxAmount)}</td>
                 </tr>`;
             }
-
             document.getElementById('pdf-materials-body').innerHTML = matsHTML;
+
+            if (subsList.length > 0) {
+                let subsHTML = '';
+                subsList.forEach(s => {
+                    subsHTML += `<tr><td class="item-name">• Subcontractor: ${s.name} <span style="display:block; font-size:12px; color:#94a3b8; font-weight:400; margin-top:4px;">${s.desc}</span></td><td class="item-cost" style="vertical-align:top;">${format(s.price * mult)}</td></tr>`;
+                });
+                document.getElementById('pdf-subs-body').innerHTML = subsHTML;
+            }
 
             if (baseLabor > 0) {
                 let lHtml = `<tr><td class="item-name">• Base Labor & Equipment</td><td class="item-cost">${format(baseLabor * mult)}</td></tr>`;
