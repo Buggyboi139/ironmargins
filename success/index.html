@@ -538,9 +538,11 @@
                     }
 
                     try {
+                        window.scrollTo(0, 0);
                         const element = document.getElementById('pdf-wrapper');
                         const opt = {
-                            margin:       0,
+                            margin:       [0.5, 0.5, 0.5, 0.5],
+                            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
                             filename:     `${project.replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
                             html2canvas:  { scale: 2, useCORS: true, windowWidth: 816 },
