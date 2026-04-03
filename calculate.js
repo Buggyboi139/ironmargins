@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!warningEl) {
                     warningEl = document.createElement('div');
                     warningEl.id = 'branding-warning';
-                    warningEl.innerHTML = `⚠️ <strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
+                    warningEl.innerHTML = `<strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
                     warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
                     warningEl.onclick = () => {
                         const pm = document.getElementById('profileModal');
@@ -220,6 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveDataForPdf();
                 const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
                 await window.saveBidToCloud(totalAmount, false);
+                if (window.currentBidId) {
+                    localStorage.setItem('im_current_bid_id', window.currentBidId);
+                }
                 window.location.href = './success';
             };
 
