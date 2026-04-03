@@ -12,6 +12,8 @@
       gtag('config', 'G-4WWZ1PYH4Q');
       gtag('config', 'AW-000000000');
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         :root {
@@ -226,7 +228,15 @@
     </div>
     
     <script>
+        const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcmVmdWdmenRld2doaWFtYmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDc1MDMsImV4cCI6MjA5MDA4MzUwM30.QncelfMky_DyIFV_7aq-NUlM9TBsxFAdj8TyLZcrD64'; 
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         document.addEventListener('DOMContentLoaded', async () => {
+            let currentUser = null;
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session && session.user) currentUser = session.user;
+
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
                 if (window.gtag) {
@@ -264,6 +274,7 @@
             const format = (n) => '$' + parseFloat(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
             const isPro = localStorage.getItem('im_is_pro') === 'true';
+            const currentBidId = localStorage.getItem('im_current_bid_id');
 
             const client = localStorage.getItem('im_clientName');
             const project = localStorage.getItem('im_projectName');
@@ -368,8 +379,8 @@
             if (stateStr) {
                 try {
                     const state = JSON.parse(stateStr);
-                    if (state && state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
-                } catch(e) {}
+                    if(state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
+                } catch(e){}
             }
 
             if (notes) {
@@ -484,7 +495,11 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                 };
 
-                document.getElementById('signAndDownloadBtn').onclick = () => {
+                document.getElementById('signAndDownloadBtn').onclick = async () => {
+                    const signBtn = document.getElementById('signAndDownloadBtn');
+                    signBtn.textContent = 'Generating PDF...';
+                    signBtn.disabled = true;
+
                     const isCanvasEmpty = () => {
                         const blank = document.createElement('canvas');
                         blank.width = canvas.width;
@@ -522,9 +537,44 @@
                         dateContainer.appendChild(dateEl);
                     }
 
-                    setTimeout(() => {
+                    try {
+                        const element = document.getElementById('pdf-wrapper');
+                        const opt = {
+                            margin:       0,
+                            filename:     `${project.replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`,
+                            image:        { type: 'jpeg', quality: 0.98 },
+                            html2canvas:  { scale: 2, useCORS: true },
+                            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                        };
+
+                        if (currentUser && currentBidId && window.supabaseClient) {
+                            const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+                            
+                            const fileName = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
+                            const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
+                                .from('signed_pdfs')
+                                .upload(fileName, pdfBlob, { contentType: 'application/pdf' });
+                            
+                            if (!uploadError && uploadData) {
+                                const { data: publicUrlData } = window.supabaseClient.storage
+                                    .from('signed_pdfs')
+                                    .getPublicUrl(uploadData.path);
+                                    
+                                await window.supabaseClient.from('bids').update({ 
+                                    pdf_url: publicUrlData.publicUrl 
+                                }).eq('id', currentBidId);
+                            }
+                        }
+
+                        await html2pdf().from(element).set(opt).save();
+
+                    } catch (e) {
+                        console.error('PDF Generation Error:', e);
                         window.print();
-                    }, 300);
+                    } finally {
+                        signBtn.textContent = 'Accept & Download PDF';
+                        signBtn.disabled = false;
+                    }
                 };
             }
         });
