@@ -46,14 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return c;
         };
         
-        const costs = { wood: getCost('wood-rows-container'), paint: getCost('paint-rows-container'), elec: getCost('electrical-rows-container'), plumb: getCost('plumbing-rows-container'), fix: getCost('fixtures-rows-container'), conc: getCost('concrete-rows-container'), grav: getCost('gravel-rows-container'), mulch: getCost('mulch-rows-container'), soil: getCost('topsoil-rows-container'), demo: getCost('demo-rows-container') };
+        const costs = { wood: getCost('wood-rows-container'), paint: getCost('paint-rows-container'), electrical: getCost('electrical-rows-container'), plumbing: getCost('plumbing-rows-container'), fixtures: getCost('fixtures-rows-container'), concrete: getCost('concrete-rows-container'), gravel: getCost('gravel-rows-container'), mulch: getCost('mulch-rows-container'), topsoil: getCost('topsoil-rows-container'), demo: getCost('demo-rows-container') };
         raw = Object.values(costs).reduce((a, b) => a + b, 0);
         
         if (document.getElementById('wood-consumables-check')?.checked) cons += costs.wood * 0.05;
         if (document.getElementById('paint-consumables-check')?.checked) cons += costs.paint * 0.05;
-        if (document.getElementById('electrical-consumables-check')?.checked) cons += costs.elec * 0.05;
-        if (document.getElementById('plumbing-consumables-check')?.checked) cons += costs.plumb * 0.05;
-        if (document.getElementById('fixtures-consumables-check')?.checked) cons += costs.fix * 0.05;
+        if (document.getElementById('electrical-consumables-check')?.checked) cons += costs.electrical * 0.05;
+        if (document.getElementById('plumbing-consumables-check')?.checked) cons += costs.plumbing * 0.05;
+        if (document.getElementById('fixtures-consumables-check')?.checked) cons += costs.fixtures * 0.05;
         
         let baseLabor = 0;
         let laborByPhase = {};
@@ -219,7 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.onclick = async () => {
                 saveDataForPdf();
                 const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-                await window.saveBidToCloud(totalAmount, false);
+                const saveResult = await window.saveBidToCloud(totalAmount, false);
+                if (saveResult === 'LIMIT_REACHED') return;
+                
                 if (window.currentBidId) {
                     localStorage.setItem('im_current_bid_id', window.currentBidId);
                 }
