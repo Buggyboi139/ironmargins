@@ -95,8 +95,24 @@ window.addLaborRow = function(type) {
     window.saveState();
 }
 
+window.addSubRow = function() {
+    if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: 'subcontractor' });
+    const container = document.getElementById('subs-rows-container');
+    const html = `
+        <div class="calc-row sub-entry">
+            <div class="input-row">
+                <div class="input-group"><label>Subcontractor Name</label><input type="text" class="glass-input sub-name" placeholder="e.g. ABC Electric"></div>
+                <div class="input-group" style="flex:2;"><label>Scope Description</label><input type="text" class="glass-input sub-desc" placeholder="e.g. Wire 3 new outlets"></div>
+                <div class="input-group"><label>Flat Quote</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input sub-price" value="0"></div></div>
+                <button class="remove-row-btn">×</button>
+            </div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    window.saveState();
+}
+
 window.saveState = function(skipAutosave = false) {
-    const state = { categories: {}, labor: [], meta: {} };
+    const state = { categories: {}, labor: [], subs: [], meta: {} };
     
     document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
         const key = el.id || el.name || el.value;
@@ -130,6 +146,17 @@ window.saveState = function(skipAutosave = false) {
                 name: row.querySelector('.glass-input[type="text"]').value,
                 qty: row.querySelector('.qty-input').value,
                 price: row.querySelector('.price-input').value
+            });
+        });
+    }
+
+    const subsContainer = document.getElementById('subs-rows-container');
+    if (subsContainer) {
+        subsContainer.querySelectorAll('.calc-row').forEach(row => {
+            state.subs.push({
+                name: row.querySelector('.sub-name').value,
+                desc: row.querySelector('.sub-desc').value,
+                price: row.querySelector('.sub-price').value
             });
         });
     }
@@ -180,6 +207,18 @@ window.loadState = function(dataOverride) {
         });
     }
 
+    const subsContainer = document.getElementById('subs-rows-container');
+    if (subsContainer && state.subs) {
+        subsContainer.innerHTML = '';
+        state.subs.forEach(s => {
+            window.addSubRow();
+            const row = subsContainer.lastElementChild;
+            row.querySelector('.sub-name').value = s.name;
+            row.querySelector('.sub-desc').value = s.desc;
+            row.querySelector('.sub-price').value = s.price;
+        });
+    }
+
     if (state.categories) {
         window.categories.forEach(cat => {
             const container = document.getElementById(`${cat}-rows-container`);
@@ -220,9 +259,15 @@ window.loadState = function(dataOverride) {
 
     document.querySelectorAll('.module-toggle').forEach(t => { 
         const d = document.getElementById(t.getAttribute('data-target')); 
-        if(t.checked) d.classList.add('active'); else d.classList.remove('active'); 
+        if(t.checked && d) d.classList.add('active'); 
+        else if(d) d.classList.remove('active'); 
     });
-    document.getElementById('markupDisplay').textContent = document.getElementById('markupSlider').value + '%';
+    
+    const markupDisplay = document.getElementById('markupDisplay');
+    const markupSlider = document.getElementById('markupSlider');
+    if(markupDisplay && markupSlider) {
+        markupDisplay.textContent = markupSlider.value + '%';
+    }
 }
 
 window.saveAsTemplate = async function(category) {
