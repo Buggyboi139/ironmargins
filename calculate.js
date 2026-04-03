@@ -88,22 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('im_csvData', csvData);
         localStorage.setItem('im_laborByPhase', JSON.stringify(laborByPhase));
+
+        const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
         const total = breakeven + markup + taxAmount;
         localStorage.setItem('im_grandTotal', total);
-
-        localStorage.setItem('im_costs', JSON.stringify(costs));
-        localStorage.setItem('im_cons', cons);
-        localStorage.setItem('im_raw', raw);
-        localStorage.setItem('im_markupPct', markupPct);
-        localStorage.setItem('im_baseLabor', baseLabor);
-        localStorage.setItem('im_laborBurden', laborBurden);
-        localStorage.setItem('im_taxRate', taxRate);
-        localStorage.setItem('im_taxAmount', taxAmount);
         
         document.getElementById('res-project-title').textContent = document.getElementById('meta-project').value || "Project Estimate";
-        
-        const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         document.getElementById('res-contractor-profit').textContent = format(markup);
         
         let contractorHTML = `<div class="item-row" style="border-bottom: 1px dashed var(--border-glass); padding-bottom: 12px; margin-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: #f8fafc;"><span>Total Breakeven Cost</span> <span>-${format(breakeven)}</span></div>`;
@@ -147,21 +138,101 @@ document.addEventListener('DOMContentLoaded', () => {
         window.renderDownloadOptions = async function() {
             const downloadBtn = document.getElementById('downloadPdfTrigger');
             if(!downloadBtn) return;
+            const parent = downloadBtn.parentElement;
             
-            const newBtn = downloadBtn.cloneNode(true);
-            downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
-            
-            newBtn.addEventListener('click', () => {
-                const clientSelect = document.getElementById('client-select');
-                const clientName = clientSelect.options[clientSelect.selectedIndex]?.text || 'Draft Client';
-                const projectName = document.getElementById('meta-project').value || 'Draft Project';
+            let warningEl = document.getElementById('branding-warning');
+            if (!localStorage.getItem('im_global_company')) {
+                if (!warningEl) {
+                    warningEl = document.createElement('div');
+                    warningEl.id = 'branding-warning';
+                    warningEl.innerHTML = `⚠️ <strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
+                    warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
+                    warningEl.onclick = () => {
+                        const pm = document.getElementById('profileModal');
+                        if(pm) pm.classList.add('show');
+                    };
+                    parent.insertBefore(warningEl, downloadBtn);
+                } else {
+                    warningEl.style.display = 'block';
+                }
+            } else if (warningEl) {
+                warningEl.style.display = 'none';
+            }
+
+            if (!window.currentUser) {
+                downloadBtn.textContent = "Sign in to Generate Proposal";
+                downloadBtn.style.background = "transparent";
+                downloadBtn.style.border = "1px solid var(--border-glass)";
+                downloadBtn.style.color = "var(--text-main)";
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => {
+                    const am = document.getElementById('authModal');
+                    if(am) am.classList.add('show');
+                };
+                return;
+            }
+
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .select('subscription_status')
+                .eq('id', window.currentUser.id)
+                .maybeSingle();
+
+            const isDbActive = data && data.subscription_status === 'active';
+            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+
+            if (isDbActive || isTempActive) {
+                downloadBtn.textContent = "Review & Generate Proposal";
+                downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
+                downloadBtn.style.border = "none";
+                downloadBtn.style.color = "#0f172a";
+                downloadBtn.style.display = 'block';
                 
-                localStorage.setItem('im_clientName', clientName);
-                localStorage.setItem('im_projectName', projectName);
+                downloadBtn.onclick = async () => {
+                    saveDataForPdf();
+                    const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+                    await window.saveBidToCloud(totalAmount, false);
+                    window.location.href = './success';
+                };
+            } else {
+                downloadBtn.textContent = "Subscribe to Generate ($12.99/mo)";
+                downloadBtn.style.background = "var(--gradient-primary)";
+                downloadBtn.style.border = "none";
+                downloadBtn.style.color = "#0f172a";
+                downloadBtn.style.display = 'block';
                 
-                window.location.href = '/success';
-            });
+                downloadBtn.onclick = async () => {
+                    if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
+                        const pm = document.getElementById('profileModal');
+                        if(pm) pm.classList.add('show');
+                        return;
+                    }
+                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
+                    saveDataForPdf();
+                    const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+                    await window.saveBidToCloud(totalAmount, false);
+                    const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
+                    checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
+                    window.location.href = checkoutUrl.toString();
+                };
+            }
         };
+
+        function saveDataForPdf() {
+            const clientSelect = document.getElementById('client-select');
+            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+            localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
+            localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
+            localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
+            localStorage.setItem('im_costs', JSON.stringify(costs));
+            localStorage.setItem('im_cons', cons);
+            localStorage.setItem('im_raw', raw);
+            localStorage.setItem('im_markupPct', markupPct);
+            localStorage.setItem('im_baseLabor', baseLabor);
+            localStorage.setItem('im_laborBurden', laborBurden);
+            localStorage.setItem('im_taxRate', taxRate);
+            localStorage.setItem('im_taxAmount', taxAmount);
+        }
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     };
