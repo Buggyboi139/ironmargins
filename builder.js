@@ -46,7 +46,7 @@ window.addMaterialRow = function(cat, containerId) {
     if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
     const items = window.materialsDb[cat] || [];
     let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
-    opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
+    opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">+ Custom Material...</div>`;
     const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
     const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
     
@@ -305,7 +305,7 @@ window.saveAsTemplate = async function(category) {
         const btn = document.querySelector(`.save-template-btn[data-category="${category}"]`);
         if (btn) {
             const originalText = btn.textContent;
-            btn.textContent = 'Saved! ✓';
+            btn.textContent = 'Saved!';
             setTimeout(() => btn.textContent = originalText, 2000);
         }
     }
