@@ -88,13 +88,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('im_csvData', csvData);
         localStorage.setItem('im_laborByPhase', JSON.stringify(laborByPhase));
-
-        const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
         const total = breakeven + markup + taxAmount;
         localStorage.setItem('im_grandTotal', total);
+
+        localStorage.setItem('im_costs', JSON.stringify(costs));
+        localStorage.setItem('im_cons', cons);
+        localStorage.setItem('im_raw', raw);
+        localStorage.setItem('im_markupPct', markupPct);
+        localStorage.setItem('im_baseLabor', baseLabor);
+        localStorage.setItem('im_laborBurden', laborBurden);
+        localStorage.setItem('im_taxRate', taxRate);
+        localStorage.setItem('im_taxAmount', taxAmount);
         
         document.getElementById('res-project-title').textContent = document.getElementById('meta-project').value || "Project Estimate";
+        
+        const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         document.getElementById('res-contractor-profit').textContent = format(markup);
         
         let contractorHTML = `<div class="item-row" style="border-bottom: 1px dashed var(--border-glass); padding-bottom: 12px; margin-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: #f8fafc;"><span>Total Breakeven Cost</span> <span>-${format(breakeven)}</span></div>`;
@@ -136,10 +145,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); window.scrollTo(0,0); }, 300);
 
         window.renderDownloadOptions = async function() {
-            // (Your existing PDF download prep logic from the old app.js goes here perfectly)
             const downloadBtn = document.getElementById('downloadPdfTrigger');
             if(!downloadBtn) return;
-            // ... truncated for brevity, exact same as your old file logic to prepare PDF ...
+            
+            const newBtn = downloadBtn.cloneNode(true);
+            downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
+            
+            newBtn.addEventListener('click', () => {
+                const clientSelect = document.getElementById('client-select');
+                const clientName = clientSelect.options[clientSelect.selectedIndex]?.text || 'Draft Client';
+                const projectName = document.getElementById('meta-project').value || 'Draft Project';
+                
+                localStorage.setItem('im_clientName', clientName);
+                localStorage.setItem('im_projectName', projectName);
+                
+                window.location.href = '/success';
+            });
         };
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
