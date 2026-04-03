@@ -302,7 +302,7 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
     h1 { font-size: 2.2rem; }
     .subtitle { font-size: 1.1rem; }
     .dashboard-grid { grid-template-columns: 1fr; } 
-    .control-panel { padding: 25px 15px 100px 15px; border-radius: 24px; }
+    .control-panel { padding: 25px 15px 120px 15px; border-radius: 24px; }
     .module-content { padding: 15px; }
     .calc-row { padding: 15px; }
     .input-row { flex-direction: column; align-items: stretch; width: 100%; } 
