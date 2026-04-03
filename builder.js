@@ -384,6 +384,19 @@ window.applyTemplate = function(category, id) {
         window.calculateRowQuantity(row, category);
     });
 
+    const toggle = document.querySelector(`.module-toggle[value="${category}"]`);
+    if (toggle) {
+        if (!toggle.checked) toggle.checked = true;
+        const targetId = toggle.getAttribute('data-target');
+        if (targetId) {
+            const mod = document.getElementById(targetId);
+            if (mod) {
+                mod.classList.add('active');
+                mod.classList.remove('collapsed');
+            }
+        }
+    }
+
     document.getElementById('templateModal').classList.remove('show');
     window.saveState();
 }
