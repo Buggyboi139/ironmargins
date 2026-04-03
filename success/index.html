@@ -29,18 +29,18 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--text-main);
             background-color: #05070a;
-            min-height: 100vh;
+            min-height: 100dvh;
         }
         .app-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            min-height: 100dvh;
             background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0, transparent 40%), 
                               radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0, transparent 40%), 
                               radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
         }
-        .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; transition: opacity 0.3s ease; }
         nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
         .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .container { max-width: 800px; width: 100%; padding: 60px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -54,11 +54,14 @@
         .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; border: none; outline: none; transition: 0.2s; }
         .secondary-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-glass); padding: 16px 32px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         
+        #preview-container { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         #pdf-wrapper {
             position: relative;
             width: 100%;
             max-width: 816px; 
-            min-height: 1056px; 
+            min-height: auto; 
             background: #ffffff;
             color: #0f172a;
             padding: 48px;
@@ -219,8 +222,13 @@
                     <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
                     <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
                 </div>
-                <canvas id="signature-pad" style="width: 100%; height: 150px; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(0,0,0,0.2); touch-action: none; cursor: crosshair;"></canvas>
-                <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 25px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
+                
+                <div style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 15px;">
+                    <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 10px;">Use your finger to sign inside the box</p>
+                    <canvas id="signature-pad" style="width: 100%; height: 120px; border-radius: 8px; touch-action: none; cursor: crosshair;"></canvas>
+                </div>
+
+                <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 10px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
                 <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
             </div>
 
@@ -434,11 +442,12 @@
                 if (p >= 100) { 
                     p = 100; 
                     clearInterval(iv); 
+                    document.getElementById('ui-container').style.opacity = '0';
                     setTimeout(() => {
                         document.getElementById('ui-container').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'block';
                         initSignaturePad();
-                    }, 500); 
+                    }, 300); 
                 }
                 bar.style.width = p + '%';
             }, 150);
@@ -451,7 +460,7 @@
                 function resizeCanvas() {
                     const rect = canvas.parentElement.getBoundingClientRect();
                     canvas.width = rect.width;
-                    canvas.height = 150;
+                    canvas.height = 120;
                     ctx.strokeStyle = '#f8fafc';
                     ctx.lineWidth = 2;
                     ctx.lineCap = 'round';
@@ -540,8 +549,14 @@
                     try {
                         window.scrollTo(0, 0);
                         const element = document.getElementById('pdf-wrapper');
+                        
+                        const originalWidth = element.style.width;
+                        const originalMaxWidth = element.style.maxWidth;
+                        element.style.width = '816px';
+                        element.style.maxWidth = '816px';
+
                         const opt = {
-                            margin:       [0.5, 0.5, 0.5, 0.5],
+                            margin:       [0.4, 0.4, 0.4, 0.4],
                             pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
                             filename:     `${project.replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
@@ -569,6 +584,9 @@
                         }
 
                         await html2pdf().from(element).set(opt).save();
+
+                        element.style.width = originalWidth;
+                        element.style.maxWidth = originalMaxWidth;
 
                     } catch (e) {
                         console.error('PDF Generation Error:', e);
