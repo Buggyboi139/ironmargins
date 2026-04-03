@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cookieBanner').style.display = 'none';
     });
 
-    window.supabaseClient.auth.onAuthStateChange((event, session) => {
+    window.supabaseClient?.auth?.onAuthStateChange((event, session) => {
         const hasUser = !!(session && session.user);
         document.querySelectorAll('.template-btn-auth').forEach(btn => {
             btn.style.display = hasUser ? 'block' : 'none';
@@ -57,28 +57,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const sideMenu = document.getElementById('sideMenu');
     const sideMenuOverlay = document.getElementById('sideMenuOverlay');
     window.closeSideMenu = () => { 
-        sideMenu.classList.remove('show');
-        sideMenuOverlay.classList.remove('show'); 
+        sideMenu?.classList.remove('show');
+        sideMenuOverlay?.classList.remove('show'); 
     };
     
     document.getElementById('hamburgerBtn')?.addEventListener('click', () => {
-        sideMenu.classList.add('show'); 
-        sideMenuOverlay.classList.add('show');
+        sideMenu?.classList.add('show'); 
+        sideMenuOverlay?.classList.add('show');
     });
     
     document.getElementById('closeSideMenuBtn')?.addEventListener('click', window.closeSideMenu);
     sideMenuOverlay?.addEventListener('click', window.closeSideMenu);
 
-    document.getElementById('openClientModalBtn').addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
-    
-    document.getElementById('closeClientModal').addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
+    document.getElementById('openClientModalBtn')?.addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
+    document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
     
     document.getElementById('profileBtn')?.addEventListener('click', () => { 
         window.closeSideMenu(); 
         document.getElementById('profileModal').classList.add('show'); 
     });
-    
-    document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
+    document.getElementById('closeProfileModal')?.addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
+
+    document.getElementById('openStarterTemplatesBtn')?.addEventListener('click', () => {
+        const list = document.getElementById('starter-template-list');
+        list.innerHTML = (window.starterTemplates || []).map(t => `
+            <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
+                 onclick="window.loadStarterTemplate('${t.id}')">
+                <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
+            </div>
+        `).join('');
+        document.getElementById('starterTemplateModal').classList.add('show');
+    });
+
+    window.loadStarterTemplate = function(id) {
+        const t = (window.starterTemplates || []).find(x => x.id === id);
+        if (t) {
+            window.loadState(t.data);
+            window.saveState();
+        }
+        document.getElementById('starterTemplateModal').classList.remove('show');
+    }
 
     const materialsBtn = document.getElementById('materialsBtn');
     const materialsModal = document.getElementById('materialsModal');
@@ -197,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.currentUser || !window.supabaseClient) return;
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('company_name, phone, address, payment_link, logo_data')
+            .select('company_name, phone, address, payment_link, logo_data, custom_terms')
             .eq('id', window.currentUser.id)
             .single();
 
@@ -207,11 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.address) localStorage.setItem('im_global_address', data.address);
             if (data.payment_link) localStorage.setItem('im_payment_link', data.payment_link);
             if (data.logo_data) localStorage.setItem('im_logo', data.logo_data);
+            if (data.custom_terms) localStorage.setItem('im_custom_terms', data.custom_terms);
 
             const compInput = document.getElementById('meta-company');
             const compPhoneInput = document.getElementById('meta-company-phone');
             const compAddressInput = document.getElementById('meta-company-address');
             const paymentLinkInput = document.getElementById('payment-link');
+            const termsInput = document.getElementById('profile-custom-terms');
             const appTitle = document.getElementById('app-main-title');
             const logoPreview = document.getElementById('logo-preview');
 
@@ -220,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (compPhoneInput && data.phone) compPhoneInput.value = data.phone;
             if (compAddressInput && data.address) compAddressInput.value = data.address;
             if (paymentLinkInput && data.payment_link) paymentLinkInput.value = data.payment_link;
+            if (termsInput && data.custom_terms) termsInput.value = data.custom_terms;
             if (logoPreview && data.logo_data) {
                 logoPreview.src = data.logo_data;
                 logoPreview.style.display = 'block';
@@ -227,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    document.getElementById('client-select').addEventListener('change', (e) => {
+    document.getElementById('client-select')?.addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if(selectedOption) {
             localStorage.setItem('im_clientName', selectedOption.textContent);
@@ -236,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveState();
     });
 
-    document.getElementById('btn-save-client').addEventListener('click', async () => {
+    document.getElementById('btn-save-client')?.addEventListener('click', async () => {
         const name = document.getElementById('new-client-name').value;
         const address = document.getElementById('new-client-address').value;
         const phone = document.getElementById('new-client-phone').value;
@@ -255,16 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
         const paymentLinkInput = document.getElementById('payment-link');
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
         const compAddressInput = document.getElementById('meta-company-address');
+        const termsInput = document.getElementById('profile-custom-terms');
 
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
         if (compInput) localStorage.setItem('im_global_company', compInput.value);
         if (compPhoneInput) localStorage.setItem('im_global_phone', compPhoneInput.value);
         if (compAddressInput) localStorage.setItem('im_global_address', compAddressInput.value);
+        if (termsInput) localStorage.setItem('im_custom_terms', termsInput.value);
 
         if (window.currentUser && window.supabaseClient) {
             const logoData = localStorage.getItem('im_logo');
@@ -273,7 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone: compPhoneInput ? compPhoneInput.value : '',
                 address: compAddressInput ? compAddressInput.value : '',
                 payment_link: paymentLinkInput ? paymentLinkInput.value : '',
-                logo_data: logoData || ''
+                logo_data: logoData || '',
+                custom_terms: termsInput ? termsInput.value : ''
             }).eq('id', window.currentUser.id);
         }
         
@@ -281,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
-    document.getElementById('logo-upload').addEventListener('change', function() {
+    document.getElementById('logo-upload')?.addEventListener('change', function() {
         const file = this.files[0];
         const logoPreview = document.getElementById('logo-preview');
         if (file) {
@@ -317,23 +341,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('closeCloseoutModal')?.addEventListener('click', () => document.getElementById('closeoutModal').classList.remove('show'));
 
-    document.getElementById('resetBidBtn').onclick = () => { 
-        if(confirm("Clear this bid and start fresh?")) { 
-            window.currentBidId = null;
-            document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
-            document.getElementById('client-select').value = '';
-            window.categories.concat(['labor']).forEach(c => { 
-                const container = document.getElementById(`${c}-rows-container`); 
-                if(container) container.innerHTML = ''; 
-            });
-            window.saveState();
-        } 
-    };
+    const resetBtn = document.getElementById('resetBidBtn');
+    if(resetBtn) {
+        resetBtn.onclick = () => { 
+            if(confirm("Clear this bid and start fresh?")) { 
+                window.currentBidId = null;
+                document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
+                document.getElementById('client-select').value = '';
+                window.categories.concat(['labor']).forEach(c => { 
+                    const container = document.getElementById(`${c}-rows-container`); 
+                    if(container) container.innerHTML = ''; 
+                });
+                const subsContainer = document.getElementById('subs-rows-container');
+                if (subsContainer) subsContainer.innerHTML = '';
+                window.saveState();
+            } 
+        };
+    }
 
-    document.getElementById('editBtn').onclick = () => { 
-        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-        setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
-    };
+    const editBtn = document.getElementById('editBtn');
+    if(editBtn) {
+        editBtn.onclick = () => { 
+            document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
+            setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
+        };
+    }
 
     document.getElementById('manualSaveBtn')?.addEventListener('click', async () => {
         const manualSaveBtn = document.getElementById('manualSaveBtn');
@@ -343,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
     });
 
-    document.getElementById('setup-view').addEventListener('input', (e) => { 
+    document.getElementById('setup-view')?.addEventListener('input', (e) => { 
         if(e.target.closest('.calc-row')) { 
             const row = e.target.closest('.calc-row'); 
             if(row.dataset.category) window.calculateRowQuantity(row, row.dataset.category); 
@@ -351,8 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveState(); 
     });
 
-    document.getElementById('setup-view').addEventListener('click', (e) => {
+    document.getElementById('setup-view')?.addEventListener('click', (e) => {
         const row = e.target.closest('.calc-row');
+        if (!row) return;
+        
         if (e.target.closest('.custom-select-trigger')) { 
             const d = e.target.closest('.custom-select-container').querySelector('.custom-select-dropdown');
             document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el !== d && el.classList.remove('show')); 
@@ -393,8 +427,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('add-laborer-btn').onclick = () => window.addLaborRow('person');
-    document.getElementById('add-vehicle-btn').onclick = () => window.addLaborRow('vehicle');
+    const laborBtn = document.getElementById('add-laborer-btn');
+    if(laborBtn) laborBtn.onclick = () => window.addLaborRow('person');
+    
+    const vehicleBtn = document.getElementById('add-vehicle-btn');
+    if(vehicleBtn) vehicleBtn.onclick = () => window.addLaborRow('vehicle');
+    
+    const subBtn = document.getElementById('add-sub-btn');
+    if(subBtn) subBtn.onclick = () => window.addSubRow();
     
     window.categories.forEach(c => {
         const btn = document.getElementById(`add-${c}-btn`);
@@ -440,6 +480,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.initApp(); 
         })
         .catch(() => window.initApp());
+
+    fetch('templates.json')
+        .then(res => res.json())
+        .then(data => { window.starterTemplates = data; })
+        .catch(() => { window.starterTemplates = []; });
 });
 
 window.initApp = function() {
@@ -447,33 +492,37 @@ window.initApp = function() {
     const compPhoneInput = document.getElementById('meta-company-phone');
     const compAddressInput = document.getElementById('meta-company-address');
     const paymentLinkInput = document.getElementById('payment-link');
+    const termsInput = document.getElementById('profile-custom-terms');
     const appTitle = document.getElementById('app-main-title');
     
     const globalComp = localStorage.getItem('im_global_company');
     const globalPhone = localStorage.getItem('im_global_phone');
     const globalAddress = localStorage.getItem('im_global_address');
     const savedPaymentLink = localStorage.getItem('im_payment_link');
+    const savedTerms = localStorage.getItem('im_custom_terms');
 
-    if (globalComp) {
+    if (globalComp && compInput) {
         compInput.value = globalComp;
         appTitle.textContent = globalComp + ' Estimates';
     }
-    if (globalPhone) compPhoneInput.value = globalPhone;
-    if (globalAddress) compAddressInput.value = globalAddress;
+    if (globalPhone && compPhoneInput) compPhoneInput.value = globalPhone;
+    if (globalAddress && compAddressInput) compAddressInput.value = globalAddress;
     if (savedPaymentLink && paymentLinkInput) paymentLinkInput.value = savedPaymentLink;
+    if (savedTerms && termsInput) termsInput.value = savedTerms;
 
-    compInput.addEventListener('input', (e) => {
+    compInput?.addEventListener('input', (e) => {
         const val = e.target.value.trim();
         appTitle.textContent = val ? val + ' Estimates' : 'Never Underbid Again';
         localStorage.setItem('im_global_company', val);
     });
     
-    compPhoneInput.addEventListener('input', (e) => localStorage.setItem('im_global_phone', e.target.value.trim()));
-    compAddressInput.addEventListener('input', (e) => localStorage.setItem('im_global_address', e.target.value.trim()));
+    compPhoneInput?.addEventListener('input', (e) => localStorage.setItem('im_global_phone', e.target.value.trim()));
+    compAddressInput?.addEventListener('input', (e) => localStorage.setItem('im_global_address', e.target.value.trim()));
+    termsInput?.addEventListener('input', (e) => localStorage.setItem('im_custom_terms', e.target.value.trim()));
 
     const savedLogo = localStorage.getItem('im_logo');
     const logoPreview = document.getElementById('logo-preview');
-    if (savedLogo) {
+    if (savedLogo && logoPreview) {
         logoPreview.src = savedLogo;
         logoPreview.style.display = 'block';
     }
@@ -484,10 +533,14 @@ window.initApp = function() {
     
     document.querySelectorAll('.module-toggle').forEach(t => t.addEventListener('change', (e) => {
         const d = document.getElementById(e.target.getAttribute('data-target'));
+        if (!d) return;
+        
         if (e.target.checked) { 
             d.classList.add('active'); 
             if (d.querySelectorAll('.calc-row').length === 0) { 
-                e.target.value === 'labor' ? window.addLaborRow('person') : window.addMaterialRow(e.target.value, `${e.target.value}-rows-container`); 
+                if (e.target.value === 'labor') window.addLaborRow('person');
+                else if (e.target.value === 'subs') window.addSubRow();
+                else window.addMaterialRow(e.target.value, `${e.target.value}-rows-container`); 
             } 
         } else { 
             d.classList.remove('active'); 
@@ -497,5 +550,7 @@ window.initApp = function() {
 
     const markupSlider = document.getElementById('markupSlider');
     const markupDisplay = document.getElementById('markupDisplay');
-    markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
+    if(markupSlider && markupDisplay) {
+        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
+    }
 }
