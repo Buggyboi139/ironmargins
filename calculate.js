@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (baseLabor > 0) {
             clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px; border-top: 1px dashed var(--border-glass);"><span>Project Labor & Fleet</span> <span>${format(baseLabor * mult)}</span></div>`;
             for (const [phase, cost] of Object.entries(laborByPhase)) {
-                if (cost > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${phase} Phase</span> <span>${format(cost * mult)}</span></div>`;
+                if (cost > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${phase}</span> <span>${format(cost * mult)}</span></div>`;
             }
             if (laborBurden > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Burden & Insurance</span> <span>${format(laborBurden * mult)}</span></div>`;
         }
@@ -178,10 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .eq('id', window.currentUser.id)
                 .maybeSingle();
 
-            const isDbActive = data && data.subscription_status === 'active';
+            const isSubActive = data && data.subscription_status && String(data.subscription_status).toLowerCase().trim() === 'active';
             const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
 
-            if (isDbActive || isTempActive) {
+            if (isSubActive || isTempActive) {
                 downloadBtn.textContent = "Review & Generate Proposal";
                 downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
                 downloadBtn.style.border = "none";
