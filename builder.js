@@ -131,7 +131,7 @@ window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
     
     document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
-        const key = el.id || (el.classList.contains('module-toggle') ? el.value : el.name);
+        const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
         state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
     });
 
@@ -202,7 +202,10 @@ window.loadState = function(dataOverride) {
 
     if (state.meta) {
         Object.keys(state.meta).forEach(key => {
-            const el = document.getElementById(key) || document.querySelector(`input[value="${key}"]`);
+            let el = document.getElementById(key);
+            if (!el && key.startsWith('toggle-')) el = document.querySelector(`input.module-toggle[value="${key.replace('toggle-', '')}"]`);
+            if (!el) el = document.querySelector(`input[name="${key}"]`);
+            if (!el) el = document.querySelector(`input[value="${key}"]`);
             if (el) {
                 if (el.type === 'checkbox') el.checked = state.meta[key];
                 else el.value = state.meta[key];
