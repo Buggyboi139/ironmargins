@@ -311,3 +311,21 @@ input[type="file"].glass-input::-webkit-file-upload-button:hover { background: r
         margin-top: 0;
     }
 }
+
+.bid-actions { 
+    display: flex; 
+    gap: 4px; 
+    align-items: center; 
+}
+.bid-action-btn { 
+    background: transparent; 
+    border: none;
+    cursor: pointer; 
+    font-size: 1.1rem; 
+    padding: 4px 6px;
+    border-radius: 6px; 
+    transition: 0.2s; 
+}
+.bid-action-btn:hover { 
+    background: rgba(255,255,255,0.1); 
+}
