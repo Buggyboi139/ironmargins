@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>IronMargins | Review & Sign</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
     <script>
@@ -39,14 +40,13 @@
             background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0, transparent 40%), 
                               radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0, transparent 40%), 
                               radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
-            background-attachment: fixed;
         }
         .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; transition: opacity 0.3s ease; }
-        nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid var(--border-glass); }
+        nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
         .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .container { max-width: 800px; width: 100%; padding: 60px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .success-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1px solid var(--border-highlight); border-radius: 32px; padding: 50px; width: 100%; max-width: 500px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
-        .check-circle { width: 80px; height: 80px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-size: 2.5rem; color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+        .success-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); backdrop-filter: blur(20px); border: 1px solid var(--border-highlight); border-radius: 32px; padding: 50px; width: 100%; max-width: 500px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+        .check-circle { width: 80px; height: 80px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
         .progress-container { width: 100%; background: rgba(0,0,0,0.5); border-radius: 10px; height: 8px; overflow: hidden; margin-bottom: 30px; border: 1px solid var(--border-glass); }
         .progress-bar { height: 100%; width: 0%; background: var(--gradient-text); transition: width 0.3s ease; }
         .status-text { font-size: 0.9rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; }
@@ -90,16 +90,22 @@
         .pdf-table td.item-name { width: 75%; font-weight: 500; }
         .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
 
+        .pdf-export {
+            width: 816px !important;
+            max-width: 816px !important;
+            padding: 48px !important;
+        }
+
         @media screen and (max-width: 768px) {
-            #pdf-wrapper { padding: 24px; }
-            .pdf-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            .pdf-meta { text-align: left; width: 100%; }
-            .meta-grid { justify-content: start; text-align: left; grid-template-columns: 100px 1fr; }
-            .pdf-quote-box { flex-direction: column; align-items: flex-start; gap: 15px; padding: 20px; }
-            .quote-col { text-align: left !important; width: 100%; }
-            .quote-val-grand { font-size: 32px; }
-            .sig-flex-container { flex-direction: column !important; justify-content: flex-start !important; gap: 40px !important; }
-            .sig-col { width: 100% !important; }
+            #pdf-wrapper:not(.pdf-export) { padding: 24px; }
+            #pdf-wrapper:not(.pdf-export) .pdf-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            #pdf-wrapper:not(.pdf-export) .pdf-meta { text-align: left; width: 100%; }
+            #pdf-wrapper:not(.pdf-export) .meta-grid { justify-content: start; text-align: left; grid-template-columns: 100px 1fr; }
+            #pdf-wrapper:not(.pdf-export) .pdf-quote-box { flex-direction: column; align-items: flex-start; gap: 15px; padding: 20px; }
+            #pdf-wrapper:not(.pdf-export) .quote-col { text-align: left !important; width: 100%; }
+            #pdf-wrapper:not(.pdf-export) .quote-val-grand { font-size: 32px; }
+            #pdf-wrapper:not(.pdf-export) .sig-flex-container { flex-direction: column !important; justify-content: flex-start !important; gap: 40px !important; }
+            #pdf-wrapper:not(.pdf-export) .sig-col { width: 100% !important; }
         }
 
         @media print {
@@ -142,7 +148,11 @@
             <nav><div class="logo">IronMargins</div></nav>
             <div class="container">
                 <div class="success-card">
-                    <div class="check-circle">Done</div>
+                    <div class="check-circle">
+                        <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
                     <h1 id="mainHeader">Processing...</h1>
                     <p class="subtitle" id="subHeader" style="margin-bottom: 20px;">Preparing your professional bid.</p>
                     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
@@ -218,7 +228,7 @@
                 </div>
             </div>
 
-            <div class="no-print" style="background: rgba(15, 23, 42, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); width: 100%; max-width: 816px; margin-top: 40px;">
+            <div class="no-print" style="background: rgba(15, 23, 42, 0.6); padding: 30px; border-radius: 20px; border: 1px solid var(--border-glass); width: 100%; max-width: 816px; margin-top: 40px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
                     <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
@@ -551,40 +561,28 @@
                         window.scrollTo(0, 0);
                         const element = document.getElementById('pdf-wrapper');
                         
-                        const originalStyle = {
-                            width: element.style.width,
-                            maxWidth: element.style.maxWidth,
-                            position: element.style.position,
-                            top: element.style.top,
-                            left: element.style.left,
-                            margin: element.style.margin,
-                            transform: element.style.transform
-                        };
+                        element.classList.add('pdf-export');
 
-                        element.style.position = 'absolute';
-                        element.style.top = '0';
-                        element.style.left = '0';
-                        element.style.margin = '0';
-                        element.style.width = '816px';
-                        element.style.maxWidth = '816px';
-                        element.style.transform = 'none';
+                        const safeProject = (project || 'Project').replace(/[^a-zA-Z0-9]/g, '_');
+                        const safeClient = (client || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
+                        const filename = `${safeProject}_${safeClient}.pdf`;
 
                         const opt = {
                             margin:       0.4,
-                            pagebreak:    { mode: 'css', avoid: ['.section-header', 'tr', '.signature-section', 'h2'] },
-                            filename:     `${project.replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`,
-                            image:        { type: 'jpeg', quality: 1 },
-                            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 816 },
+                            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
+                            filename:     filename,
+                            image:        { type: 'jpeg', quality: 0.98 },
+                            html2canvas:  { scale: 2, useCORS: true, windowWidth: 816, width: 816 },
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
 
                         if (currentUser && currentBidId && window.supabaseClient) {
                             const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
                             
-                            const fileName = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
+                            const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
                             const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
                                 .from('signed_pdfs')
-                                .upload(fileName, pdfBlob, { contentType: 'application/pdf' });
+                                .upload(fileNameStr, pdfBlob, { contentType: 'application/pdf' });
                             
                             if (!uploadError && uploadData) {
                                 const { data: publicUrlData } = window.supabaseClient.storage
@@ -599,13 +597,7 @@
 
                         await html2pdf().from(element).set(opt).save();
 
-                        element.style.width = originalStyle.width;
-                        element.style.maxWidth = originalStyle.maxWidth;
-                        element.style.position = originalStyle.position;
-                        element.style.top = originalStyle.top;
-                        element.style.left = originalStyle.left;
-                        element.style.margin = originalStyle.margin;
-                        element.style.transform = originalStyle.transform;
+                        element.classList.remove('pdf-export');
 
                     } catch (e) {
                         console.error('PDF Generation Error:', e);
