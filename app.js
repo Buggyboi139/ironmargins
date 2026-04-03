@@ -41,50 +41,107 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!localStorage.getItem('im_cookies_accepted')) {
         document.getElementById('cookieBanner').style.display = 'block';
     }
+    
     document.getElementById('acceptCookiesBtn').addEventListener('click', () => {
         localStorage.setItem('im_cookies_accepted', 'true');
         document.getElementById('cookieBanner').style.display = 'none';
     });
 
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const sideMenuOverlay = document.getElementById('sideMenuOverlay');
-    const sideMenu = document.getElementById('sideMenu');
-    const closeSideMenuBtn = document.getElementById('closeSideMenuBtn');
-
-    if(hamburgerBtn) hamburgerBtn.addEventListener('click', () => {
-        sideMenu.classList.add('show');
-        sideMenuOverlay.classList.add('show');
+    window.supabaseClient.auth.onAuthStateChange((event, session) => {
+        const hasUser = !!(session && session.user);
+        document.querySelectorAll('.template-btn-auth').forEach(btn => {
+            btn.style.display = hasUser ? 'block' : 'none';
+        });
     });
 
-    const closeSideMenu = () => {
+    const sideMenu = document.getElementById('sideMenu');
+    const sideMenuOverlay = document.getElementById('sideMenuOverlay');
+    window.closeSideMenu = () => { 
         sideMenu.classList.remove('show');
-        sideMenuOverlay.classList.remove('show');
+        sideMenuOverlay.classList.remove('show'); 
     };
-
-    if(closeSideMenuBtn) closeSideMenuBtn.addEventListener('click', closeSideMenu);
-    if(sideMenuOverlay) sideMenuOverlay.addEventListener('click', closeSideMenu);
-
-    let materialsDb = {};
-    const categories =['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
     
-    const categoryNames = {
-        wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Hauls'
-    };
+    document.getElementById('hamburgerBtn')?.addEventListener('click', () => {
+        sideMenu.classList.add('show'); 
+        sideMenuOverlay.classList.add('show');
+    });
+    
+    document.getElementById('closeSideMenuBtn')?.addEventListener('click', window.closeSideMenu);
+    sideMenuOverlay?.addEventListener('click', window.closeSideMenu);
 
-    const sessionCustomSaved = new Set();
-    let currentBidId = null;
-    let autoSaveTimer = null;
+    document.getElementById('openClientModalBtn').addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
+    
+    document.getElementById('closeClientModal').addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
+    
+    document.getElementById('profileBtn')?.addEventListener('click', () => { 
+        window.closeSideMenu(); 
+        document.getElementById('profileModal').classList.add('show'); 
+    });
+    
+    document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
 
-    fetch('materials.json')
-        .then(res => res.json())
-        .then(data => { 
-            materialsDb = data; 
-            initApp(); 
-        })
-        .catch(() => initApp());
+    const materialsBtn = document.getElementById('materialsBtn');
+    const materialsModal = document.getElementById('materialsModal');
+    const closeMaterialsModal = document.getElementById('closeMaterialsModal');
+    const catManageSelect = document.getElementById('cat-manage-select');
+    const materialsManageList = document.getElementById('materials-manage-list');
+    const saveMaterialsBtn = document.getElementById('saveMaterialsBtn');
 
-    const markupSlider = document.getElementById('markupSlider');
-    const markupDisplay = document.getElementById('markupDisplay');
+    if(materialsBtn) materialsBtn.addEventListener('click', () => {
+        window.closeSideMenu();
+        materialsModal.classList.add('show');
+        catManageSelect.innerHTML = window.categories.map(c => `<option value="${c}">${window.categoryNames[c]}</option>`).join('');
+        renderManageList();
+    });
+    
+    if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal.classList.remove('show'));
+    if(catManageSelect) catManageSelect.addEventListener('change', renderManageList);
+
+    function renderManageList() {
+        const cat = catManageSelect.value;
+        const items = window.materialsDb[cat] || [];
+        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${i.name}</span>
+                <div class="unit-wrapper icon-prefix" style="max-width:120px;">
+                    <span class="prefix">$</span>
+                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${i.name}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
+        saveMaterialsBtn.textContent = 'Saving...';
+        const inputs = materialsManageList.querySelectorAll('.mat-price-edit');
+        for(let inp of inputs) {
+            const price = parseFloat(inp.value);
+            const name = inp.dataset.name;
+            const cat = inp.dataset.cat;
+            const unit = inp.dataset.unit;
+            
+            const defaultItem = window.materialsDb[cat].find(i => i.name === name);
+            if(defaultItem && defaultItem.price !== price) {
+                defaultItem.price = price;
+                await saveCustomMaterialToCloud(cat, name, price, unit);
+            }
+        }
+        saveMaterialsBtn.textContent = 'Saved!';
+        setTimeout(() => {
+            saveMaterialsBtn.textContent = 'Save Prices';
+            materialsModal.classList.remove('show');
+        }, 1000);
+    });
+
+    async function saveCustomMaterialToCloud(category, name, price, unit) {
+        if (!window.currentUser || !window.supabaseClient) return;
+        const uniqueKey = `${category}_${name}_${price}`;
+        if (window.sessionCustomSaved.has(uniqueKey)) return;
+
+        const payload = { user_id: window.currentUser.id, category, name, price, unit };
+        const { error } = await window.supabaseClient.from('custom_materials').insert([payload]);
+        if (!error) window.sessionCustomSaved.add(uniqueKey);
+    }
 
     window.fetchCustomMaterials = async function() {
         if (!window.supabaseClient || !window.currentUser) return;
@@ -95,15 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
         if (data && !error) {
             data.forEach(mat => {
-                if (!materialsDb[mat.category]) materialsDb[mat.category] =[];
-                
-                const existingDefault = materialsDb[mat.category].find(m => m.name === mat.name);
-                
+                if (!window.materialsDb[mat.category]) window.materialsDb[mat.category] = [];
+                const existingDefault = window.materialsDb[mat.category].find(m => m.name === mat.name);
                 if (existingDefault) {
                     existingDefault.price = parseFloat(mat.price);
                 } else {
-                    if (!materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
-                        materialsDb[mat.category].push({
+                    if (!window.materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
+                        window.materialsDb[mat.category].push({
                             id: `custom_${mat.id}`,
                             name: `⭐ ${mat.name}`,
                             unit: mat.unit,
@@ -115,19 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    async function saveCustomMaterialToCloud(category, name, price, unit) {
+    window.fetchClients = async function() {
         if (!window.currentUser || !window.supabaseClient) return;
-        const uniqueKey = `${category}_${name}_${price}`;
-        if (sessionCustomSaved.has(uniqueKey)) return;
-
-        const payload = { user_id: window.currentUser.id, category, name, price, unit };
-        const { error } = await window.supabaseClient.from('custom_materials').insert([payload]);
-        if (!error) sessionCustomSaved.add(uniqueKey);
-    }
-
-    async function fetchClients() {
-        if (!window.currentUser || !window.supabaseClient) return;
-        
         const { data, error } = await window.supabaseClient
             .from('clients')
             .select('id, name, address, phone')
@@ -147,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (currentValue) clientSelect.value = currentValue;
         }
-    }
+    };
 
     window.fetchUserProfile = async function() {
         if (!window.currentUser || !window.supabaseClient) return;
@@ -189,11 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('im_clientName', selectedOption.textContent);
             localStorage.setItem('im_clientAddress', selectedOption.dataset.address || '');
         }
-        saveState();
+        window.saveState();
     });
-
-    document.getElementById('openClientModalBtn').addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
-    document.getElementById('closeClientModal').addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
 
     document.getElementById('btn-save-client').addEventListener('click', async () => {
         const name = document.getElementById('new-client-name').value;
@@ -210,113 +251,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('new-client-name').value = '';
             document.getElementById('new-client-address').value = '';
             document.getElementById('new-client-phone').value = '';
-            await fetchClients(); 
+            await window.fetchClients(); 
         }
     });
 
-    window.refreshSavedBids = async function() {
-        const recentList = document.getElementById('recentBidsList');
-        const moreList = document.getElementById('moreBidsList');
-        const showMoreBtn = document.getElementById('showMoreBidsBtn');
-        
-        if (!window.currentUser || !window.supabaseClient) {
-            recentList.innerHTML = '<div class="dropdown-empty">Sign in to see saved bids</div>';
-            showMoreBtn.style.display = 'none';
-            moreList.innerHTML = '';
-            return;
-        }
-
-        await window.fetchUserProfile();
-        await fetchClients();
-
-        recentList.innerHTML = '<div class="dropdown-empty">Loading bids...</div>';
-
-        const { data, error } = await window.supabaseClient
-            .from('bids')
-            .select('id, project_name, created_at, clients(name)')
-            .eq('user_id', window.currentUser.id)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            recentList.innerHTML = '<div class="dropdown-empty">Failed to load bids.</div>';
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            recentList.innerHTML = '<div class="dropdown-empty">No saved bids yet.</div>';
-            showMoreBtn.style.display = 'none';
-            moreList.innerHTML = '';
-            return;
-        }
-
-        const buildHtml = (bidsArray) => {
-            let html = '';
-            bidsArray.forEach(bid => {
-                const dateStr = new Date(bid.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-                const client = (bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client';
-                const project = bid.project_name || 'Unnamed Project';
-                
-                html += `
-                    <div class="nav-bid-item">
-                        <div onclick="handleLoadBid('${bid.id}')" style="flex:1; cursor:pointer;">
-                            <span class="bid-title">${client} - ${project}</span>
-                            <span class="bid-date">${dateStr}</span>
-                        </div>
-                        <button onclick="duplicateBid('${bid.id}'); event.stopPropagation();" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:1.2rem; padding:5px;">⎘</button>
-                    </div>
-                `;
-            });
-            return html;
-        };
-
-        recentList.innerHTML = buildHtml(data.slice(0, 3));
-
-        if (data.length > 3) {
-            showMoreBtn.style.display = 'block';
-            moreList.innerHTML = buildHtml(data.slice(3));
-            
-            showMoreBtn.onclick = () => {
-                const isHidden = moreList.style.display === 'none';
-                moreList.style.display = isHidden ? 'block' : 'none';
-                showMoreBtn.textContent = isHidden ? 'Show Less ▴' : 'Show More ▾';
-            };
-        } else {
-            showMoreBtn.style.display = 'none';
-            moreList.innerHTML = '';
-        }
-    };
-
-    window.handleLoadBid = async function(bidId) {
-        closeSideMenu();
-        await window.loadBidFromCloud(bidId);
-        
-        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-        document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
-        window.scrollTo(0,0);
-    };
-
-    window.duplicateBid = async function(bidId) {
-        closeSideMenu();
-        await window.loadBidFromCloud(bidId);
-        currentBidId = null; 
-        const projInput = document.getElementById('meta-project');
-        if(projInput.value) projInput.value = projInput.value + ' (Copy)';
-        saveState();
-        document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-        document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
-        window.scrollTo(0,0);
-    };
-
-    const profileBtn = document.getElementById('profileBtn');
-    if(profileBtn) {
-        profileBtn.addEventListener('click', () => {
-            closeSideMenu();
-            document.getElementById('profileModal').classList.add('show');
-        });
-    }
-
-    document.getElementById('closeProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
-    
     document.getElementById('saveProfileBtn').addEventListener('click', async () => {
         const paymentLinkInput = document.getElementById('payment-link');
         const compInput = document.getElementById('meta-company');
@@ -343,892 +281,146 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
-    const materialsBtn = document.getElementById('materialsBtn');
-    const materialsModal = document.getElementById('materialsModal');
-    const closeMaterialsModal = document.getElementById('closeMaterialsModal');
-    const catManageSelect = document.getElementById('cat-manage-select');
-    const materialsManageList = document.getElementById('materials-manage-list');
-    const saveMaterialsBtn = document.getElementById('saveMaterialsBtn');
-
-    if(materialsBtn) materialsBtn.addEventListener('click', () => {
-        closeSideMenu();
-        openMaterialsManager();
-    });
-    
-    if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal.classList.remove('show'));
-
-    function openMaterialsManager() {
-        materialsModal.classList.add('show');
-        catManageSelect.innerHTML = categories.map(c => `<option value="${c}">${categoryNames[c]}</option>`).join('');
-        renderManageList();
-    }
-
-    if(catManageSelect) catManageSelect.addEventListener('change', renderManageList);
-
-    function renderManageList() {
-        const cat = catManageSelect.value;
-        const items = materialsDb[cat] || [];
-        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${i.name}</span>
-                <div class="unit-wrapper icon-prefix" style="max-width:120px;">
-                    <span class="prefix">$</span>
-                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${i.name}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
-                </div>
-            </div>
-        `).join('');
-    }
-
-    if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
-        saveMaterialsBtn.textContent = 'Saving...';
-        const inputs = materialsManageList.querySelectorAll('.mat-price-edit');
-        for(let inp of inputs) {
-            const price = parseFloat(inp.value);
-            const name = inp.dataset.name;
-            const cat = inp.dataset.cat;
-            const unit = inp.dataset.unit;
-            
-            const defaultItem = materialsDb[cat].find(i => i.name === name);
-            if(defaultItem && defaultItem.price !== price) {
-                defaultItem.price = price;
-                await saveCustomMaterialToCloud(cat, name, price, unit);
-            }
-        }
-        saveMaterialsBtn.textContent = 'Saved!';
-        setTimeout(() => {
-            saveMaterialsBtn.textContent = 'Save Prices';
-            materialsModal.classList.remove('show');
-        }, 1000);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.custom-select-container')) document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el.classList.remove('show'));
-    });
-
-    function saveState(skipAutosave = false) {
-        const state = { categories: {}, labor:[], meta: {} };
-        
-        document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
-            const key = el.id || el.name || el.value;
-            state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
-        });
-
-        categories.forEach(cat => {
-            state.categories[cat] =[];
-            const container = document.getElementById(`${cat}-rows-container`);
-            if (container) {
-                container.querySelectorAll('.calc-row').forEach(row => {
-                    const item = row.querySelector('.item-select').value;
-                    const customName = row.querySelector('.custom-mat-input').value;
-                    const qty = row.querySelector('.qty-input').value;
-                    const price = row.querySelector('.price-input').value;
-                    const shapes =[];
-                    row.querySelectorAll('.shape-row').forEach(s => {
-                        shapes.push({
-                            l: s.querySelector('.d-l')?.value || '',
-                            w: s.querySelector('.d-w')?.value || '',
-                            h: s.querySelector('.d-h')?.value || '',
-                            d: s.querySelector('.d-d')?.value || '',
-                            coats: s.querySelector('.d-coats')?.value || ''
-                        });
-                    });
-                    state.categories[cat].push({ item, customName, qty, price, shapes });
-                });
-            }
-        });
-
-        const laborContainer = document.getElementById('labor-rows-container');
-        if (laborContainer) {
-            laborContainer.querySelectorAll('.calc-row').forEach(row => {
-                state.labor.push({
-                    type: row.dataset.type,
-                    name: row.querySelector('.glass-input[type="text"]').value,
-                    qty: row.querySelector('.qty-input').value,
-                    price: row.querySelector('.price-input').value
-                });
-            });
-        }
-
-        localStorage.setItem('im_v5_data', JSON.stringify(state));
-
-        if (!skipAutosave && window.currentUser) {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                const manualSaveBtn = document.getElementById('manualSaveBtn');
-                if (manualSaveBtn) manualSaveBtn.textContent = 'Autosaving...';
-                window.saveBidToCloud(0, true).then((success) => {
-                    if (manualSaveBtn && success) {
-                        manualSaveBtn.textContent = 'Saved!';
-                        setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
-                    }
-                });
-            }, 3000);
-        }
-    }
-
-    window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
-        if (!window.currentUser || !window.supabaseClient) return false;
-
-        if (!isAutosaving) saveState(true);
-
-        const stateStr = localStorage.getItem('im_v5_data') || '{}';
-        const bidData = JSON.parse(stateStr);
-
-        const clientId = document.getElementById('client-select').value;
-        const parsedClientId = parseInt(clientId, 10);
-        const projectName = document.getElementById('meta-project').value || 'Draft Project';
-
-        const payload = {
-            user_id: window.currentUser.id,
-            client_id: isNaN(parsedClientId) ? null : parsedClientId,
-            project_name: projectName,
-            total_amount: totalAmount,
-            bid_data: bidData
-        };
-
-        try {
-            if (currentBidId) {
-                await window.supabaseClient.from('bids').update(payload).eq('id', currentBidId);
-            } else {
-                const { data, error } = await window.supabaseClient.from('bids').insert([payload]).select().single();
-                if (error) throw error;
-                if (data) currentBidId = data.id;
-                if (window.refreshSavedBids) window.refreshSavedBids();
-            }
-            if (window.gtag && !isAutosaving) window.gtag('event', 'save_bid');
-            return true;
-        } catch (error) {
-            return false;
-        }
-    };
-
-    window.loadBidFromCloud = async function(bidId) {
-        if (!window.supabaseClient) return;
-        
-        const { data, error } = await window.supabaseClient.from('bids').select('*').eq('id', bidId).single();
-        if (error || !data) return;
-
-        currentBidId = data.id;
-        document.getElementById('client-select').value = data.client_id || '';
-        document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
-
-        if (data.bid_data) loadState(data.bid_data);
-    };
-
-    const manualSaveBtn = document.getElementById('manualSaveBtn');
-    if (manualSaveBtn) {
-        manualSaveBtn.addEventListener('click', async () => {
-            manualSaveBtn.textContent = 'Saving...';
-            await window.saveBidToCloud(0, false);
-            manualSaveBtn.textContent = 'Saved!';
-            setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
-        });
-    }
-
-    function loadState(dataOverride) {
-        const dataStr = localStorage.getItem('im_v5_data');
-        if (!dataStr && !dataOverride) return;
-        const state = dataOverride || JSON.parse(dataStr);
-        if (!state) return;
-
-        if (state.meta) {
-            Object.keys(state.meta).forEach(key => {
-                const el = document.getElementById(key) || document.querySelector(`input[value="${key}"]`);
-                if (el) {
-                    if (el.type === 'checkbox') el.checked = state.meta[key];
-                    else el.value = state.meta[key];
-                }
-            });
-        }
-
-        const laborContainer = document.getElementById('labor-rows-container');
-        if (laborContainer && state.labor) {
-            laborContainer.innerHTML = '';
-            state.labor.forEach(l => {
-                addLaborRow(l.type);
-                const row = laborContainer.lastElementChild;
-                row.querySelector('.glass-input[type="text"]').value = l.name;
-                row.querySelector('.qty-input').value = l.qty;
-                row.querySelector('.price-input').value = l.price;
-            });
-        }
-
-        if (state.categories) {
-            categories.forEach(cat => {
-                const container = document.getElementById(`${cat}-rows-container`);
-                if (container && state.categories[cat]) {
-                    container.innerHTML = '';
-                    state.categories[cat].forEach(c => {
-                        addMaterialRow(cat, `${cat}-rows-container`);
-                        const row = container.lastElementChild;
-                        
-                        const opt = row.querySelector(`.custom-option[data-value="${c.item}"]`);
-                        if (opt) {
-                            row.querySelector('.custom-select-text').textContent = opt.textContent;
-                            row.querySelector('.item-select').value = c.item;
-                            row.querySelector('.unit').textContent = opt.dataset.unit + 's';
-                        }
-                        
-                        if (c.item === 'CUSTOM') {
-                            row.querySelector('.custom-select-container').style.display = 'none';
-                            row.querySelector('.custom-mat-wrapper').style.display = 'flex';
-                            row.querySelector('.custom-mat-input').value = c.customName;
-                        }
-                        
-                        row.querySelector('.qty-input').value = c.qty;
-                        row.querySelector('.price-input').value = c.price;
-
-                        if (c.shapes && c.shapes.length > 0) {
-                            c.shapes.forEach(s => {
-                                const html = cat === 'paint' 
-                                    ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">&times;</button></div>` 
-                                    : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" value="${s.w}" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" value="${s.d}" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">&times;</button></div>`;
-                                row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        document.querySelectorAll('.module-toggle').forEach(t => { 
-            const d = document.getElementById(t.getAttribute('data-target')); 
-            if(t.checked) d.classList.add('active'); else d.classList.remove('active'); 
-        });
-        markupDisplay.textContent = markupSlider.value + '%';
-    }
-
-    function calculateRowQuantity(row, cat) {
-        const shapes = row.querySelectorAll('.shape-row'); if (shapes.length === 0) return;
-        let total = 0;
-        
-        if (cat === 'paint') { shapes.forEach(s => total += (parseFloat(s.querySelector('.d-l').value)||0) * (parseFloat(s.querySelector('.d-h').value)||0) * (parseFloat(s.querySelector('.d-coats').value)||1)); row.querySelector('.qty-input').value = Math.ceil((total * 1.1) / 350); return; }
-        shapes.forEach(s => total += ((parseFloat(s.querySelector('.d-l').value)||0) * (parseFloat(s.querySelector('.d-w').value)||0) * (parseFloat(s.querySelector('.d-d').value)||0)/12)/27);
-        
-        const itemId = row.querySelector('.item-select').value;
-        const unit = itemId === 'CUSTOM' ? 'qty' : (materialsDb[cat]?.find(i => i.id === itemId)?.unit || 'qty');
-        
-        let wasteFactor = 1.0;
-        const wasteBox = document.getElementById(`${cat}-waste-check`);
-        if (wasteBox && wasteBox.checked) wasteFactor += 0.1;
-
-        if (cat === 'gravel') {
-            const compactionBox = document.getElementById('gravel-compaction-check');
-            if (compactionBox && compactionBox.checked) wasteFactor += 0.2;
-        }
-        
-        if (cat === 'topsoil') {
-            const settlingBox = document.getElementById('topsoil-settling-check');
-            if (settlingBox && settlingBox.checked) wasteFactor += 0.1;
-        }
-
-        if (cat === 'mulch') {
-            const settlingBox = document.getElementById('mulch-settling-check');
-            if (settlingBox && settlingBox.checked) wasteFactor += 0.1;
-        }
-        
-        let final = total * wasteFactor;
-        
-        if (cat === 'concrete' && unit === 'bag') {
-            if (itemId.includes('60lb')) final *= 60;
-            else if (itemId.includes('50lb')) final *= 72;
-            else final *= 45;
-        } else if (cat === 'mulch' && unit === 'bag') {
-            final *= 13.5;
-        } else if (cat === 'topsoil' && unit === 'bag') {
-            final *= 36;
-        } else if (unit === 'ton') {
-            final *= (cat === 'topsoil' ? 1.2 : 1.4);
-        }
-        
-        row.querySelector('.qty-input').value = final.toFixed(1);
-    }
-
-    function addMaterialRow(cat, containerId) {
-        if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
-        const items = materialsDb[cat] ||[];
-        let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
-        opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">➕ Custom Material...</div>`;
-        const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
-        const shapes =['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
-        document.getElementById(containerId).insertAdjacentHTML('beforeend', `
-            <div class="calc-row" data-category="${cat}">
-                <div class="input-row">
-                    <div class="input-group" style="flex:2;">
-                        <label>Material/Item</label>
-                        <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${def.name}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
-                        <div class="custom-mat-wrapper" style="display:none;"><input type="text" class="glass-input custom-mat-input" placeholder="Name..."><button class="reset-mat-btn">↺</button></div>
-                    </div>
-                    <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
-                    <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}"></div></div>
-                    <button class="remove-row-btn">×</button>
-                </div>${shapes}
-            </div>`);
-        saveState();
-    }
-
-    function addLaborRow(type) {
-        if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: 'labor_' + type });
-        const container = document.getElementById('labor-rows-container');
-        const isVehicle = type === 'vehicle';
-        const html = `
-            <div class="calc-row labor-entry" data-type="${type}">
-                <div class="input-row">
-                    <div class="input-group" style="flex:2;"><label>${isVehicle ? 'Vehicle / Run Name' : 'Crew Member Name'}</label><input type="text" class="glass-input" placeholder="${isVehicle ? 'Service Truck' : 'Lead Builder'}"></div>
-                    <div class="input-group"><label>${isVehicle ? 'Miles' : 'Hours'}</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="${isVehicle ? 0 : 40}"><span class="unit">${isVehicle ? 'mi' : 'hrs'}</span></div></div>
-                    <div class="input-group"><label>${isVehicle ? 'IRS Rate' : 'Hourly Rate'}</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${isVehicle ? 0.67 : 65.00}"></div></div>
-                    <button class="remove-row-btn">×</button>
-                </div>
-            </div>`;
-        container.insertAdjacentHTML('beforeend', html);
-        saveState();
-    }
-
-    function initApp() {
-        const compInput = document.getElementById('meta-company');
-        const compPhoneInput = document.getElementById('meta-company-phone');
-        const compAddressInput = document.getElementById('meta-company-address');
-        const paymentLinkInput = document.getElementById('payment-link');
-        const appTitle = document.getElementById('app-main-title');
-        
-        const globalComp = localStorage.getItem('im_global_company');
-        const globalPhone = localStorage.getItem('im_global_phone');
-        const globalAddress = localStorage.getItem('im_global_address');
-        const savedPaymentLink = localStorage.getItem('im_payment_link');
-
-        if (globalComp) {
-            compInput.value = globalComp;
-            appTitle.textContent = globalComp + ' Estimates';
-        }
-        if (globalPhone) compPhoneInput.value = globalPhone;
-        if (globalAddress) compAddressInput.value = globalAddress;
-        if (savedPaymentLink && paymentLinkInput) paymentLinkInput.value = savedPaymentLink;
-
-        compInput.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            appTitle.textContent = val ? val + ' Estimates' : 'Never Underbid Again';
-            localStorage.setItem('im_global_company', val);
-        });
-        compPhoneInput.addEventListener('input', (e) => localStorage.setItem('im_global_phone', e.target.value.trim()));
-        compAddressInput.addEventListener('input', (e) => localStorage.setItem('im_global_address', e.target.value.trim()));
-
-        const savedLogo = localStorage.getItem('im_logo');
+    document.getElementById('logo-upload').addEventListener('change', function() {
+        const file = this.files[0];
         const logoPreview = document.getElementById('logo-preview');
-        if (savedLogo) {
-            logoPreview.src = savedLogo;
-            logoPreview.style.display = 'block';
-        }
-
-        document.getElementById('logo-upload').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 300; 
-                        const scaleSize = MAX_WIDTH / img.width;
-                        
-                        if (scaleSize < 1) {
-                            canvas.width = MAX_WIDTH;
-                            canvas.height = img.height * scaleSize;
-                        } else {
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                        }
-                        
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        const base64 = canvas.toDataURL('image/png', 0.8);
-                        localStorage.setItem('im_logo', base64);
-                        logoPreview.src = base64;
-                        logoPreview.style.display = 'block';
-                    };
-                    img.src = e.target.result;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 300; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    
+                    if (scaleSize < 1) {
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                    } else {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const base64 = canvas.toDataURL('image/png', 0.8);
+                    localStorage.setItem('im_logo', base64);
+                    logoPreview.src = base64;
+                    logoPreview.style.display = 'block';
                 };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
-        
-        markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
-            const wasteBtn = document.getElementById(`${cat}-waste-check`);
-            if(wasteBtn) {
-                wasteBtn.addEventListener('change', () => {
-                    document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => calculateRowQuantity(row, cat));
-                    saveState();
-                });
-            }
-        });['gravel-compaction-check', 'topsoil-settling-check', 'mulch-settling-check'].forEach(id => {
-            const btn = document.getElementById(id);
-            if(btn) {
-                btn.addEventListener('change', (e) => {
-                    const cat = id.split('-')[0];
-                    document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => calculateRowQuantity(row, cat));
-                    saveState();
-                });
-            }
-        });
-
-        document.querySelectorAll('.module-toggle').forEach(t => t.addEventListener('change', (e) => {
-            const d = document.getElementById(e.target.getAttribute('data-target'));
-            if (e.target.checked) { 
-                d.classList.add('active'); 
-                if (d.querySelectorAll('.calc-row').length === 0) { 
-                    if(e.target.value === 'labor') addLaborRow('person'); 
-                    else addMaterialRow(e.target.value, `${e.target.value}-rows-container`); 
-                } 
-            } else {
-                d.classList.remove('active');
-            }
-            saveState();
-        }));
-        
-        document.getElementById('setup-view').addEventListener('input', (e) => { 
-            if(e.target.closest('.calc-row')) { 
-                const row = e.target.closest('.calc-row'); 
-                if(row.dataset.category) calculateRowQuantity(row, row.dataset.category); 
-            } 
-            saveState(); 
-        });
-
-        document.getElementById('setup-view').addEventListener('click', (e) => {
-            const row = e.target.closest('.calc-row');
-            if (e.target.closest('.custom-select-trigger')) { 
-                const d = e.target.closest('.custom-select-container').querySelector('.custom-select-dropdown'); 
-                document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el !== d && el.classList.remove('show')); 
-                d.classList.toggle('show'); 
-            }
-            if (e.target.closest('.custom-option')) {
-                const o = e.target.closest('.custom-option'), c = o.closest('.custom-select-container');
-                c.querySelector('.custom-select-text').textContent = o.textContent; 
-                c.querySelector('.item-select').value = o.dataset.value;
-                if (o.dataset.value === 'CUSTOM') { 
-                    c.style.display = 'none'; 
-                    row.querySelector('.custom-mat-wrapper').style.display = 'flex'; 
-                } else { 
-                    row.querySelector('.price-input').value = parseFloat(o.dataset.price).toFixed(2); 
-                    row.querySelector('.unit').textContent = o.dataset.unit + 's'; 
-                }
-                calculateRowQuantity(row, row.dataset.category); 
-                o.parentElement.classList.remove('show'); 
-                saveState();
-            }
-            if (e.target.closest('.reset-mat-btn')) { 
-                row.querySelector('.custom-mat-wrapper').style.display = 'none'; 
-                row.querySelector('.custom-select-container').style.display = 'block'; 
-                saveState(); 
-            }
-            
-            if (e.target.classList.contains('add-shape-btn')) {
-                const cat = row.dataset.category;
-                const html = cat === 'paint' 
-                    ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">&times;</button></div>` 
-                    : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">&times;</button></div>`;
-                row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html); 
-                saveState();
-            }
-            if (e.target.classList.contains('remove-shape-btn')) { 
-                e.target.closest('.shape-row').remove(); 
-                calculateRowQuantity(row, row.dataset.category); 
-                saveState(); 
-            }
-            if (e.target.classList.contains('remove-row-btn')) { 
-                e.target.closest('.calc-row').remove(); 
-                saveState(); 
-            }
-        });
-        
-        document.getElementById('add-laborer-btn').onclick = () => addLaborRow('person');
-        document.getElementById('add-vehicle-btn').onclick = () => addLaborRow('vehicle');
-        categories.forEach(c => document.getElementById(`add-${c}-btn`).onclick = () => addMaterialRow(c, `${c}-rows-container`));
-        
-        loadState();
-    }
-
-    function updatePaymentSchedule() {
-        const total = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-        const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
-        const progQty = parseInt(document.getElementById('progress-payments').value) || 0;
-        
-        const depAmt = total * (depPct / 100);
-        const remAmt = total - depAmt;
-        const progAmt = progQty > 0 ? remAmt / progQty : 0;
-
-        let text = `Deposit: $${depAmt.toFixed(2)}`;
-        if (progQty > 0) {
-            text += ` • Plus ${progQty} payment(s) of $${progAmt.toFixed(2)}`;
-        } else if (remAmt > 0) {
-            text += ` • Plus Final Balance of $${remAmt.toFixed(2)}`;
-        }
-        
-        document.getElementById('schedule-preview').textContent = text;
-        
-        localStorage.setItem('im_depAmt', depAmt);
-        localStorage.setItem('im_progQty', progQty);
-        localStorage.setItem('im_progAmt', progAmt);
-    }
-
-    document.getElementById('deposit-pct').addEventListener('input', updatePaymentSchedule);
-    document.getElementById('progress-payments').addEventListener('input', updatePaymentSchedule);
-
-    const canvas = document.getElementById('signature-pad');
-    let ctx = null;
-    let isDrawing = false;
-    
-    if (canvas) {
-        ctx = canvas.getContext('2d');
-    }
-    
-    function resizeCanvas() {
-        if(!canvas || !canvas.parentElement || !ctx) return;
-        const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = 150;
-        ctx.strokeStyle = '#f8fafc';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-    };
-
-    const startDrawing = (e) => { 
-        isDrawing = true; 
-        draw(e); 
-    };
-    
-    const stopDrawing = () => { 
-        isDrawing = false; 
-        ctx.beginPath(); 
-    };
-    
-    const draw = (e) => {
-        if (!isDrawing) return;
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-    };
-
-    if(canvas) {
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-
-        canvas.addEventListener('touchstart', startDrawing, {passive: false});
-        canvas.addEventListener('touchmove', draw, {passive: false});
-        canvas.addEventListener('touchend', stopDrawing);
-    }
-
-    const clearSigBtn = document.getElementById('clear-signature');
-    if(clearSigBtn) {
-        clearSigBtn.onclick = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        };
-    }
-
-    const signProposalBtn = document.getElementById('signProposalBtn');
-    const signatureModal = document.getElementById('signatureModal');
-    const closeSignatureModal = document.getElementById('closeSignatureModal');
-    const saveSignatureBtn = document.getElementById('saveSignatureBtn');
-
-    if (signProposalBtn) {
-        signProposalBtn.addEventListener('click', () => {
-            signatureModal.classList.add('show');
-            setTimeout(resizeCanvas, 50);
-        });
-    }
-
-    if (closeSignatureModal) {
-        closeSignatureModal.addEventListener('click', () => {
-            signatureModal.classList.remove('show');
-        });
-    }
-
-    if (saveSignatureBtn) {
-        saveSignatureBtn.addEventListener('click', () => {
-            const isCanvasEmpty = () => {
-                const blank = document.createElement('canvas');
-                blank.width = canvas.width;
-                blank.height = canvas.height;
-                return canvas.toDataURL() === blank.toDataURL();
+                img.src = e.target.result;
             };
-
-            if (!isCanvasEmpty()) {
-                localStorage.setItem('im_client_signature', canvas.toDataURL('image/png'));
-                signProposalBtn.textContent = 'Signed ✓';
-                signProposalBtn.style.color = '#10b981';
-                signProposalBtn.style.borderColor = '#10b981';
-                signProposalBtn.style.background = 'rgba(16, 185, 129, 0.1)';
-            } else {
-                localStorage.removeItem('im_client_signature');
-                signProposalBtn.textContent = 'Sign';
-                signProposalBtn.style.color = '#38bdf8';
-                signProposalBtn.style.borderColor = '#38bdf8';
-                signProposalBtn.style.background = 'transparent';
-            }
-            signatureModal.classList.remove('show');
-        });
-    }
-
-    document.getElementById('calculateBtn').onclick = () => {
-        let raw = 0, cons = 0;
-        let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
-        const csvEscape = (text) => `"${(text||'').replace(/"/g, '""')}"`;
-
-        const getCost = (catId, catKey) => {
-            let c = 0; const el = document.getElementById(catId);
-            if (el && el.closest('.module-container').classList.contains('active')) { 
-                el.querySelectorAll('.calc-row').forEach(r => {
-                    const itemSelect = r.querySelector('.item-select').value;
-                    const isCustom = itemSelect === 'CUSTOM';
-                    const name = isCustom ? r.querySelector('.custom-mat-input').value : r.querySelector('.custom-select-text').textContent;
-                    const qty = parseFloat(r.querySelector('.qty-input').value)||0;
-                    const price = parseFloat(r.querySelector('.price-input').value)||0;
-                    
-                    let defaultPrice = 0;
-                    if (!isCustom && materialsDb[catKey]) {
-                        const defaultItem = materialsDb[catKey].find(i => i.id === itemSelect);
-                        if (defaultItem) defaultPrice = parseFloat(defaultItem.price);
-                    }
-                    
-                    if ((isCustom && name && price > 0) || (!isCustom && price > 0 && price !== defaultPrice)) {
-                        saveCustomMaterialToCloud(catKey, name, price, 'qty');
-                    }
-
-                    if (qty > 0) csvData += `Materials,${csvEscape(name)},${qty},${price},${qty*price}\n`;
-                    c += qty * price;
-                }); 
-            }
-            return c;
-        };
-        
-        const costs = { wood: getCost('wood-rows-container', 'wood'), paint: getCost('paint-rows-container', 'paint'), elec: getCost('electrical-rows-container', 'elec'), plumb: getCost('plumbing-rows-container', 'plumb'), fix: getCost('fixtures-rows-container', 'fix'), conc: getCost('concrete-rows-container', 'conc'), grav: getCost('gravel-rows-container', 'grav'), mulch: getCost('mulch-rows-container', 'mulch'), soil: getCost('topsoil-rows-container', 'soil'), demo: getCost('demo-rows-container', 'demo') };
-        raw = Object.values(costs).reduce((a, b) => a + b, 0);
-        
-        if (document.getElementById('wood-consumables-check')?.checked) cons += costs.wood * 0.05;
-        if (document.getElementById('paint-consumables-check')?.checked) cons += costs.paint * 0.05;
-        if (document.getElementById('electrical-consumables-check')?.checked) cons += costs.elec * 0.05;
-        if (document.getElementById('plumbing-consumables-check')?.checked) cons += costs.plumb * 0.05;
-        if (document.getElementById('fixtures-consumables-check')?.checked) cons += costs.fix * 0.05;
-        
-        let baseLabor = 0;
-        if (document.querySelector('input[value="labor"]')?.checked) {
-            document.querySelectorAll('.labor-entry').forEach(entry => {
-                const name = entry.querySelector('.glass-input[type="text"]').value || 'Labor/Vehicle';
-                const qty = parseFloat(entry.querySelector('.qty-input').value)||0;
-                const price = parseFloat(entry.querySelector('.price-input').value)||0;
-                if (qty > 0) csvData += `Labor,${csvEscape(name)},${qty},${price},${qty*price}\n`;
-                baseLabor += qty * price;
-            });
+            reader.readAsDataURL(file);
         }
+    });
 
-        const laborBurden = document.getElementById('labor-burden-check')?.checked ? baseLabor * 0.25 : 0;
-        const laborTotal = baseLabor + laborBurden;
+    document.getElementById('closeCloseoutModal')?.addEventListener('click', () => document.getElementById('closeoutModal').classList.remove('show'));
 
-        const breakeven = raw + cons + laborTotal;
-        const markupPct = parseFloat(markupSlider.value) / 100;
-        const markup = breakeven * markupPct; 
-        const mult = 1 + markupPct; 
-
-        const taxRate = parseFloat(document.getElementById('meta-tax').value) || 0;
-        const taxAmount = (raw + cons) * (taxRate / 100);
-        const materialsCostForClient = (raw + cons) * mult;
-
-        localStorage.setItem('im_csvData', csvData);
-
-        const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        
-        const total = breakeven + markup + taxAmount;
-        localStorage.setItem('im_grandTotal', total);
-        
-        if(window.gtag) window.gtag('event', 'generate_lead', { currency: 'USD', value: total });
-
-        document.getElementById('res-project-title').textContent = document.getElementById('meta-project').value || "Project Estimate";
-        document.getElementById('res-contractor-profit').textContent = format(markup);
-        
-        let contractorHTML = '';
-        contractorHTML += `<div class="item-row" style="border-bottom: 1px dashed var(--border-glass); padding-bottom: 12px; margin-bottom: 12px; font-weight: 700; font-size: 1.1rem; color: #f8fafc;"><span>Total Breakeven Cost</span> <span>-${format(breakeven)}</span></div>`;
-        contractorHTML += `<div class="item-row" style="color: #34d399; font-weight: 700; margin-bottom: 15px;"><span>Built-in Markup (${markupSlider.value}%)</span> <span>+${format(markup)}</span></div>`;
-        
-        if (baseLabor > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Total Base Labor & Fleet</span> <span>-${format(baseLabor)}</span></div>`;
-        if (laborBurden > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Labor Burden (Taxes/Ins)</span> <span>-${format(laborBurden)}</span></div>`;
-        for (const[key, val] of Object.entries(costs)) {
-            if (val > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>-${format(val)}</span></div>`;
-        }
-        if (cons > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Shop Consumables</span> <span>-${format(cons)}</span></div>`;
-        document.getElementById('dynamic-breakdown').innerHTML = contractorHTML;
-
-        document.getElementById('res-client-total').textContent = format(total);
-
-        let clientHTML = '';
-        clientHTML += `<div class="item-row" style="font-weight: 700; font-size: 1.15rem; padding-bottom: 5px;"><span>Total Bid</span> <span>${format(total)}</span></div>`;
-        
-        if (laborTotal > 0) {
-            clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px; border-top: 1px dashed var(--border-glass);"><span>Project Labor & Fleet</span> <span>${format(baseLabor * mult)}</span></div>`;
-            if (laborBurden > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Burden & Insurance</span> <span>${format(laborBurden * mult)}</span></div>`;
-        }
-        
-        clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
-        
-        for (const [key, val] of Object.entries(costs)) {
-            if (val > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${categoryNames[key]}</span> <span>${format(val * mult)}</span></div>`;
-        }
-        if (cons > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Shop Consumables</span> <span>${format(cons * mult)}</span></div>`;
-        
-        if (taxAmount > 0) {
-            clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Estimated Sales Tax (${taxRate}%)</span> <span>${format(taxAmount)}</span></div>`;
-        }
-
-        document.getElementById('client-dynamic-breakdown').innerHTML = clientHTML;
-        
-        updatePaymentSchedule();
-        
-        document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
-        setTimeout(() => { 
-            document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); 
-            window.scrollTo(0,0); 
-        }, 300);
-
-        window.renderDownloadOptions = async function() {
-            const downloadBtn = document.getElementById('downloadPdfTrigger');
-            if(!downloadBtn) return;
-            const parent = downloadBtn.parentElement;
-            
-            let warningEl = document.getElementById('branding-warning');
-            if (!localStorage.getItem('im_global_company')) {
-                if (!warningEl) {
-                    warningEl = document.createElement('div');
-                    warningEl.id = 'branding-warning';
-                    warningEl.innerHTML = `⚠️ <strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
-                    warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
-                    warningEl.onclick = () => {
-                        const pm = document.getElementById('profileModal');
-                        if(pm) pm.classList.add('show');
-                    };
-                    parent.insertBefore(warningEl, downloadBtn);
-                } else {
-                    warningEl.style.display = 'block';
-                }
-            } else if (warningEl) {
-                warningEl.style.display = 'none';
-            }
-
-            if (!window.currentUser) {
-                downloadBtn.textContent = "Sign in to Generate Proposal";
-                downloadBtn.style.background = "transparent";
-                downloadBtn.style.border = "1px solid var(--border-glass)";
-                downloadBtn.style.color = "var(--text-main)";
-                downloadBtn.style.display = 'block';
-                downloadBtn.onclick = () => {
-                    const am = document.getElementById('authModal');
-                    if(am) am.classList.add('show');
-                };
-                return;
-            }
-
-            const { data, error } = await window.supabaseClient
-                .from('users')
-                .select('subscription_status')
-                .eq('id', window.currentUser.id)
-                .maybeSingle();
-
-            const isDbActive = data && data.subscription_status === 'active';
-            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
-
-            if (isDbActive || isTempActive) {
-                downloadBtn.textContent = "Review & Generate Proposal";
-                downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
-                downloadBtn.style.border = "none";
-                downloadBtn.style.color = "#0f172a";
-                downloadBtn.style.display = 'block';
-                
-                downloadBtn.onclick = async () => {
-                    saveDataForPdf();
-                    const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-                    await window.saveBidToCloud(totalAmount, false);
-                    window.location.href = './success';
-                };
-            } else {
-                downloadBtn.textContent = "Subscribe to Generate ($12.99/mo)";
-                downloadBtn.style.background = "var(--gradient-primary)";
-                downloadBtn.style.border = "none";
-                downloadBtn.style.color = "#0f172a";
-                downloadBtn.style.display = 'block';
-                
-                downloadBtn.onclick = async () => {
-                    if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
-                        const pm = document.getElementById('profileModal');
-                        if(pm) pm.classList.add('show');
-                        return;
-                    }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
-                    saveDataForPdf();
-                    const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-                    await window.saveBidToCloud(totalAmount, false);
-                    const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
-                    checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                    window.location.href = checkoutUrl.toString();
-                };
-            }
-        };
-
-        window.renderDownloadOptions();
-
-        function saveDataForPdf() {
-            const clientSelect = document.getElementById('client-select');
-            const selectedOption = clientSelect.options[clientSelect.selectedIndex];
-            localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
-            localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
-            localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
-            localStorage.setItem('im_costs', JSON.stringify(costs));
-            localStorage.setItem('im_cons', cons);
-            localStorage.setItem('im_raw', raw);
-            localStorage.setItem('im_markupPct', markupPct);
-            localStorage.setItem('im_baseLabor', baseLabor);
-            localStorage.setItem('im_laborBurden', laborBurden);
-            localStorage.setItem('im_taxRate', taxRate);
-            localStorage.setItem('im_taxAmount', taxAmount);
-        }
-    };
-    
     document.getElementById('resetBidBtn').onclick = () => { 
         if(confirm("Clear this bid and start fresh?")) { 
-            currentBidId = null;
+            window.currentBidId = null;
             document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
             document.getElementById('client-select').value = '';
-            categories.concat(['labor']).forEach(c => {
-                const container = document.getElementById(`${c}-rows-container`);
-                if(container) container.innerHTML = '';
+            window.categories.concat(['labor']).forEach(c => { 
+                const container = document.getElementById(`${c}-rows-container`); 
+                if(container) container.innerHTML = ''; 
             });
-            saveState();
+            window.saveState();
         } 
     };
-    
+
     document.getElementById('editBtn').onclick = () => { 
         document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
         setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
     };
 
-    document.getElementById('exportCSVBtn').onclick = () => {
-        if(window.gtag) window.gtag('event', 'file_download', { file_extension: 'csv', file_name: 'QuickBooks_Material_List' });
-        const csv = localStorage.getItem('im_csvData') || 'No data generated';
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'QuickBooks_Import.csv');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
+    document.getElementById('manualSaveBtn')?.addEventListener('click', async () => {
+        const manualSaveBtn = document.getElementById('manualSaveBtn');
+        manualSaveBtn.textContent = 'Saving...';
+        await window.saveBidToCloud(0, false);
+        manualSaveBtn.textContent = 'Saved!';
+        setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
+    });
+
+    document.getElementById('setup-view').addEventListener('input', (e) => { 
+        if(e.target.closest('.calc-row')) { 
+            const row = e.target.closest('.calc-row'); 
+            if(row.dataset.category) window.calculateRowQuantity(row, row.dataset.category); 
+        } 
+        window.saveState(); 
+    });
+
+    document.getElementById('setup-view').addEventListener('click', (e) => {
+        const row = e.target.closest('.calc-row');
+        if (e.target.closest('.custom-select-trigger')) { 
+            const d = e.target.closest('.custom-select-container').querySelector('.custom-select-dropdown');
+            document.querySelectorAll('.custom-select-dropdown.show').forEach(el => el !== d && el.classList.remove('show')); 
+            d.classList.toggle('show'); 
+        }
+        if (e.target.closest('.custom-option')) {
+            const o = e.target.closest('.custom-option');
+            const c = o.closest('.custom-select-container');
+            c.querySelector('.custom-select-text').textContent = o.textContent; 
+            c.querySelector('.item-select').value = o.dataset.value;
+            if (o.dataset.value === 'CUSTOM') { 
+                c.style.display = 'none'; 
+                row.querySelector('.custom-mat-wrapper').style.display = 'flex'; 
+            } else { 
+                row.querySelector('.price-input').value = parseFloat(o.dataset.price).toFixed(2); 
+                row.querySelector('.unit').textContent = o.dataset.unit + 's'; 
+            }
+            window.calculateRowQuantity(row, row.dataset.category); 
+            o.parentElement.classList.remove('show'); 
+            window.saveState();
+        }
+        if (e.target.closest('.reset-mat-btn')) { 
+            row.querySelector('.custom-mat-wrapper').style.display = 'none'; 
+            row.querySelector('.custom-select-container').style.display = 'block'; 
+            window.saveState(); 
+        }
+        if (e.target.classList.contains('remove-shape-btn') || e.target.classList.contains('remove-row-btn')) { 
+            e.target.closest(e.target.classList.contains('remove-row-btn') ? '.calc-row' : '.shape-row').remove(); 
+            window.saveState(); 
+        }
+        if (e.target.classList.contains('add-shape-btn')) {
+            const cat = row.dataset.category;
+            const html = cat === 'paint' 
+                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">&times;</button></div>` 
+                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">&times;</button></div>`;
+            row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
+            window.saveState();
+        }
+    });
+
+    document.getElementById('add-laborer-btn').onclick = () => window.addLaborRow('person');
+    document.getElementById('add-vehicle-btn').onclick = () => window.addLaborRow('vehicle');
+    
+    window.categories.forEach(c => {
+        const btn = document.getElementById(`add-${c}-btn`);
+        if (btn) btn.onclick = () => window.addMaterialRow(c, `${c}-rows-container`);
+    });
+
+    ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
+        const wasteBtn = document.getElementById(`${cat}-waste-check`);
+        if(wasteBtn) {
+            wasteBtn.addEventListener('change', () => {
+                document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => window.calculateRowQuantity(row, cat));
+                window.saveState();
+            });
+        }
+    });
+    
+    ['gravel-compaction-check', 'topsoil-settling-check', 'mulch-settling-check'].forEach(id => {
+        const btn = document.getElementById(id);
+        if(btn) {
+            btn.addEventListener('change', () => {
+                const cat = id.split('-')[0];
+                document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => window.calculateRowQuantity(row, cat));
+                window.saveState();
+            });
+        }
+    });
 
     window.addEventListener('focus', () => {
         if (window.currentUser && window.supabaseClient && typeof window.renderDownloadOptions === 'function') {
@@ -1240,4 +432,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         }
     });
+
+    fetch('materials.json')
+        .then(res => res.json())
+        .then(data => { 
+            window.materialsDb = data; 
+            window.initApp(); 
+        })
+        .catch(() => window.initApp());
 });
+
+window.initApp = function() {
+    const compInput = document.getElementById('meta-company');
+    const compPhoneInput = document.getElementById('meta-company-phone');
+    const compAddressInput = document.getElementById('meta-company-address');
+    const paymentLinkInput = document.getElementById('payment-link');
+    const appTitle = document.getElementById('app-main-title');
+    
+    const globalComp = localStorage.getItem('im_global_company');
+    const globalPhone = localStorage.getItem('im_global_phone');
+    const globalAddress = localStorage.getItem('im_global_address');
+    const savedPaymentLink = localStorage.getItem('im_payment_link');
+
+    if (globalComp) {
+        compInput.value = globalComp;
+        appTitle.textContent = globalComp + ' Estimates';
+    }
+    if (globalPhone) compPhoneInput.value = globalPhone;
+    if (globalAddress) compAddressInput.value = globalAddress;
+    if (savedPaymentLink && paymentLinkInput) paymentLinkInput.value = savedPaymentLink;
+
+    compInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        appTitle.textContent = val ? val + ' Estimates' : 'Never Underbid Again';
+        localStorage.setItem('im_global_company', val);
+    });
+    
+    compPhoneInput.addEventListener('input', (e) => localStorage.setItem('im_global_phone', e.target.value.trim()));
+    compAddressInput.addEventListener('input', (e) => localStorage.setItem('im_global_address', e.target.value.trim()));
+
+    const savedLogo = localStorage.getItem('im_logo');
+    const logoPreview = document.getElementById('logo-preview');
+    if (savedLogo) {
+        logoPreview.src = savedLogo;
+        logoPreview.style.display = 'block';
+    }
+
+    window.loadState();
+    
+    document.querySelectorAll('.collapsible').forEach(h => h.onclick = () => h.parentElement.classList.toggle('collapsed'));
+    
+    document.querySelectorAll('.module-toggle').forEach(t => t.addEventListener('change', (e) => {
+        const d = document.getElementById(e.target.getAttribute('data-target'));
+        if (e.target.checked) { 
+            d.classList.add('active'); 
+            if (d.querySelectorAll('.calc-row').length === 0) { 
+                e.target.value === 'labor' ? window.addLaborRow('person') : window.addMaterialRow(e.target.value, `${e.target.value}-rows-container`); 
+            } 
+        } else { 
+            d.classList.remove('active'); 
+        }
+        window.saveState();
+    }));
+
+    const markupSlider = document.getElementById('markupSlider');
+    const markupDisplay = document.getElementById('markupDisplay');
+    markupSlider.oninput = (e) => markupDisplay.textContent = e.target.value + '%';
+}
