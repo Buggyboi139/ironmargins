@@ -52,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.template-btn-auth').forEach(btn => {
             btn.style.display = hasUser ? 'block' : 'none';
         });
+        if (hasUser && typeof window.fetchUserProfile === 'function') {
+            window.fetchUserProfile();
+        }
     });
 
     const sideMenu = document.getElementById('sideMenu');
@@ -289,6 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('saveProfileBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
         const paymentLinkInput = document.getElementById('payment-link');
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
@@ -296,14 +304,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const termsInput = document.getElementById('profile-custom-terms');
 
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
-        if (compInput) localStorage.setItem('im_global_company', compInput.value);
+        if (compInput) {
+            localStorage.setItem('im_global_company', compInput.value);
+            const appTitle = document.getElementById('app-main-title');
+            if (appTitle) appTitle.textContent = compInput.value ? compInput.value + ' Estimates' : 'Never Underbid Again';
+        }
         if (compPhoneInput) localStorage.setItem('im_global_phone', compPhoneInput.value);
         if (compAddressInput) localStorage.setItem('im_global_address', compAddressInput.value);
         if (termsInput) localStorage.setItem('im_custom_terms', termsInput.value);
 
         if (window.currentUser && window.supabaseClient) {
             const logoData = localStorage.getItem('im_logo');
-            await window.supabaseClient.from('users').upsert({
+            const { error } = await window.supabaseClient.from('users').upsert({
                 id: window.currentUser.id,
                 company_name: compInput ? compInput.value : '',
                 phone: compPhoneInput ? compPhoneInput.value : '',
@@ -312,9 +324,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 logo_data: logoData || '',
                 custom_terms: termsInput ? termsInput.value : ''
             });
+
+            if (error) {
+                alert("Failed to save profile to cloud: " + error.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return; 
+            }
         }
         
-        document.getElementById('profileModal').classList.remove('show');
+        btn.textContent = 'Saved!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+            document.getElementById('profileModal').classList.remove('show');
+        }, 800);
+
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
