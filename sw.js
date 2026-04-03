@@ -5,7 +5,11 @@ const ASSETS = [
     '/styles.css',
     '/app.js',
     '/auth.js',
+    '/builder.js',
+    '/calculate.js',
+    '/bids.js',
     '/materials.json',
+    '/templates.json',
     '/logo.png',
     '/logo_nb.png'
 ];
