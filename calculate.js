@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
         const csvEscape = (text) => `"${(text||'').replace(/"/g, '""')}"`;
 
-        const getCost = (catId, catKey) => {
+        const getCost = (catId) => {
             let c = 0; const el = document.getElementById(catId);
             if (el && el.closest('.module-container').classList.contains('active')) { 
                 el.querySelectorAll('.calc-row').forEach(r => {
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return c;
         };
         
-        const costs = { wood: getCost('wood-rows-container', 'wood'), paint: getCost('paint-rows-container', 'paint'), elec: getCost('electrical-rows-container', 'elec'), plumb: getCost('plumbing-rows-container', 'plumb'), fix: getCost('fixtures-rows-container', 'fix'), conc: getCost('concrete-rows-container', 'conc'), grav: getCost('gravel-rows-container', 'grav'), mulch: getCost('mulch-rows-container', 'mulch'), soil: getCost('topsoil-rows-container', 'soil'), demo: getCost('demo-rows-container', 'demo') };
+        const costs = { wood: getCost('wood-rows-container'), paint: getCost('paint-rows-container'), elec: getCost('electrical-rows-container'), plumb: getCost('plumbing-rows-container'), fix: getCost('fixtures-rows-container'), conc: getCost('concrete-rows-container'), grav: getCost('gravel-rows-container'), mulch: getCost('mulch-rows-container'), soil: getCost('topsoil-rows-container'), demo: getCost('demo-rows-container') };
         raw = Object.values(costs).reduce((a, b) => a + b, 0);
         
         if (document.getElementById('wood-consumables-check')?.checked) cons += costs.wood * 0.05;
@@ -74,10 +74,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        let subTotal = 0;
+        let subsList = [];
+        if (document.querySelector('input[value="subs"]')?.checked) {
+            document.querySelectorAll('.sub-entry').forEach(entry => {
+                const name = entry.querySelector('.sub-name').value || 'Subcontractor';
+                const desc = entry.querySelector('.sub-desc').value || 'Scope of work';
+                const price = parseFloat(entry.querySelector('.sub-price').value) || 0;
+                subTotal += price;
+                if (price > 0) {
+                    csvData += `Subcontractor,${csvEscape(name + " - " + desc)},1,${price},${price}\n`;
+                    subsList.push({ name, desc, price });
+                }
+            });
+        }
+
         const laborBurden = document.getElementById('labor-burden-check')?.checked ? baseLabor * 0.25 : 0;
         const laborTotal = baseLabor + laborBurden;
 
-        const breakeven = raw + cons + laborTotal;
+        const breakeven = raw + cons + laborTotal + subTotal;
         const markupPct = parseFloat(document.getElementById('markupSlider').value) / 100;
         const markup = breakeven * markupPct; 
         const mult = 1 + markupPct; 
@@ -88,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('im_csvData', csvData);
         localStorage.setItem('im_laborByPhase', JSON.stringify(laborByPhase));
+        localStorage.setItem('im_subs', JSON.stringify(subsList));
 
         const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         
@@ -102,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (baseLabor > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Total Base Labor & Fleet</span> <span>-${format(baseLabor)}</span></div>`;
         if (laborBurden > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Labor Burden (Taxes/Ins)</span> <span>-${format(laborBurden)}</span></div>`;
+        if (subTotal > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Subcontractors</span> <span>-${format(subTotal)}</span></div>`;
         for (const[key, val] of Object.entries(costs)) {
             if (val > 0) contractorHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${window.categoryNames[key]}</span> <span>-${format(val)}</span></div>`;
         }
@@ -120,6 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (laborBurden > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Burden & Insurance</span> <span>${format(laborBurden * mult)}</span></div>`;
         }
         
+        if (subTotal > 0) {
+            clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px;"><span>Subcontracted Services</span> <span>${format(subTotal * mult)}</span></div>`;
+            subsList.forEach(s => {
+                clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${s.name}</span> <span>${format(s.price * mult)}</span></div>`;
+            });
+        }
+
         clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px;"><span>Itemized Materials & Supplies</span> <span>${format(materialsCostForClient)}</span></div>`;
         
         for (const [key, val] of Object.entries(costs)) {
@@ -139,9 +163,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const downloadBtn = document.getElementById('downloadPdfTrigger');
             if(!downloadBtn) return;
             const parent = downloadBtn.parentElement;
+
+            if (!window.currentUser) {
+                downloadBtn.textContent = "Sign in to Generate Proposal";
+                downloadBtn.style.background = "transparent";
+                downloadBtn.style.border = "1px solid var(--border-glass)";
+                downloadBtn.style.color = "var(--text-main)";
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => {
+                    const am = document.getElementById('authModal');
+                    if(am) am.classList.add('show');
+                };
+                return;
+            }
+
+            let subStatus = '';
+            let metaSubStatus = '';
+            if (window.supabaseClient) {
+                const { data } = await window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle();
+                subStatus = data && data.subscription_status ? String(data.subscription_status).toLowerCase().trim() : '';
+            }
+            metaSubStatus = window.currentUser.user_metadata?.subscription_status ? String(window.currentUser.user_metadata.subscription_status).toLowerCase().trim() : '';
             
+            const isSubActive = ['active', 'trialing'].includes(subStatus) || ['active', 'trialing'].includes(metaSubStatus);
+            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+            const isPro = isSubActive || isTempActive;
+
+            localStorage.setItem('im_is_pro', isPro ? 'true' : 'false');
+
             let warningEl = document.getElementById('branding-warning');
-            if (!localStorage.getItem('im_global_company')) {
+            if (isPro && !localStorage.getItem('im_global_company')) {
                 if (!warningEl) {
                     warningEl = document.createElement('div');
                     warningEl.id = 'branding-warning';
@@ -159,87 +210,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 warningEl.style.display = 'none';
             }
 
-            if (!window.currentUser) {
-                downloadBtn.textContent = "Sign in to Generate Proposal";
-                downloadBtn.style.background = "transparent";
-                downloadBtn.style.border = "1px solid var(--border-glass)";
-                downloadBtn.style.color = "var(--text-main)";
-                downloadBtn.style.display = 'block';
-                downloadBtn.onclick = () => {
-                    const am = document.getElementById('authModal');
-                    if(am) am.classList.add('show');
-                };
-                return;
-            }
-
-            const { count } = await window.supabaseClient
-                .from('bids')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', window.currentUser.id);
-
-            const { data, error } = await window.supabaseClient
-                .from('users')
-                .select('subscription_status')
-                .eq('id', window.currentUser.id)
-                .maybeSingle();
-
-            const subStatus = data && data.subscription_status ? String(data.subscription_status).toLowerCase().trim() : '';
-            const metaSubStatus = window.currentUser.user_metadata?.subscription_status ? String(window.currentUser.user_metadata.subscription_status).toLowerCase().trim() : '';
+            downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
+            downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
+            downloadBtn.style.border = "none";
+            downloadBtn.style.color = "#0f172a";
+            downloadBtn.style.display = 'block';
             
-            const isSubActive = ['active', 'trialing'].includes(subStatus) || ['active', 'trialing'].includes(metaSubStatus);
-            const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
+            downloadBtn.onclick = async () => {
+                saveDataForPdf();
+                const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+                await window.saveBidToCloud(totalAmount, false);
+                window.location.href = './success';
+            };
 
-            const savedBidsCount = count || 0;
-            
-            const isEditingExistingFreeBid = window.currentBidId && savedBidsCount <= 3;
-            const isUnderFreeLimit = !window.currentBidId && savedBidsCount < 3;
-            const isFreeTierValid = isUnderFreeLimit || isEditingExistingFreeBid;
-
-            if (isSubActive || isTempActive || isFreeTierValid) {
-                
-                let btnText = "Review & Generate Proposal";
-                if (!isSubActive && !isTempActive) {
-                    const currentBidNum = window.currentBidId ? savedBidsCount : savedBidsCount + 1;
-                    btnText = `Review & Generate (Free Bid ${currentBidNum}/3)`;
+            let upgradeBtn = document.getElementById('upgradeProBtn');
+            if (!isPro) {
+                if (!upgradeBtn) {
+                    upgradeBtn = document.createElement('button');
+                    upgradeBtn.id = 'upgradeProBtn';
+                    upgradeBtn.className = 'secondary-btn';
+                    upgradeBtn.style.width = '100%';
+                    upgradeBtn.style.marginTop = '15px';
+                    upgradeBtn.textContent = 'Upgrade to Pro (Remove Watermark & Add Logo)';
+                    upgradeBtn.onclick = () => {
+                        if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
+                        saveDataForPdf();
+                        const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
+                        checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
+                        window.location.href = checkoutUrl.toString();
+                    };
+                    downloadBtn.parentNode.insertBefore(upgradeBtn, downloadBtn.nextSibling);
                 }
-
-                downloadBtn.textContent = btnText;
-                downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
-                downloadBtn.style.border = "none";
-                downloadBtn.style.color = "#0f172a";
-                downloadBtn.style.display = 'block';
-                
-                downloadBtn.onclick = async () => {
-                    saveDataForPdf();
-                    const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-                    
-                    const saveSuccess = await window.saveBidToCloud(totalAmount, false);
-                    if (saveSuccess !== false) {
-                        window.location.href = './success';
-                    } else {
-                        alert("Unable to save bid. You may have reached your free tier limit.");
-                    }
-                };
-            } else {
-                downloadBtn.textContent = "Subscribe to Generate ($12.99/mo)";
-                downloadBtn.style.background = "var(--gradient-primary)";
-                downloadBtn.style.border = "none";
-                downloadBtn.style.color = "#0f172a";
-                downloadBtn.style.display = 'block';
-                
-                downloadBtn.onclick = async () => {
-                    if(!localStorage.getItem('im_global_company') && !confirm("Your PDF doesn't have a Company Name set. Continue anyway?")) {
-                        const pm = document.getElementById('profileModal');
-                        if(pm) pm.classList.add('show');
-                        return;
-                    }
-                    if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
-                    saveDataForPdf();
-                    
-                    const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
-                    checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                    window.location.href = checkoutUrl.toString();
-                };
+                upgradeBtn.style.display = 'block';
+            } else if (upgradeBtn) {
+                upgradeBtn.style.display = 'none';
             }
         };
 
