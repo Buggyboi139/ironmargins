@@ -94,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (t) {
             window.loadState(t.data);
             window.saveState();
+            document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
+            document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
+            window.scrollTo(0,0);
         }
         document.getElementById('starterTemplateModal').classList.remove('show');
     }
@@ -118,15 +121,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderManageList() {
         const cat = catManageSelect.value;
         const items = window.materialsDb[cat] || [];
-        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => `
+        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => {
+            const safeName = String(i.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
+            return `
             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${i.name}</span>
+                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${safeName}</span>
                 <div class="unit-wrapper icon-prefix" style="max-width:120px;">
                     <span class="prefix">$</span>
-                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${i.name}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
+                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${safeName}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
@@ -156,9 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const uniqueKey = `${category}_${name}_${price}`;
         if (window.sessionCustomSaved.has(uniqueKey)) return;
 
-        const payload = { user_id: window.currentUser.id, category, name, price, unit };
-        const { error } = await window.supabaseClient.from('custom_materials').insert([payload]);
-        if (!error) window.sessionCustomSaved.add(uniqueKey);
+        const { data } = await window.supabaseClient.from('custom_materials')
+            .select('id').eq('user_id', window.currentUser.id).eq('category', category).eq('name', name).maybeSingle();
+        
+        if (data) {
+            await window.supabaseClient.from('custom_materials').update({ price, unit }).eq('id', data.id);
+        } else {
+            await window.supabaseClient.from('custom_materials').insert([{ user_id: window.currentUser.id, category, name, price, unit }]);
+        }
+        window.sessionCustomSaved.add(uniqueKey);
     }
 
     window.fetchCustomMaterials = async function() {
@@ -291,14 +303,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.currentUser && window.supabaseClient) {
             const logoData = localStorage.getItem('im_logo');
-            await window.supabaseClient.from('users').update({
+            await window.supabaseClient.from('users').upsert({
+                id: window.currentUser.id,
                 company_name: compInput ? compInput.value : '',
                 phone: compPhoneInput ? compPhoneInput.value : '',
                 address: compAddressInput ? compAddressInput.value : '',
                 payment_link: paymentLinkInput ? paymentLinkInput.value : '',
                 logo_data: logoData || '',
                 custom_terms: termsInput ? termsInput.value : ''
-            }).eq('id', window.currentUser.id);
+            });
         }
         
         document.getElementById('profileModal').classList.remove('show');
@@ -428,8 +441,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('add-shape-btn')) {
             const cat = row.dataset.category;
             const html = cat === 'paint' 
-                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">&times;</button></div>` 
-                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">&times;</button></div>`;
+                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">Del</button></div>` 
+                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">Del</button></div>`;
             row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
             window.saveState();
         }
@@ -545,6 +558,7 @@ window.initApp = function() {
         
         if (e.target.checked) { 
             d.classList.add('active'); 
+            d.classList.remove('collapsed');
             if (d.querySelectorAll('.calc-row').length === 0) { 
                 if (e.target.value === 'labor') window.addLaborRow('person');
                 else if (e.target.value === 'subs') window.addSubRow();
