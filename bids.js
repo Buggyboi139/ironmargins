@@ -2,6 +2,8 @@ window.currentBidId = null;
 window.activeCloseoutBidId = null;
 window.activeCloseoutBidData = {};
 
+const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
+
 window.switchBidTab = function(tab) {
     document.getElementById('tab-active').classList.toggle('active', tab === 'active');
     document.getElementById('tab-closed').classList.toggle('active', tab === 'closed');
@@ -40,8 +42,8 @@ window.refreshSavedBids = async function() {
         let html = '';
         bidsArray.forEach(bid => {
             const dateStr = new Date(bid.created_at).toLocaleDateString();
-            const client = (bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client';
-            const project = bid.project_name || 'Unnamed Project';
+            const client = escapeHTML((bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client');
+            const project = escapeHTML(bid.project_name || 'Unnamed Project');
             
             if (isClosed) {
                 const profitColor = parseFloat(bid.actual_profit) >= 0 ? '#10b981' : '#fb7185';
@@ -61,9 +63,9 @@ window.refreshSavedBids = async function() {
                             <span class="bid-date">${dateStr}</span>
                         </div>
                         <div class="bid-actions">
-                            <button onclick="window.duplicateBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#38bdf8;" title="Duplicate">⎘</button>
-                            <button onclick="window.openCloseout('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#34d399;" title="Close Out">✓</button>
-                            <button onclick="window.deleteBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#fb7185;" title="Delete">×</button>
+                            <button onclick="window.duplicateBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#38bdf8;" title="Duplicate">Dup</button>
+                            <button onclick="window.openCloseout('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#34d399;" title="Close Out">Close</button>
+                            <button onclick="window.deleteBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#fb7185;" title="Delete">Del</button>
                         </div>
                     </div>`;
             }
@@ -254,7 +256,7 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
             if (!isAutosaving) {
                 alert("You have reached your limit of 3 free bids. Please upgrade to Pro to generate more estimates.");
             }
-            return false;
+            return "LIMIT_REACHED";
         }
     }
 
