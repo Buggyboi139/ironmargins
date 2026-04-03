@@ -1,6 +1,6 @@
 window.materialsDb = {};
 window.categories = ['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
-window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes', elec: 'Electrical & Wire', plumb: 'Plumbing & Pipe', fix: 'Fixtures & Cabinetry', conc: 'Concrete & Flatwork', grav: 'Gravel & Rock', mulch: 'Mulch & Landscape', soil: 'Topsoil & Dirt', demo: 'Demo & Hauls' };
+window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes', electrical: 'Electrical & Wire', plumbing: 'Plumbing & Pipe', fixtures: 'Fixtures & Cabinetry', concrete: 'Concrete & Flatwork', gravel: 'Gravel & Rock', mulch: 'Mulch & Landscape', topsoil: 'Topsoil & Dirt', demo: 'Demo & Hauls' };
 window.sessionCustomSaved = new Set();
 window.autoSaveTimer = null;
 window.tempTemplateData = [];
@@ -11,12 +11,28 @@ window.calculateRowQuantity = function(row, cat) {
     
     let total = 0;
     if (cat === 'paint') { 
-        shapes.forEach(s => total += (parseFloat(s.querySelector('.d-l').value)||0) * (parseFloat(s.querySelector('.d-h').value)||0) * (parseFloat(s.querySelector('.d-coats').value)||1)); 
+        shapes.forEach(s => {
+            const dl = s.querySelector('.d-l');
+            const dh = s.querySelector('.d-h');
+            const dc = s.querySelector('.d-coats');
+            const l = dl ? (parseFloat(dl.value) || 0) : 0;
+            const h = dh ? (parseFloat(dh.value) || 0) : 0;
+            const c = dc ? (parseFloat(dc.value) || 1) : 1;
+            total += (l * h * c);
+        });
         row.querySelector('.qty-input').value = Math.ceil((total * 1.1) / 350); 
         return; 
     }
     
-    shapes.forEach(s => total += ((parseFloat(s.querySelector('.d-l').value)||0) * (parseFloat(s.querySelector('.d-w').value)||0) * (parseFloat(s.querySelector('.d-d').value)||0)/12)/27);
+    shapes.forEach(s => {
+        const dl = s.querySelector('.d-l');
+        const dw = s.querySelector('.d-w');
+        const dd = s.querySelector('.d-d');
+        const l = dl ? (parseFloat(dl.value) || 0) : 0;
+        const w = dw ? (parseFloat(dw.value) || 0) : 0;
+        const d = dd ? (parseFloat(dd.value) || 0) : 0;
+        total += (l * w * (d / 12)) / 27;
+    });
     
     const itemId = row.querySelector('.item-select').value;
     const unit = itemId === 'CUSTOM' ? 'qty' : (window.materialsDb[cat]?.find(i => i.id === itemId)?.unit || 'qty');
@@ -60,7 +76,7 @@ window.addMaterialRow = function(cat, containerId) {
                 </div>
                 <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
                 <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}"></div></div>
-                <button class="remove-row-btn">×</button>
+                <button class="remove-row-btn">Del</button>
             </div>${shapes}
         </div>`);
     window.saveState();
@@ -88,7 +104,7 @@ window.addLaborRow = function(type) {
                 <div class="input-group" style="flex:2;"><label>${isVehicle ? 'Vehicle / Run Name' : 'Crew Member Name'}</label><input type="text" class="glass-input" placeholder="${isVehicle ? 'Service Truck' : 'Lead Builder'}"></div>
                 <div class="input-group"><label>${isVehicle ? 'Miles' : 'Hours'}</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="${isVehicle ? 0 : 40}"><span class="unit">${isVehicle ? 'mi' : 'hrs'}</span></div></div>
                 <div class="input-group"><label>${isVehicle ? 'IRS Rate' : 'Hourly Rate'}</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${isVehicle ? 0.67 : 65.00}"></div></div>
-                <button class="remove-row-btn">×</button>
+                <button class="remove-row-btn">Del</button>
             </div>
         </div>`;
     container.insertAdjacentHTML('beforeend', html);
@@ -104,7 +120,7 @@ window.addSubRow = function() {
                 <div class="input-group"><label>Subcontractor Name</label><input type="text" class="glass-input sub-name" placeholder="e.g. ABC Electric"></div>
                 <div class="input-group" style="flex:2;"><label>Scope Description</label><input type="text" class="glass-input sub-desc" placeholder="e.g. Wire 3 new outlets"></div>
                 <div class="input-group"><label>Flat Quote</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input sub-price" value="0"></div></div>
-                <button class="remove-row-btn">×</button>
+                <button class="remove-row-btn">Del</button>
             </div>
         </div>`;
     container.insertAdjacentHTML('beforeend', html);
@@ -115,7 +131,7 @@ window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
     
     document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-select, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
-        const key = el.id || el.name || el.value;
+        const key = el.id || (el.classList.contains('module-toggle') ? el.value : el.name);
         state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
     });
 
@@ -169,7 +185,7 @@ window.saveState = function(skipAutosave = false) {
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             if (manualSaveBtn) manualSaveBtn.textContent = 'Autosaving...';
             window.saveBidToCloud(0, true).then((success) => {
-                if (manualSaveBtn && success) {
+                if (manualSaveBtn && success && success !== "LIMIT_REACHED") {
                     manualSaveBtn.textContent = 'Saved!';
                     setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
                 }
@@ -247,8 +263,8 @@ window.loadState = function(dataOverride) {
                     if (c.shapes && c.shapes.length > 0) {
                         c.shapes.forEach(s => {
                             const html = cat === 'paint' 
-                                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">&times;</button></div>` 
-                                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" value="${s.w}" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" value="${s.d}" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">&times;</button></div>`;
+                                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">Del</button></div>` 
+                                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" value="${s.w}" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" value="${s.d}" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">Del</button></div>`;
                             row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
                         });
                     }
@@ -259,7 +275,10 @@ window.loadState = function(dataOverride) {
 
     document.querySelectorAll('.module-toggle').forEach(t => { 
         const d = document.getElementById(t.getAttribute('data-target')); 
-        if(t.checked && d) d.classList.add('active'); 
+        if(t.checked && d) {
+            d.classList.add('active'); 
+            d.classList.remove('collapsed');
+        }
         else if(d) d.classList.remove('active'); 
     });
     
