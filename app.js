@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!window.materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
                         window.materialsDb[mat.category].push({
                             id: `custom_${mat.id}`,
-                            name: `⭐ ${mat.name}`,
+                            name: `${mat.name}`,
                             unit: mat.unit,
                             price: parseFloat(mat.price)
                         });
@@ -354,6 +354,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const subsContainer = document.getElementById('subs-rows-container');
                 if (subsContainer) subsContainer.innerHTML = '';
+                
+                document.getElementById('closed-banner').style.display = 'none';
+                document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
+                document.getElementById('results-view').classList.replace('active-view', 'hidden-view');
+                document.getElementById('editBtn').style.display = 'block';
+                document.getElementById('payment-signature-section').style.display = 'block';
+                document.querySelectorAll('.add-row-btn, .remove-row-btn, .add-shape-btn, .remove-shape-btn').forEach(el => el.style.display = '');
+
                 window.saveState();
             } 
         };
