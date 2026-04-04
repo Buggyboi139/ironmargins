@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (baseLabor > 0) {
             clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px; border-top: 1px dashed var(--border-glass);"><span>Project Labor & Fleet</span> <span>${format(baseLabor * mult)}</span></div>`;
             for (const [phase, cost] of Object.entries(laborByPhase)) {
-                if (cost > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${phase}</span> <span>${format(cost * mult)}</span></div>`;
+                if (cost > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${window.escapeHTML(phase)}</span> <span>${format(cost * mult)}</span></div>`;
             }
             if (laborBurden > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Burden & Insurance</span> <span>${format(laborBurden * mult)}</span></div>`;
         }
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subTotal > 0) {
             clientHTML += `<div class="item-row" style="font-weight: 600; padding-top: 15px;"><span>Subcontracted Services</span> <span>${format(subTotal * mult)}</span></div>`;
             subsList.forEach(s => {
-                clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${s.name}</span> <span>${format(s.price * mult)}</span></div>`;
+                clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• ${window.escapeHTML(s.name)}</span> <span>${format(s.price * mult)}</span></div>`;
             });
         }
 
