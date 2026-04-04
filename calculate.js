@@ -1,6 +1,3 @@
-================================================
-FILE: calculate.js
-================================================
 window.updatePaymentSchedule = function() {
     const total = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
     const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
