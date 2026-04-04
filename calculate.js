@@ -76,7 +76,7 @@ window.renderDownloadOptions = async function() {
         warningEl.style.display = 'none';
     }
 
-    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "⚡ Review & Generate (Watermarked)";
+    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
     downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
     downloadBtn.style.border = "none";
     downloadBtn.style.color = "#0f172a";
