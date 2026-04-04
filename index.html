@@ -92,12 +92,9 @@
                     <div class="module-content">
                         <div class="input-row" style="background: transparent; border: none; padding: 0;">
                             <div class="input-group">
-                                <label>Client</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <input type="hidden" id="client-id" value="">
-                                    <input type="text" id="client-display" class="glass-input" style="flex: 1; cursor: pointer;" readonly placeholder="Select a Client..." onclick="document.getElementById('openClientModalBtn').click()">
-                                    <button id="openClientModalBtn" class="secondary-btn" style="padding: 0 15px; border-radius: 10px; font-size: 1.2rem;">+</button>
-                                </div>
+                                <label>Client <span id="client-display-name" style="color: #38bdf8; margin-left: 8px;">None</span></label>
+                                <input type="hidden" id="client-id" value="">
+                                <button id="openClientModalBtn" class="secondary-btn" style="width: 100%; border-radius: 8px; font-size: 1.5rem; padding: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.2);">+</button>
                             </div>
                             <div class="input-group"><label>Project Name</label><input type="text" id="meta-project" class="glass-input" placeholder="e.g. Full Master Remodel"></div>
                             <div class="input-group"><label>Date</label><input type="date" id="meta-date" class="glass-input" style="color-scheme: dark;"></div>
@@ -347,17 +344,29 @@
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
                 <h3 id="client-form-title" style="font-size: 1.1rem; margin-bottom: 15px; color: #f8fafc;">Add New Client</h3>
                 <input type="hidden" id="edit-client-id" value="">
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Client Name</label>
-                    <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+                <div class="input-row" style="border: none; padding: 0; background: transparent; margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>Client Name</label>
+                        <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label>Email Address</label>
+                        <input type="email" id="new-client-email" class="glass-input" placeholder="e.g. jane@example.com">
+                    </div>
                 </div>
-                <div class="input-group" style="margin-bottom: 15px;">
-                    <label>Address</label>
-                    <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST">
+                <div class="input-row" style="border: none; padding: 0; background: transparent; margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>Phone Number</label>
+                        <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label>Property Address</label>
+                        <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St">
+                    </div>
                 </div>
                 <div class="input-group" style="margin-bottom: 25px;">
-                    <label>Phone Number</label>
-                    <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+                    <label>Internal Notes (Gate codes, pet warnings, etc.)</label>
+                    <textarea id="new-client-notes" class="glass-input" rows="2" placeholder="e.g. Prefers text messages, beware of dog..."></textarea>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="primary-btn" id="btn-save-client" style="margin-top: 0; padding: 15px; flex: 2;">Save Client</button>
