@@ -21,10 +21,19 @@ window.updatePaymentSchedule = function() {
 }
 
 window.saveDataForPdf = function() {
-    const clientSelect = document.getElementById('client-select');
-    const selectedOption = clientSelect.options[clientSelect.selectedIndex];
-    localStorage.setItem('im_clientName', selectedOption && selectedOption.value ? selectedOption.textContent : 'Client');
-    localStorage.setItem('im_clientAddress', selectedOption ? (selectedOption.dataset.address || '') : '');
+    const displayEl = document.getElementById('client-display');
+    const idEl = document.getElementById('client-id');
+    
+    const clientName = displayEl && displayEl.value ? displayEl.value : 'Client';
+    let clientAddress = '';
+    
+    if (idEl && idEl.value && window.clientsDb) {
+        const cObj = window.clientsDb.find(c => c.id == idEl.value);
+        if (cObj && cObj.address) clientAddress = cObj.address;
+    }
+
+    localStorage.setItem('im_clientName', clientName);
+    localStorage.setItem('im_clientAddress', clientAddress);
     localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
 }
 
