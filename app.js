@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clientIdEl = document.getElementById('client-id');
                 const clientDispEl = document.getElementById('client-display-name');
                 if (clientIdEl) clientIdEl.value = '';
-                if (clientDispEl) clientDispEl.textContent = 'None';
+                if (clientDispEl) clientDispEl.textContent = '+ Select Client';
                 
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
