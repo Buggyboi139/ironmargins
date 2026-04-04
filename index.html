@@ -94,9 +94,8 @@
                             <div class="input-group">
                                 <label>Client</label>
                                 <div style="display: flex; gap: 10px;">
-                                    <select id="client-select" class="glass-input" style="flex: 1;">
-                                        <option value="">Select a Client...</option>
-                                    </select>
+                                    <input type="hidden" id="client-id" value="">
+                                    <input type="text" id="client-display" class="glass-input" style="flex: 1; cursor: pointer;" readonly placeholder="Select a Client..." onclick="document.getElementById('openClientModalBtn').click()">
                                     <button id="openClientModalBtn" class="secondary-btn" style="padding: 0 15px; border-radius: 10px; font-size: 1.2rem;">+</button>
                                 </div>
                             </div>
@@ -341,7 +340,7 @@
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeClientModal" class="close-btn">&times;</button>
             <h2>Client Management</h2>
-            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Manage your CRM or add a new client.</p>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Manage your CRM or select a client.</p>
             
             <div id="client-manage-list" style="margin-bottom: 25px; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
             
