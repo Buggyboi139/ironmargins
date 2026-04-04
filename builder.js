@@ -200,6 +200,10 @@ window.loadState = function(dataOverride) {
     const state = dataOverride || JSON.parse(dataStr);
     if (!state) return;
 
+    if (dataOverride) {
+        document.querySelectorAll('.module-toggle').forEach(t => t.checked = false);
+    }
+
     if (state.meta) {
         Object.keys(state.meta).forEach(key => {
             let el = document.getElementById(key);
@@ -214,7 +218,9 @@ window.loadState = function(dataOverride) {
     }
 
     const laborContainer = document.getElementById('labor-rows-container');
-    if (laborContainer && state.labor) {
+    if (laborContainer && state.labor && state.labor.length > 0) {
+        const t = document.querySelector(`input.module-toggle[value="labor"]`);
+        if (t) t.checked = true;
         laborContainer.innerHTML = '';
         state.labor.forEach(l => {
             window.addLaborRow(l.type);
@@ -227,7 +233,9 @@ window.loadState = function(dataOverride) {
     }
 
     const subsContainer = document.getElementById('subs-rows-container');
-    if (subsContainer && state.subs) {
+    if (subsContainer && state.subs && state.subs.length > 0) {
+        const t = document.querySelector(`input.module-toggle[value="subs"]`);
+        if (t) t.checked = true;
         subsContainer.innerHTML = '';
         state.subs.forEach(s => {
             window.addSubRow();
@@ -241,7 +249,9 @@ window.loadState = function(dataOverride) {
     if (state.categories) {
         window.categories.forEach(cat => {
             const container = document.getElementById(`${cat}-rows-container`);
-            if (container && state.categories[cat]) {
+            if (container && state.categories[cat] && state.categories[cat].length > 0) {
+                const t = document.querySelector(`input.module-toggle[value="${cat}"]`);
+                if (t) t.checked = true;
                 container.innerHTML = '';
                 state.categories[cat].forEach(c => {
                     window.addMaterialRow(cat, `${cat}-rows-container`);
