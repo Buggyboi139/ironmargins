@@ -133,9 +133,9 @@ window.addSubRow = function() {
 window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
     
-    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
+    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display-name, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
         const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
-        state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
+        state.meta[key] = el.type === 'checkbox' ? el.checked : (el.id === 'client-display-name' ? el.textContent : el.value);
     });
 
     window.categories.forEach(cat => {
@@ -215,6 +215,7 @@ window.loadState = function(dataOverride) {
             if (!el) el = document.querySelector(`input[value="${key}"]`);
             if (el) {
                 if (el.type === 'checkbox') el.checked = state.meta[key];
+                else if (el.id === 'client-display-name') el.textContent = state.meta[key];
                 else el.value = state.meta[key];
             }
         });
@@ -303,113 +304,4 @@ window.loadState = function(dataOverride) {
     if(markupDisplay && markupSlider) {
         markupDisplay.textContent = markupSlider.value + '%';
     }
-}
-
-window.saveAsTemplate = async function(category) {
-    if (!window.currentUser || !window.supabaseClient) {
-        alert("Sign in to save reusable material templates.");
-        return;
-    }
-    const name = prompt(`Save as Template\nEnter a name for this ${window.categoryNames[category]} assembly:`);
-    if (!name) return;
-
-    const container = document.getElementById(`${category}-rows-container`);
-    const rows = container.querySelectorAll('.calc-row');
-    const items = [];
-
-    rows.forEach(row => {
-        items.push({
-            item_id: row.querySelector('.item-select').value,
-            custom_name: row.querySelector('.custom-mat-input').value,
-            qty: row.querySelector('.qty-input').value,
-            price: row.querySelector('.price-input').value
-        });
-    });
-
-    const payload = {
-        user_id: window.currentUser.id,
-        name: name,
-        category: category,
-        items: items
-    };
-
-    const { error } = await window.supabaseClient.from('assemblies').insert([payload]);
-    if (error) {
-        alert("Error saving template: " + error.message);
-    } else {
-        const btn = document.querySelector(`.save-template-btn[data-category="${category}"]`);
-        if (btn) {
-            const originalText = btn.textContent;
-            btn.textContent = 'Saved!';
-            setTimeout(() => btn.textContent = originalText, 2000);
-        }
-    }
-}
-
-window.loadTemplate = async function(category) {
-    if (!window.currentUser || !window.supabaseClient) return;
-    const modal = document.getElementById('templateModal');
-    const list = document.getElementById('template-list');
-    list.innerHTML = 'Loading...';
-    modal.classList.add('show');
-
-    const { data, error } = await window.supabaseClient.from('assemblies').select('*').eq('category', category).eq('user_id', window.currentUser.id);
-    
-    if (error || !data || data.length === 0) {
-        list.innerHTML = '<div style="padding: 15px; color: var(--text-muted);">No templates found.</div>';
-        return;
-    }
-
-    list.innerHTML = data.map(t => `
-        <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
-             onclick="window.applyTemplate('${category}', ${t.id})">
-            <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
-        </div>
-    `).join('');
-    
-    window.tempTemplateData = data;
-}
-
-window.applyTemplate = function(category, id) {
-    const template = window.tempTemplateData.find(t => t.id === id);
-    if (!template) return;
-
-    const containerId = `${category}-rows-container`;
-    template.items.forEach(item => {
-        window.addMaterialRow(category, containerId);
-        const container = document.getElementById(containerId);
-        const row = container.lastElementChild;
-
-        const opt = row.querySelector(`.custom-option[data-value="${item.item_id}"]`);
-        if (opt) {
-            row.querySelector('.custom-select-text').textContent = opt.textContent;
-            row.querySelector('.item-select').value = item.item_id;
-            row.querySelector('.unit').textContent = opt.dataset.unit + 's';
-        }
-        if (item.item_id === 'CUSTOM') {
-            row.querySelector('.custom-select-container').style.display = 'none';
-            row.querySelector('.custom-mat-wrapper').style.display = 'flex';
-            row.querySelector('.custom-mat-input').value = item.custom_name;
-        }
-        
-        row.querySelector('.qty-input').value = item.qty;
-        row.querySelector('.price-input').value = item.price;
-        window.calculateRowQuantity(row, category);
-    });
-
-    const toggle = document.querySelector(`.module-toggle[value="${category}"]`);
-    if (toggle) {
-        if (!toggle.checked) toggle.checked = true;
-        const targetId = toggle.getAttribute('data-target');
-        if (targetId) {
-            const mod = document.getElementById(targetId);
-            if (mod) {
-                mod.classList.add('active');
-                mod.classList.remove('collapsed');
-            }
-        }
-    }
-
-    document.getElementById('templateModal').classList.remove('show');
-    window.saveState();
 }
