@@ -59,6 +59,7 @@
         
         <button id="materialsBtn" class="side-menu-link">Materials Catalog</button>
         <button id="profileBtn" class="side-menu-link">Company Profile</button>
+        <button id="manageClientsSideBtn" class="side-menu-link">Clients</button>
         
         <div class="side-menu-divider"></div>
         <div class="side-menu-label">Saved Bids</div>
@@ -340,20 +341,30 @@
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeClientModal" class="close-btn">&times;</button>
             <h2>Client Management</h2>
-            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Add a new client to your CRM.</p>
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label>Client Name</label>
-                <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Manage your CRM or add a new client.</p>
+            
+            <div id="client-manage-list" style="margin-bottom: 25px; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+                <h3 id="client-form-title" style="font-size: 1.1rem; margin-bottom: 15px; color: #f8fafc;">Add New Client</h3>
+                <input type="hidden" id="edit-client-id" value="">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Client Name</label>
+                    <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Address</label>
+                    <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST">
+                </div>
+                <div class="input-group" style="margin-bottom: 25px;">
+                    <label>Phone Number</label>
+                    <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="primary-btn" id="btn-save-client" style="margin-top: 0; padding: 15px; flex: 2;">Save Client</button>
+                    <button class="secondary-btn" id="btn-cancel-edit-client" style="margin-top: 0; padding: 15px; flex: 1; display: none;">Cancel</button>
+                </div>
             </div>
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label>Address</label>
-                <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST">
-            </div>
-            <div class="input-group" style="margin-bottom: 25px;">
-                <label>Phone Number</label>
-                <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
-            </div>
-            <button class="primary-btn" id="btn-save-client" style="margin-top: 0; padding: 15px; width: 100%;">Save Client</button>
         </div>
     </div>
 
