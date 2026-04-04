@@ -1,3 +1,6 @@
+================================================
+FILE: builder.js
+================================================
 window.materialsDb = {};
 window.categories = ['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
 window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes', electrical: 'Electrical & Wire', plumbing: 'Plumbing & Pipe', fixtures: 'Fixtures & Cabinetry', concrete: 'Concrete & Flatwork', gravel: 'Gravel & Rock', mulch: 'Mulch & Landscape', topsoil: 'Topsoil & Dirt', demo: 'Demo & Hauls' };
@@ -12,6 +15,11 @@ window.calculateRowQuantity = function(row, cat) {
     const shapes = row.querySelectorAll('.shape-row'); 
     if (shapes.length === 0) return;
     
+    const itemId = row.querySelector('.item-select').value;
+    const itemData = window.materialsDb[cat]?.find(i => i.id === itemId);
+    const unit = itemData?.unit || 'qty';
+    const isCustom = itemId === 'CUSTOM';
+    
     let total = 0;
     if (cat === 'paint') { 
         shapes.forEach(s => {
@@ -23,7 +31,16 @@ window.calculateRowQuantity = function(row, cat) {
             const c = dc ? (parseFloat(dc.value) || 1) : 1;
             total += (l * h * c);
         });
-        row.querySelector('.qty-input').value = Math.ceil((total * 1.1) / 350); 
+        
+        const coverage = isCustom ? 350 : (itemData?.coverage || 350);
+        let wasteFactor = 1.0;
+        const wasteBox = document.getElementById(`paint-waste-check`);
+        if (wasteBox && wasteBox.checked) {
+            const pct = parseFloat(document.getElementById('paint-waste-pct')?.value) || 10;
+            wasteFactor += (pct / 100);
+        }
+        
+        row.querySelector('.qty-input').value = Math.ceil((total * wasteFactor) / coverage); 
         return; 
     }
     
@@ -37,16 +54,25 @@ window.calculateRowQuantity = function(row, cat) {
         total += (l * w * (d / 12)) / 27;
     });
     
-    const itemId = row.querySelector('.item-select').value;
-    const unit = itemId === 'CUSTOM' ? 'qty' : (window.materialsDb[cat]?.find(i => i.id === itemId)?.unit || 'qty');
-    
     let wasteFactor = 1.0;
     const wasteBox = document.getElementById(`${cat}-waste-check`);
-    if (wasteBox && wasteBox.checked) wasteFactor += 0.1;
+    if (wasteBox && wasteBox.checked) {
+        const pct = parseFloat(document.getElementById(`${cat}-waste-pct`)?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
 
-    if (cat === 'gravel' && document.getElementById('gravel-compaction-check')?.checked) wasteFactor += 0.2;
-    if (cat === 'topsoil' && document.getElementById('topsoil-settling-check')?.checked) wasteFactor += 0.1;
-    if (cat === 'mulch' && document.getElementById('mulch-settling-check')?.checked) wasteFactor += 0.1;
+    if (cat === 'gravel' && document.getElementById('gravel-compaction-check')?.checked) {
+        const pct = parseFloat(document.getElementById('gravel-compaction-pct')?.value) || 20;
+        wasteFactor += (pct / 100);
+    }
+    if (cat === 'topsoil' && document.getElementById('topsoil-settling-check')?.checked) {
+        const pct = parseFloat(document.getElementById('topsoil-settling-pct')?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
+    if (cat === 'mulch' && document.getElementById('mulch-settling-check')?.checked) {
+        const pct = parseFloat(document.getElementById('mulch-settling-pct')?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
     
     let final = total * wasteFactor;
     
@@ -56,7 +82,10 @@ window.calculateRowQuantity = function(row, cat) {
         else final *= 45;
     } else if (cat === 'mulch' && unit === 'bag') { final *= 13.5; } 
       else if (cat === 'topsoil' && unit === 'bag') { final *= 36; } 
-      else if (unit === 'ton') { final *= (cat === 'topsoil' ? 1.2 : 1.4); }
+      else if (unit === 'ton') { 
+          const density = isCustom ? 1.4 : (itemData?.density || 1.4);
+          final *= density; 
+      }
     
     row.querySelector('.qty-input').value = final.toFixed(1);
 }
@@ -133,7 +162,7 @@ window.addSubRow = function() {
 window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
     
-    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display-name, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
+    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display-name, #setup-view input[type="checkbox"], #markupSlider, #setup-view .inline-pct').forEach(el => {
         const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
         state.meta[key] = el.type === 'checkbox' ? el.checked : (el.id === 'client-display-name' ? el.textContent : el.value);
     });
@@ -191,6 +220,8 @@ window.saveState = function(skipAutosave = false) {
                 if (manualSaveBtn && success && success !== "LIMIT_REACHED") {
                     manualSaveBtn.textContent = 'Saved!';
                     setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
+                } else if (manualSaveBtn && !window.isPro && window.bidCount >= 3 && !window.currentBidId) {
+                    manualSaveBtn.textContent = '⚡ Unlock Unlimited Bids';
                 }
             });
         }, 3000);
