@@ -95,7 +95,7 @@ window.calculateRowQuantity = function(row, cat) {
 window.addMaterialRow = function(cat, containerId) {
     if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
     const items = window.materialsDb[cat] || [];
-    let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${i.name}</div>`).join('');
+    let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${window.escapeHTML(i.name)}</div>`).join('');
     opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">+ Custom Material...</div>`;
     const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
     const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
@@ -105,12 +105,12 @@ window.addMaterialRow = function(cat, containerId) {
             <div class="input-row">
                 <div class="input-group" style="flex:2;">
                     <label>Material/Item</label>
-                    <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${def.name}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
+                    <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${window.escapeHTML(def.name)}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
                     <div class="custom-mat-wrapper" style="display:none;"><input type="text" class="glass-input custom-mat-input" placeholder="Name..."><button class="reset-mat-btn">↺</button></div>
                 </div>
                 <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
                 <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}"></div></div>
-                <button class="remove-row-btn" title="Remove Item">${xIcon}</button>
+                <button class="remove-row-btn" title="Remove Item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>${shapes}
         </div>`);
     window.saveState();
