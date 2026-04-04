@@ -133,7 +133,7 @@ window.addSubRow = function() {
 window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
     
-    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
+    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view input[type="checkbox"], #markupSlider').forEach(el => {
         const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
         state.meta[key] = el.type === 'checkbox' ? el.checked : el.value;
     });
