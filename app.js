@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += items.map(t => `
                     <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
                          onclick="window.loadStarterTemplate('${t.id}')">
-                        <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
+                        <span style="font-weight:bold; color:#38bdf8;">${window.escapeHTML(t.name)}</span>
                     </div>
                 `).join('');
                 html += `</div>`;
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
             list.innerHTML = data.map(t => {
-                const safeName = String(t.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
+                const safeName = window.escapeHTML(t.name);
                 const jsSafeName = (t.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                 return `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cat = catManageSelect.value;
         const items = window.materialsDb[cat] || [];
         materialsManageList.innerHTML = items.map(i => {
-            const safeName = String(i.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
+            const safeName = window.escapeHTML(i.name);
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; gap: 15px; margin-bottom: 8px;">
                 <span style="font-size:0.9rem; flex:1 1 auto; min-width:0; word-break: break-word; line-height: 1.3;">${safeName}</span>
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cat = inp.dataset.cat;
             const unit = inp.dataset.unit;
             
-            const defaultItem = window.materialsDb[cat]?.find(i => i.name === name);
+            const defaultItem = window.materialsDb[cat]?.find(i => window.escapeHTML(i.name) === name || i.name === name);
             if(defaultItem && defaultItem.price !== price) {
                 defaultItem.price = price;
                 await saveCustomMaterialToCloud(cat, name, price, unit);
@@ -480,14 +480,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const manageList = document.getElementById('client-manage-list');
             let manageHtml = '';
             
-            const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
             const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
             const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
             const selectIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
             data.forEach(client => {
-                const safeName = escapeHTML(client.name);
-                const contactSubtitle = [client.email, client.phone, client.address].filter(Boolean).map(escapeHTML).join(' • ') || 'No details';
+                const safeName = window.escapeHTML(client.name);
+                const contactSubtitle = [client.email, client.phone, client.address].filter(Boolean).map(window.escapeHTML).join(' • ') || 'No details';
 
                 manageHtml += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
