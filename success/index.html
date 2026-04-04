@@ -2,656 +2,552 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="dark">
-    <title>IronMargins | Review & Sign</title>
+    <title>IronMargins | Professional Bids</title>
+    <meta name="description" content="IronMargins is a lightning-fast construction estimating software. Calculate accurate material costs, labor burden, and protect your margins effortlessly.">
+    <meta name="keywords" content="construction estimating software, contractor bidding, material pricing calculator, labor burden, construction margins">
+    <meta property="og:title" content="IronMargins | Professional Bids">
+    <meta property="og:description" content="Never underbid again. Calculate material costs, labor burden, and invisible margins perfectly on any device.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ironmargins.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#05070a">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
     <script>
-      window.dataLayer = window.dataLayer ||[];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-4WWZ1PYH4Q');
-      gtag('config', 'AW-000000000');
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        :root {
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(56, 189, 248, 0.3);
-            --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #10b981 50%, #34d399 100%);
-            --gradient-text: linear-gradient(to right, #34d399, #38bdf8);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--text-main);
-            background-color: #05070a;
-            min-height: 100dvh;
-        }
-        
-        iframe, object, embed {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-            border: 0;
-            transform: translateX(0);
-        }
-
-        .app-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100dvh;
-            background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0, transparent 40%), 
-                              radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.1) 0, transparent 40%), 
-                              radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
-        }
-        .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; transition: opacity 0.3s ease; }
-        nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
-        .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .container { max-width: 800px; width: 100%; padding: 60px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .success-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); backdrop-filter: blur(20px); border: 1px solid var(--border-highlight); border-radius: 32px; padding: 50px; width: 100%; max-width: 500px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
-        .check-circle { width: 80px; height: 80px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; color: #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
-        .progress-container { width: 100%; background: rgba(0,0,0,0.5); border-radius: 10px; height: 8px; overflow: hidden; margin-bottom: 30px; border: 1px solid var(--border-glass); }
-        .progress-bar { height: 100%; width: 0%; background: var(--gradient-text); transition: width 0.3s ease; }
-        .status-text { font-size: 0.9rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; }
-        .actions { display: flex; gap: 15px; justify-content: center; opacity: 0; transition: 0.5s; pointer-events: none; margin-top: 20px; }
-        .actions.show { opacity: 1; pointer-events: all; }
-        .primary-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 16px 32px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; outline: none; transition: 0.2s; }
-        .secondary-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-glass); padding: 16px 32px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        
-        #preview-container { animation: fadeIn 0.5s ease; padding-top: 40px; padding-bottom: 100px; display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .preview-flex-layout {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            gap: 40px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .pdf-scroll-area {
-            width: 100%;
-            max-width: 816px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .action-panel {
-            background: rgba(15, 23, 42, 0.6);
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid var(--border-glass);
-            width: 100%;
-            max-width: 816px;
-        }
-
-        #pdf-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 816px; 
-            min-height: auto; 
-            background: #ffffff;
-            color: #0f172a;
-            padding: 48px;
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: left;
-            margin: 0 auto;
-        }
-        
-        .pdf-header { display: flex; justify-content: space-between; border-bottom: 4px solid #10b981; padding-bottom: 24px; margin-bottom: 32px; align-items: center; }
-        .pdf-brand h2 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1px; }
-        .pdf-brand p { margin: 8px 0 0 0; color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .pdf-meta { text-align: right; }
-        .meta-grid { display: grid; grid-template-columns: auto auto; column-gap: 24px; row-gap: 8px; text-align: right; justify-content: end; }
-        .meta-label { font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; align-self: center; }
-        .meta-val { font-size: 16px; color: #0f172a; font-weight: 700; }
-        .pdf-quote-box { width: 100%; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 32px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 48px; }
-        .quote-col { display: flex; flex-direction: column; }
-        .quote-label { font-size: 14px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
-        .quote-val-grand { font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: -1px; line-height: 1; }
-        .quote-val-dep { font-size: 28px; font-weight: 800; color: #10b981; line-height: 1; display: block; }
-        .section-header { font-size: 18px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid #10b981; padding-bottom: 10px; margin-bottom: 16px; display: inline-block; }
-        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-        .pdf-table td { padding: 16px 0; border-bottom: 1px solid #f1f5f9; font-size: 16px; color: #334155; }
-        .pdf-table tr:last-child td { border-bottom: none; }
-        .pdf-table td.item-name { width: 75%; font-weight: 500; }
-        .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
-
-        .pdf-export {
-            width: 816px !important;
-            max-width: 816px !important;
-            padding: 48px !important;
-        }
-
-        @media screen and (max-width: 768px) {
-            #pdf-wrapper:not(.pdf-export) { padding: 24px; }
-            #pdf-wrapper:not(.pdf-export) .pdf-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            #pdf-wrapper:not(.pdf-export) .pdf-meta { text-align: left; width: 100%; }
-            #pdf-wrapper:not(.pdf-export) .meta-grid { justify-content: start; text-align: left; grid-template-columns: 100px 1fr; }
-            #pdf-wrapper:not(.pdf-export) .pdf-quote-box { flex-direction: column; align-items: flex-start; gap: 15px; padding: 20px; }
-            #pdf-wrapper:not(.pdf-export) .quote-col { text-align: left !important; width: 100%; }
-            #pdf-wrapper:not(.pdf-export) .quote-val-grand { font-size: 32px; }
-            #pdf-wrapper:not(.pdf-export) .sig-flex-container { flex-direction: column !important; justify-content: flex-start !important; gap: 40px !important; }
-            #pdf-wrapper:not(.pdf-export) .sig-col { width: 100% !important; }
-        }
-
-        @media print {
-            @page { size: letter portrait; margin: 0; }
-            body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #0f172a !important; }
-            .app-wrapper, .no-print { display: none !important; }
-            #preview-container { padding: 0 !important; margin: 0 !important; display: block !important; }
-            .pdf-scroll-area { height: auto !important; overflow: visible !important; box-shadow: none !important; }
-            #pdf-wrapper { box-shadow: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; padding: 40pt 50pt !important; }
-            .pdf-header { border-bottom: 3pt solid #10b981; padding-bottom: 20pt; margin-bottom: 30pt; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
-            .pdf-meta { text-align: right !important; width: auto !important; }
-            .pdf-brand h2 { font-size: 26pt; letter-spacing: -1pt; }
-            .pdf-brand p { margin: 6pt 0 0 0; font-size: 11pt; letter-spacing: 1pt; }
-            .meta-grid { column-gap: 20pt; row-gap: 6pt; display: grid !important; grid-template-columns: auto auto !important; justify-content: end !important; text-align: right !important; }
-            .meta-label { font-size: 9pt; }
-            .meta-val { font-size: 12pt; }
-            .pdf-quote-box { background: #f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid #e2e8f0; margin-bottom: 40pt; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; }
-            .quote-col { text-align: right !important; width: auto !important; }
-            .quote-col:first-child { text-align: left !important; }
-            .quote-label { font-size: 11pt; letter-spacing: 1pt; margin-bottom: 4pt; }
-            .quote-val-grand { font-size: 32pt; letter-spacing: -1pt; }
-            .quote-val-dep { font-size: 22pt; }
-            .section-header { font-size: 14pt; letter-spacing: 1pt; border-bottom: 2pt solid #10b981; padding-bottom: 8pt; margin-bottom: 12pt; page-break-after: avoid; break-after: avoid; }
-            .pdf-table { margin-bottom: 30pt; }
-            .pdf-table td { padding: 12pt 0; border-bottom: 1pt solid #f1f5f9; font-size: 12pt; }
-            tr, .signature-section { page-break-inside: avoid; break-inside: avoid; }
-            h2 { page-break-after: avoid; break-after: avoid; }
-            .signature-section { margin-top: 50pt !important; }
-            .signature-section p { font-size: 10pt !important; margin-bottom: 30pt !important; }
-            .sig-flex-container { display: flex !important; flex-direction: row !important; justify-content: flex-end !important; gap: 60pt !important; }
-            .sig-col { width: 300px !important; }
-            .sig-col:last-child { width: 150px !important; }
-            #sig-image-container { height: 40pt !important; }
-            #sig-date-container { height: 40pt !important; }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="app-wrapper" id="ui-container">
-        <div class="ui-layer">
-            <nav><div class="logo">IronMargins</div></nav>
-            <div class="container">
-                <div class="success-card">
-                    <div class="check-circle">
-                        <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    </div>
-                    <h1 id="mainHeader">Processing...</h1>
-                    <p class="subtitle" id="subHeader" style="margin-bottom: 20px;">Preparing your professional bid.</p>
-                    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
-                    <div class="status-text" id="statusText">Initializing...</div>
-                    <div class="actions" id="actionButtons">
-                        <button class="secondary-btn" onclick="window.location.href='/'">Back to Quote</button>
-                    </div>
-                </div>
-            </div>
+    <div id="left-color-bar"></div>
+    
+    <nav>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button id="hamburgerBtn" class="hamburger-btn">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <a href="/" class="logo-container" id="logoBtn">
+                <img src="logo_nb.png" alt="IronMargins Logo" class="logo-img">
+                <span class="logo-text">IronMargins</span>
+            </a>
         </div>
-    </div>
+        <div class="nav-actions">
+            <button id="manualSaveBtn" class="nav-link neutral" style="display: none; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Save Bid</button>
+            <button id="openStarterTemplatesBtn" class="nav-link neutral">Templates</button>
+            <button id="authBtn" class="nav-link neutral">Sign In</button>
+            <button id="resetBidBtn" class="nav-link neutral">Clear Bid</button>
+        </div>
+    </nav>
 
-    <div id="preview-container">
-        <div class="no-print" style="text-align: center; padding: 0 20px 20px;">
-            <h2 style="font-size: 2.5rem; margin-bottom: 10px;">Review & Sign</h2>
-            <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 1.1rem;">Review your proposal below. Draw your signature to accept.</p>
+    <div id="sideMenuOverlay" class="side-menu-overlay"></div>
+    <div id="sideMenu" class="side-menu">
+        <div class="side-menu-header">
+            <span class="logo-text" style="font-size: 1.4rem;">Menu</span>
+            <button id="closeSideMenuBtn" class="close-btn" style="position: static; font-size: 2rem;">&times;</button>
         </div>
         
-        <div class="preview-flex-layout">
-            
-            <div class="pdf-scroll-area">
-                <div id="pdf-wrapper">
-                    <div class="pdf-header">
-                        <div class="pdf-brand" id="pdf-brand-container"></div>
-                        <div class="pdf-meta">
-                            <div class="meta-grid">
-                                <div class="meta-label">Proposal For</div>
-                                <div class="meta-val" id="pdf-client">---</div>
-                                <div class="meta-val" id="pdf-client-address" style="grid-column: 1 / -1; font-size: 14px; font-weight: 500; color: #64748b; margin-top: -6px;"></div>
-                                <div class="meta-label">Project</div>
-                                <div class="meta-val" id="pdf-project">---</div>
-                                <div class="meta-label">Date</div>
-                                <div class="meta-val" id="pdf-date">--/--/----</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="pdf-quote-box">
-                        <div class="quote-col">
-                            <span class="quote-label">Total Investment</span>
-                            <span class="quote-val-grand" id="pdf-total">$0.00</span>
-                        </div>
-                        <div class="quote-col" style="text-align: right;" id="pdf-schedule-box">
-                        </div>
-                    </div>
-                    
-                    <div class="section-header">Scope of Work & Cost Breakdown</div>
-                    <table class="pdf-table">
-                        <tbody id="pdf-materials-body">
-                        </tbody>
-                        <tbody id="pdf-subs-body">
-                        </tbody>
-                        <tbody id="pdf-labor-body">
-                        </tbody>
-                    </table>
+        <button id="materialsBtn" class="side-menu-link">Materials Catalog</button>
+        <button id="profileBtn" class="side-menu-link">Company Profile</button>
+        <button id="manageClientsSideBtn" class="side-menu-link">Clients</button>
+        
+        <div class="side-menu-divider"></div>
+        <div class="side-menu-label">Saved Bids</div>
+        
+        <div class="menu-tabs">
+            <button class="menu-tab-btn active" id="tab-active" onclick="window.switchBidTab('active')">Active</button>
+            <button class="menu-tab-btn" id="tab-closed" onclick="window.switchBidTab('closed')">History</button>
+        </div>
 
-                    <div class="signature-section" style="margin-top: 60px; page-break-inside: avoid;">
-                        <p id="pdf-terms-text" style="font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 40px;">
-                            <strong>Terms & Conditions:</strong> This estimate is valid for 30 days. Any alteration or deviation from the above specifications involving extra costs will be executed only upon written orders and will become an extra charge over and above the estimate.
-                        </p>
-                        <div class="sig-flex-container" style="display: flex; justify-content: flex-end; gap: 60px;">
-                            <div class="sig-col" style="width: 300px; display: flex; flex-direction: column;">
-                                <div id="sig-image-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
-                                <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-                                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Client Acceptance Signature</p>
+        <div id="activeBidsList"></div>
+        <div id="closedBidsList" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        
+        <div id="closed-banner" class="closed-banner">
+            <div>
+                <span style="display:block; font-weight:700; font-size:1.1rem; color:#10b981; margin-bottom:5px;">JOB CLOSED</span>
+                <span style="font-size:0.9rem; color:#f8fafc;">Actual Profit: <strong id="closed-profit-val" style="font-size:1.2rem;">$0.00</strong></span>
+            </div>
+            <button id="closed-view-pdf" class="secondary-btn" style="background:rgba(255,255,255,0.05);">View Signed PDF</button>
+        </div>
+
+        <div id="setup-view" class="view-section active-view">
+            <h1 id="app-main-title">Never Underbid Again</h1>
+            <p class="subtitle">Stack your team, haul your materials, and capture every dollar of overhead.</p>
+            <div class="control-panel">
+                <div class="module-container active" style="margin-bottom: 40px; display: block;">
+                    <div class="module-header collapsible"><span style="color: #f8fafc;">Project Details</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div class="input-row" style="background: transparent; border: none; padding: 0;">
+                            <div class="input-group">
+                                <label>Client</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <select id="client-select" class="glass-input" style="flex: 1;">
+                                        <option value="">Select a Client...</option>
+                                    </select>
+                                    <button id="openClientModalBtn" class="secondary-btn" style="padding: 0 15px; border-radius: 10px; font-size: 1.2rem;">+</button>
                                 </div>
                             </div>
-                            <div class="sig-col" style="width: 150px; display: flex; flex-direction: column;">
-                                <div id="sig-date-container" style="height: 60px; width: 100%; display: flex; align-items: flex-end; padding-bottom: 5px;"></div>
-                                <div style="width: 100%; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-                                    <p style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin:0;">Date</p>
-                                </div>
+                            <div class="input-group"><label>Project Name</label><input type="text" id="meta-project" class="glass-input" placeholder="e.g. Full Master Remodel"></div>
+                            <div class="input-group"><label>Date</label><input type="date" id="meta-date" class="glass-input" style="color-scheme: dark;"></div>
+                            <div class="input-group"><label>Sales Tax (%)</label><input type="number" id="meta-tax" class="glass-input" placeholder="0" value="0" step="0.1"></div>
+                        </div>
+                        <div class="input-row" style="background: transparent; border: none; padding: 0; margin-top: 15px;">
+                            <div class="input-group" style="width: 100%;">
+                                <label>Project Notes / Scope Exclusions</label>
+                                <textarea id="meta-notes" class="glass-input" rows="3" placeholder="e.g., Does not include fixing existing subfloor rot..."></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="action-panel no-print">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-weight: 600; font-size: 1.05rem; color: #f8fafc;">Client Signature</span>
-                    <span id="clear-signature" style="color: #fb7185; cursor: pointer; font-size: 0.9rem;">Clear</span>
+                <div class="category-selector">
+                    <div class="category-title-label">Invisible Client Markup (%)</div>
+                    <div class="slider-container">
+                        <div class="budget-display" id="markupDisplay">20%</div>
+                        <div class="slider-wrapper"><input type="range" id="markupSlider" min="0" max="100" step="5" value="20"></div>
+                    </div>
+                </div>
+                <div class="category-selector">
+                    <div class="category-title-label">Required Modules</div>
+                    <div class="toggles-grid">
+                        <label><input type="checkbox" value="labor" class="cat-checkbox module-toggle" data-target="module-labor"><div class="cat-label">Labor</div></label>
+                        <label><input type="checkbox" value="subs" class="cat-checkbox module-toggle" data-target="module-subs"><div class="cat-label">Subcontractors</div></label>
+                        <label><input type="checkbox" value="wood" class="cat-checkbox module-toggle" data-target="module-wood"><div class="cat-label">Lumber</div></label>
+                        <label><input type="checkbox" value="paint" class="cat-checkbox module-toggle" data-target="module-paint"><div class="cat-label">Paint</div></label>
+                        <label><input type="checkbox" value="electrical" class="cat-checkbox module-toggle" data-target="module-electrical"><div class="cat-label">Electrical</div></label>
+                        <label><input type="checkbox" value="plumbing" class="cat-checkbox module-toggle" data-target="module-plumbing"><div class="cat-label">Plumbing</div></label>
+                        <label><input type="checkbox" value="fixtures" class="cat-checkbox module-toggle" data-target="module-fixtures"><div class="cat-label">Cabinetry</div></label>
+                        <label><input type="checkbox" value="concrete" class="cat-checkbox module-toggle" data-target="module-concrete"><div class="cat-label">Concrete</div></label>
+                        <label><input type="checkbox" value="gravel" class="cat-checkbox module-toggle" data-target="module-gravel"><div class="cat-label">Gravel</div></label>
+                        <label><input type="checkbox" value="mulch" class="cat-checkbox module-toggle" data-target="module-mulch"><div class="cat-label">Mulch</div></label>
+                        <label><input type="checkbox" value="topsoil" class="cat-checkbox module-toggle" data-target="module-topsoil"><div class="cat-label">Topsoil</div></label>
+                        <label><input type="checkbox" value="demo" class="cat-checkbox module-toggle" data-target="module-demo"><div class="cat-label">Demo & Haul</div></label>
+                    </div>
+                </div>
+
+                <div id="module-labor" class="module-container">
+                    <div class="module-header collapsible"><span>Labor & Fleet</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"><input type="checkbox" id="labor-burden-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.95rem; font-weight: 600; color: #f8fafc;">Add 25% Labor Burden (Taxes, Worker's Comp, Ins)</span></label>
+                        <div id="labor-rows-container"></div>
+                        <button id="add-laborer-btn" class="add-row-btn" style="margin-bottom: 10px;">+ Add Laborer (Crew Member)</button>
+                        <button id="add-vehicle-btn" class="add-row-btn" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);">+ Add Vehicle / Travel Run</button>
+                    </div>
+                </div>
+
+                <div id="module-subs" class="module-container">
+                    <div class="module-header collapsible"><span>Subcontractors</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="subs-rows-container"></div>
+                        <button id="add-sub-btn" class="add-row-btn" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%); border-color: rgba(52, 211, 153, 0.3);">+ Add Subcontractor Quote</button>
+                    </div>
                 </div>
                 
-                <div style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 15px;">
-                    <p style="font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 10px;">Use your finger to sign inside the box</p>
-                    <canvas id="signature-pad" style="width: 100%; height: 120px; border-radius: 8px; touch-action: none; cursor: crosshair;"></canvas>
+                <div id="module-wood" class="module-container">
+                    <div class="module-header collapsible"><span>Construction Lumber</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="wood-rows-container"></div>
+                        <button id="add-wood-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="wood" onclick="window.saveAsTemplate('wood')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="wood" onclick="window.loadTemplate('wood')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="wood-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for shop consumables</span></label>
+                    </div>
                 </div>
 
-                <button id="signAndDownloadBtn" class="primary-btn" style="width: 100%; margin-top: 10px; padding: 15px; font-size: 1.1rem;">Accept & Download PDF</button>
-                <button class="secondary-btn" style="width: 100%; margin-top: 15px; padding: 15px;" onclick="window.location.href='/'">Go Back to Edit</button>
+                <div id="module-paint" class="module-container">
+                    <div class="module-header collapsible"><span>Paint & Finishes</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="paint-rows-container"></div>
+                        <button id="add-paint-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="paint" onclick="window.saveAsTemplate('paint')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="paint" onclick="window.loadTemplate('paint')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="paint-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                    </div>
+                </div>
+
+                <div id="module-electrical" class="module-container">
+                    <div class="module-header collapsible"><span>Electrical & Wire</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="electrical-rows-container"></div>
+                        <button id="add-electrical-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="electrical" onclick="window.saveAsTemplate('electrical')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="electrical" onclick="window.loadTemplate('electrical')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="electrical-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                    </div>
+                </div>
+
+                <div id="module-plumbing" class="module-container">
+                    <div class="module-header collapsible"><span>Plumbing & Pipe</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="plumbing-rows-container"></div>
+                        <button id="add-plumbing-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="plumbing" onclick="window.saveAsTemplate('plumbing')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="plumbing" onclick="window.loadTemplate('plumbing')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="plumbing-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                    </div>
+                </div>
+
+                <div id="module-fixtures" class="module-container">
+                    <div class="module-header collapsible"><span>Fixtures & Cabinetry</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="fixtures-rows-container"></div>
+                        <button id="add-fixtures-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="fixtures" onclick="window.saveAsTemplate('fixtures')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="fixtures" onclick="window.loadTemplate('fixtures')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="fixtures-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for hardware/consumables</span></label>
+                    </div>
+                </div>
+
+                <div id="module-concrete" class="module-container">
+                    <div class="module-header collapsible"><span>Concrete & Flatwork</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="concrete-rows-container"></div>
+                        <button id="add-concrete-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="concrete" onclick="window.saveAsTemplate('concrete')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="concrete" onclick="window.loadTemplate('concrete')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="concrete-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste/spillage</span></label>
+                    </div>
+                </div>
+
+                <div id="module-gravel" class="module-container">
+                    <div class="module-header collapsible"><span>Gravel & Rock</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="gravel-rows-container"></div>
+                        <button id="add-gravel-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="gravel" onclick="window.saveAsTemplate('gravel')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="gravel" onclick="window.loadTemplate('gravel')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-compaction-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 20% for compaction</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="module-mulch" class="module-container">
+                    <div class="module-header collapsible"><span>Mulch & Landscape</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="mulch-rows-container"></div>
+                        <button id="add-mulch-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="mulch" onclick="window.saveAsTemplate('mulch')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="mulch" onclick="window.loadTemplate('mulch')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="module-topsoil" class="module-container">
+                    <div class="module-header collapsible"><span>Topsoil & Dirt</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="topsoil-rows-container"></div>
+                        <button id="add-topsoil-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="topsoil" onclick="window.saveAsTemplate('topsoil')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="topsoil" onclick="window.loadTemplate('topsoil')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="module-demo" class="module-container">
+                    <div class="module-header collapsible"><span>Demo & Dumpster Hauls</span><span class="chevron">▼</span></div>
+                    <div class="module-content">
+                        <div id="demo-rows-container"></div>
+                        <button id="add-demo-btn" class="add-row-btn">+ Add Item</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="save-template-btn add-row-btn template-btn-auth" data-category="demo" onclick="window.saveAsTemplate('demo')" style="background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Save as Template</button>
+                            <button class="load-template-btn add-row-btn template-btn-auth" data-category="demo" onclick="window.loadTemplate('demo')" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); display: none;">Load Template</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="primary-btn" id="calculateBtn">Calculate Breakdown</button>
+            </div>
+        </div>
+        
+        <div id="results-view" class="view-section hidden-view">
+            <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom:30px; flex-wrap: wrap; gap: 15px;">
+                <div><h2 id="res-project-title">Estimate Breakdown</h2><p id="res-client-meta" style="color: var(--text-muted);">Reviewing markup vs. client proposal.</p></div>
+                <button class="secondary-btn" id="editBtn" style="width: 100%; max-width: 200px;">← Edit Inputs</button>
             </div>
 
+            <div id="payment-signature-section" class="dash-card" style="margin-bottom: 30px;">
+                <div class="gt-label" style="margin-bottom: 15px;">Payment Schedule</div>
+                <div class="input-row" style="margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label>Deposit (%)</label>
+                        <input type="number" id="deposit-pct" class="glass-input" value="50" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Progress Payments (Qty)</label>
+                        <input type="number" id="progress-payments" class="glass-input" value="0" min="0">
+                    </div>
+                </div>
+                <div id="schedule-preview" style="margin-bottom: 20px; font-size: 0.95rem; color: #38bdf8; font-weight: 600;"></div>
+                
+                <button class="primary-btn" id="downloadPdfTrigger" style="margin-top: 0; padding: 15px; font-size: 1.1rem; width: 100%;">Review & Generate Proposal</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dash-card profit-card">
+                    <div class="gt-label" style="color: #34d399;">Your IronMargins Estimate</div>
+                    <div class="gt-value" style="color: #10b981;" id="res-contractor-profit">$0</div>
+                    <div class="line-items" id="dynamic-breakdown"></div>
+                </div>
+                <div class="dash-card">
+                    <div class="gt-label">Client Quote</div>
+                    <div class="gt-value" id="res-client-total" style="background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">$0</div>
+                    <div class="line-items" id="client-dynamic-breakdown"></div>
+                    <button class="secondary-btn" id="exportCSVBtn" style="width: 100%; padding: 15px; margin-top: 25px; font-size: 1rem;">Export Materials to QuickBooks (CSV)</button>
+                </div>
+            </div>
         </div>
     </div>
     
-    <script>
-        const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcmVmdWdmenRld2doaWFtYmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDc1MDMsImV4cCI6MjA5MDA4MzUwM30.QncelfMky_DyIFV_7aq-NUlM9TBsxFAdj8TyLZcrD64'; 
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            let currentUser = null;
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session && session.user) currentUser = session.user;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
-                if (window.gtag) {
-                    gtag('event', 'conversion', {
-                        'send_to': 'AW-000000000/DUMMY_CONVERSION_LABEL',
-                        'value': 1.0,
-                        'currency': 'USD'
-                    });
-
-                    gtag('event', 'purchase', {
-                        transaction_id: 'TXN_' + Date.now(),
-                        value: 29.99,
-                        currency: 'USD',
-                        items:[
-                            {
-                                item_id: 'pro_sub',
-                                item_name: 'Unlimited PDFs Subscription',
-                                price: 29.99,
-                                quantity: 1
-                            }
-                        ]
-                    });
-                }
-                
-                localStorage.setItem('im_temp_sub_active', 'true'); 
-                localStorage.removeItem('im_pending_purchase_value');
-                localStorage.removeItem('im_pending_purchase_item');
-
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            const bar = document.getElementById('progressBar');
-            const status = document.getElementById('statusText');
-            const btns = document.getElementById('actionButtons');
-            const format = (n) => '$' + parseFloat(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    <div id="clientModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
+            <button id="closeClientModal" class="close-btn">&times;</button>
+            <h2>Client Management</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Manage your CRM or add a new client.</p>
             
-            const isPro = localStorage.getItem('im_is_pro') === 'true';
-            const currentBidId = localStorage.getItem('im_current_bid_id');
-
-            const client = localStorage.getItem('im_clientName');
-            const project = localStorage.getItem('im_projectName');
-            const clientAddress = localStorage.getItem('im_clientAddress') || '';
-            const costs = JSON.parse(localStorage.getItem('im_costs') || '{}');
-            const cons = parseFloat(localStorage.getItem('im_cons')) || 0;
-            const raw = parseFloat(localStorage.getItem('im_raw')) || 0;
-            const markupPct = parseFloat(localStorage.getItem('im_markupPct')) || 0;
-            const baseLabor = parseFloat(localStorage.getItem('im_baseLabor')) || 0;
-            const laborBurden = parseFloat(localStorage.getItem('im_laborBurden')) || 0;
+            <div id="client-manage-list" style="margin-bottom: 25px; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
             
-            const subsList = JSON.parse(localStorage.getItem('im_subs') || '[]');
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+                <h3 id="client-form-title" style="font-size: 1.1rem; margin-bottom: 15px; color: #f8fafc;">Add New Client</h3>
+                <input type="hidden" id="edit-client-id" value="">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Client Name</label>
+                    <input type="text" id="new-client-name" class="glass-input" placeholder="e.g. Jane Doe" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Address</label>
+                    <input type="text" id="new-client-address" class="glass-input" placeholder="e.g. 123 Main St, City, ST">
+                </div>
+                <div class="input-group" style="margin-bottom: 25px;">
+                    <label>Phone Number</label>
+                    <input type="text" id="new-client-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="primary-btn" id="btn-save-client" style="margin-top: 0; padding: 15px; flex: 2;">Save Client</button>
+                    <button class="secondary-btn" id="btn-cancel-edit-client" style="margin-top: 0; padding: 15px; flex: 1; display: none;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="materialsModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button id="closeMaterialsModal" class="close-btn">&times;</button>
+            <h2>Materials Catalog</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Update your default material prices.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <select id="cat-manage-select" class="glass-input"></select>
+            </div>
+            <div id="materials-manage-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">Save Prices</button>
+        </div>
+    </div>
+
+    <div id="templateModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button class="close-btn" onclick="document.getElementById('templateModal').classList.remove('show')">&times;</button>
+            <h2>Load Template</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Select a saved template to insert.</p>
+            <div id="template-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
+    <div id="starterTemplateModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button class="close-btn" onclick="document.getElementById('starterTemplateModal').classList.remove('show')">&times;</button>
+            <h2>Starter Templates</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Start fresh with a pre-built bid kit.</p>
+            <div id="starter-template-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
+            <button id="closeProfileModal" class="close-btn">&times;</button>
+            <h2>Company Profile</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Notice: Fill this out to brand your official PDFs.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Your Company Name</label>
+                <input type="text" id="meta-company" class="glass-input" placeholder="e.g. Apex Builders">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Deposit Payment Link</label>
+                <input type="text" id="payment-link" class="glass-input" placeholder="e.g. https://paypal.me/yourbusiness">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Phone Number</label>
+                <input type="text" id="meta-company-phone" class="glass-input" placeholder="e.g. (555) 123-4567">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Business Address / Email</label>
+                <input type="text" id="meta-company-address" class="glass-input" placeholder="e.g. 100 Builder Ln | info@apex.com">
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Terms & Conditions (PDF Footer)</label>
+                <textarea id="profile-custom-terms" class="glass-input" rows="4" placeholder="e.g. This estimate is valid for 30 days..."></textarea>
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>Company Logo</label>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top:8px;">
+                    <img id="logo-preview" style="display:none; width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: rgba(255,255,255,0.05); padding: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="file" id="logo-upload" class="glass-input" accept="image/*" style="padding: 10px; flex: 1;">
+                </div>
+            </div>
+            <button class="primary-btn" id="saveProfileBtn" style="margin-top: 0; padding: 15px; width: 100%;">Save Profile</button>
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="https://billing.stripe.com/p/login/3cI4gB94XcDba9I7oe0co00" target="_blank" style="color: #94a3b8; font-size: 0.9rem; text-decoration: underline;">Manage Subscription & Billing</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button id="closeAuthModal" class="close-btn">&times;</button>
+            <h2 id="authTitle">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to access your saved bids.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Email Address</label>
+                <input type="email" id="authEmail" class="glass-input" placeholder="you@example.com">
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>Password</label>
+                <input type="password" id="authPassword" class="glass-input" placeholder="••••••••">
+            </div>
+            <div style="text-align: right; margin-top: -15px; margin-bottom: 20px;">
+                <span id="authForgotPassword" style="color: #38bdf8; cursor: pointer; font-size: 0.85rem;">Forgot Password?</span>
+            </div>
+            <button id="authSubmitBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Sign In</button>
+            <p class="auth-switch">
+                <span id="authSwitchText">Don't have an account? </span>
+                <span id="authToggleMode" style="color: #38bdf8; cursor: pointer; font-weight: 700;">Sign Up</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="updatePasswordModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2 id="updatePasswordTitle">Set New Password</h2>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>New Password</label>
+                <input type="password" id="newPasswordInput" class="glass-input" placeholder="••••••••">
+            </div>
+            <button id="updatePasswordBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Update</button>
+        </div>
+    </div>
+
+    <div id="closeoutModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <button id="closeCloseoutModal" class="close-btn" onclick="document.getElementById('closeoutModal').classList.remove('show')">&times;</button>
+            <h2>Close Out Job</h2>
+            <div id="closeout-bid-info" style="margin-bottom: 20px; font-weight: 600; font-size: 1.1rem;"></div>
             
-            const taxRate = parseFloat(localStorage.getItem('im_taxRate')) || 0;
-            const taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Total Client Bid:</span>
+                <span id="closeout-est-bid" style="font-weight:bold;">$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <span>Estimated Total Cost:</span>
+                <span id="closeout-est-cost" style="font-weight:bold;">$0.00</span>
+            </div>
 
-            const grandTotal = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-            const depAmt = parseFloat(localStorage.getItem('im_depAmt')) || 0;
-            const progQty = parseInt(localStorage.getItem('im_progQty')) || 0;
-            const progAmt = parseFloat(localStorage.getItem('im_progAmt')) || 0;
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Actual Material Cost</label>
+                <div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" id="closeout-actual-mat" class="glass-input" placeholder="0.00"></div>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Actual Labor Cost</label>
+                <div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" id="closeout-actual-lab" class="glass-input" placeholder="0.00"></div>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Actual Subcontractor Cost</label>
+                <div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" id="closeout-actual-sub" class="glass-input" placeholder="0.00"></div>
+            </div>
 
-            const customTerms = localStorage.getItem('im_custom_terms');
-            if (customTerms) {
-                document.getElementById('pdf-terms-text').innerHTML = `<strong>Terms & Conditions:</strong> ` + customTerms;
-            }
+            <div style="display: flex; justify-content: space-between; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; font-weight: 600; font-size: 1.2rem;">
+                <span>Actual Profit:</span>
+                <span id="closeout-actual-profit">$0.00</span>
+            </div>
 
-            if(!client) {
-                status.textContent = "Error: No Data Found";
-                status.style.color = "#fb7185";
-                document.getElementById('mainHeader').textContent = "Data Missing";
-                document.getElementById('subHeader').textContent = "Please go back and click 'Calculate' first.";
-                btns.classList.add('show');
-                return;
-            }
-
-            let brandHtml = '';
-            if (isPro) {
-                const logoData = localStorage.getItem('im_logo');
-                const compName = localStorage.getItem('im_global_company');
-                const compPhone = localStorage.getItem('im_global_phone') || '';
-                const compAddress = localStorage.getItem('im_global_address') || '';
-
-                if (logoData) {
-                    brandHtml += `<img src="${logoData}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
-                }
-                if (compName) {
-                    brandHtml += `<h2>${compName}</h2><p>Official Project Proposal</p>`;
-                } else {
-                    brandHtml += `<h2>Official Proposal</h2><p>IronMargins.com</p>`;
-                }
-                let contactStr =[compPhone, compAddress].filter(Boolean).join(' • ');
-                if (contactStr) {
-                    brandHtml += `<p style="font-size: 13px; margin-top: 5px; text-transform: none; letter-spacing: 0;">${contactStr}</p>`;
-                }
-            } else {
-                brandHtml += `<h2 style="margin:0; font-size: 28px; color: #0f172a; font-weight:800;">Official Proposal</h2>`;
-                const watermark = document.createElement('div');
-                watermark.style.textAlign = 'center';
-                watermark.style.fontSize = '12px';
-                watermark.style.color = '#94a3b8';
-                watermark.style.marginTop = '40px';
-                watermark.style.borderTop = '1px solid #e2e8f0';
-                watermark.style.paddingTop = '15px';
-                watermark.textContent = 'Generated with IronMargins - Professional Estimating Software';
-                document.querySelector('.signature-section').appendChild(watermark);
-            }
+            <div class="input-group" style="margin-bottom: 20px;">
+                <textarea id="closeout-notes" class="glass-input" rows="3" placeholder="Notes..."></textarea>
+            </div>
             
-            document.getElementById('pdf-brand-container').innerHTML = brandHtml;
+            <button class="primary-btn" onclick="window.submitCloseout()" style="margin-top: 0; padding: 15px; width: 100%;">Save & Archive</button>
+        </div>
+    </div>
 
-            document.getElementById('pdf-client').textContent = client;
-            if (clientAddress) {
-                document.getElementById('pdf-client-address').textContent = clientAddress;
-            } else {
-                document.getElementById('pdf-client-address').style.display = 'none';
-            }
-            
-            document.getElementById('pdf-project').textContent = project;
-            document.getElementById('pdf-date').textContent = new Date().toLocaleDateString();
-            document.getElementById('pdf-total').textContent = format(grandTotal);
+    <div id="cookieBanner" class="cookie-banner" style="display: none;">
+        <div class="cookie-content">
+            <p>We use cookies and local storage to save your estimates and improve your experience. <a href="/cookies">Learn more</a>.</p>
+            <button id="acceptCookiesBtn" class="cookie-btn">Got it!</button>
+        </div>
+    </div>
 
-            let scheduleHtml = `<span class="quote-label">Deposit Required</span><span class="quote-val-dep" style="color: #10b981;">${format(depAmt)}</span>`;
-            if (progQty > 0) {
-                scheduleHtml += `<span class="quote-label" style="margin-top:10px; font-size:12px;">+ ${progQty} Progress Payment(s) of ${format(progAmt)}</span>`;
-            } else if (grandTotal - depAmt > 0) {
-                scheduleHtml += `<span class="quote-label" style="margin-top:10px; font-size:12px;">+ Final Balance of ${format(grandTotal - depAmt)}</span>`;
-            }
-            document.getElementById('pdf-schedule-box').innerHTML = scheduleHtml;
+    <div id="pwa-prompt" class="pwa-prompt" style="display: none;">
+        <span class="close-pwa">&times;</span>
+        <p></p>
+    </div>
 
-            if (isPro) {
-                const paymentLink = localStorage.getItem('im_payment_link');
-                if (paymentLink && depAmt > 0) {
-                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
-                    const qrContainer = document.createElement('div');
-                    qrContainer.style.textAlign = 'right';
-                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
-                    document.querySelector('.pdf-quote-box').appendChild(qrContainer);
-                }
-            }
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IronMargins. All rights reserved.</p>
+            <p style="font-size: 0.85rem; color: #64748b; line-height: 1.5; margin-top: 5px; margin-bottom: 5px;">
+                Support: <a href="mailto:support@ironmargins.com" style="color: #38bdf8; text-decoration: none;">support@ironmargins.com</a><br>PO Box 35161<br>
+                Des Moines, IA 50315
+            </p>
+            <div class="footer-links">
+                <a href="/pwa">Install App</a>
+                <a href="/contact">Contact Us</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/cookies">Cookie Policy</a>
+            </div>
+        </div>
+    </footer>
 
-            const stateStr = localStorage.getItem('im_v5_data');
-            let notes = '';
-            if (stateStr) {
-                try {
-                    const state = JSON.parse(stateStr);
-                    if(state.meta && state.meta['meta-notes']) notes = state.meta['meta-notes'];
-                } catch(e){}
-            }
-
-            if (notes) {
-                const notesHtml = `<div class="section-header" style="margin-top:20px;">Project Notes & Exclusions</div><p style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:40px; white-space:pre-wrap;">${notes}</p>`;
-                document.querySelector('.section-header').insertAdjacentHTML('beforebegin', notesHtml);
-            }
-
-            const mult = 1 + markupPct;
-            const categoryNames = {
-                wood: 'Construction Lumber', paint: 'Paint & Finishes', electrical: 'Electrical & Wire', plumbing: 'Plumbing & Pipe', fixtures: 'Fixtures & Cabinetry', concrete: 'Concrete & Flatwork', gravel: 'Gravel & Rock', mulch: 'Mulch & Landscape', topsoil: 'Topsoil & Dirt', demo: 'Demo & Dumpster Hauls'
-            };
-
-            let matsHTML = '';
-            for (const [key, val] of Object.entries(costs)) {
-                if (val > 0) {
-                    matsHTML += `<tr><td class="item-name">• ${categoryNames[key]}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
-                }
-            }
-            
-            if (cons > 0) {
-                matsHTML += `<tr><td class="item-name">• Shop Consumables & Supplies</td><td class="item-cost">${format(cons * mult)}</td></tr>`;
-            }
-            
-            if (taxAmount > 0) {
-                matsHTML += `<tr>
-                    <td class="item-name" style="color: #64748b; font-weight: 500;">Estimated Sales Tax (${taxRate}%)</td>
-                    <td class="item-cost" style="color: #64748b; font-weight: 500;">${format(taxAmount)}</td>
-                </tr>`;
-            }
-            document.getElementById('pdf-materials-body').innerHTML = matsHTML;
-
-            if (subsList.length > 0) {
-                let subsHTML = '';
-                subsList.forEach(s => {
-                    subsHTML += `<tr><td class="item-name">• Subcontractor: ${s.name} <span style="display:block; font-size:12px; color:#94a3b8; font-weight:400; margin-top:4px;">${s.desc}</span></td><td class="item-cost" style="vertical-align:top;">${format(s.price * mult)}</td></tr>`;
-                });
-                document.getElementById('pdf-subs-body').innerHTML = subsHTML;
-            }
-
-            if (baseLabor > 0) {
-                let lHtml = `<tr><td class="item-name">• Base Labor & Equipment</td><td class="item-cost">${format(baseLabor * mult)}</td></tr>`;
-                if (laborBurden > 0) {
-                    lHtml += `<tr><td class="item-name" style="color: #64748b; font-weight: 500;">Labor Burden (Taxes, Ins, W-Comp)</td><td class="item-cost" style="color: #64748b; font-weight: 500;">${format(laborBurden * mult)}</td></tr>`;
-                }
-                document.getElementById('pdf-labor-body').innerHTML = lHtml;
-            }
-
-            let p = 0;
-            const iv = setInterval(() => {
-                p += Math.random() * 15;
-                if (p >= 100) { 
-                    p = 100; 
-                    clearInterval(iv); 
-                    document.getElementById('ui-container').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('ui-container').style.display = 'none';
-                        document.getElementById('preview-container').style.display = 'block';
-                        initSignaturePad();
-                    }, 300); 
-                }
-                bar.style.width = p + '%';
-            }, 150);
-
-            function initSignaturePad() {
-                const canvas = document.getElementById('signature-pad');
-                const ctx = canvas.getContext('2d');
-                let isDrawing = false;
-
-                function resizeCanvas() {
-                    const rect = canvas.parentElement.getBoundingClientRect();
-                    canvas.width = rect.width;
-                    canvas.height = 120;
-                    ctx.strokeStyle = '#f8fafc';
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = 'round';
-                }
-
-                resizeCanvas();
-                window.addEventListener('resize', resizeCanvas);
-
-                const startDrawing = (e) => { 
-                    isDrawing = true; 
-                    draw(e); 
-                };
-                
-                const stopDrawing = () => { 
-                    isDrawing = false; 
-                    ctx.beginPath(); 
-                };
-                
-                const draw = (e) => {
-                    if (!isDrawing) return;
-                    e.preventDefault();
-                    const rect = canvas.getBoundingClientRect();
-                    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-                    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                };
-
-                canvas.addEventListener('mousedown', startDrawing);
-                canvas.addEventListener('mousemove', draw);
-                canvas.addEventListener('mouseup', stopDrawing);
-                canvas.addEventListener('mouseout', stopDrawing);
-
-                canvas.addEventListener('touchstart', startDrawing, {passive: false});
-                canvas.addEventListener('touchmove', draw, {passive: false});
-                canvas.addEventListener('touchend', stopDrawing);
-
-                document.getElementById('clear-signature').onclick = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                };
-
-                document.getElementById('signAndDownloadBtn').onclick = async () => {
-                    const signBtn = document.getElementById('signAndDownloadBtn');
-                    signBtn.textContent = 'Generating PDF...';
-                    signBtn.disabled = true;
-
-                    const isCanvasEmpty = () => {
-                        const blank = document.createElement('canvas');
-                        blank.width = canvas.width;
-                        blank.height = canvas.height;
-                        return canvas.toDataURL() === blank.toDataURL();
-                    };
-
-                    const sigImgContainer = document.getElementById('sig-image-container');
-                    sigImgContainer.innerHTML = '';
-
-                    if (!isCanvasEmpty()) {
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = canvas.width;
-                        tempCanvas.height = canvas.height;
-                        const tempCtx = tempCanvas.getContext('2d');
-                        
-                        tempCtx.drawImage(canvas, 0, 0);
-                        tempCtx.globalCompositeOperation = 'source-in';
-                        tempCtx.fillStyle = '#0f172a';
-                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-                        const sigImg = document.createElement('img');
-                        sigImg.src = tempCanvas.toDataURL('image/png');
-                        sigImg.style.maxHeight = '55px';
-                        sigImgContainer.appendChild(sigImg);
-
-                        const dateContainer = document.getElementById('sig-date-container');
-                        dateContainer.innerHTML = '';
-                        
-                        const dateEl = document.createElement('span');
-                        dateEl.textContent = new Date().toLocaleDateString();
-                        dateEl.style.fontSize = '16px';
-                        dateEl.style.fontWeight = '700';
-                        dateEl.style.color = '#0f172a';
-                        dateContainer.appendChild(dateEl);
-                    }
-
-                    try {
-                        window.scrollTo(0, 0);
-                        const element = document.getElementById('pdf-wrapper');
-                        
-                        element.classList.add('pdf-export');
-
-                        const safeProject = (project || 'Project').replace(/[^a-zA-Z0-9]/g, '_');
-                        const safeClient = (client || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
-                        const filename = `${safeProject}_${safeClient}.pdf`;
-
-                        const opt = {
-                            margin:       0.4,
-                            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
-                            filename:     filename,
-                            image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, useCORS: true, windowWidth: 816, width: 816 },
-                            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-                        };
-
-                        if (currentUser && currentBidId && window.supabaseClient) {
-                            const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-                            
-                            const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
-                            const { data: uploadData, error: uploadError } = await window.supabaseClient.storage
-                                .from('signed_pdfs')
-                                .upload(fileNameStr, pdfBlob, { contentType: 'application/pdf' });
-                            
-                            if (!uploadError && uploadData) {
-                                const { data: publicUrlData } = window.supabaseClient.storage
-                                    .from('signed_pdfs')
-                                    .getPublicUrl(uploadData.path);
-                                    
-                                await window.supabaseClient.from('bids').update({ 
-                                    pdf_url: publicUrlData.publicUrl 
-                                }).eq('id', currentBidId);
-                            }
-                        }
-
-                        await html2pdf().from(element).set(opt).save();
-
-                        element.classList.remove('pdf-export');
-
-                    } catch (e) {
-                        console.error('PDF Generation Error:', e);
-                        window.print();
-                    } finally {
-                        signBtn.textContent = 'Accept & Download PDF';
-                        signBtn.disabled = false;
-                    }
-                };
-            }
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="builder.js"></script>
+    <script src="bids.js"></script>
+    <script src="calculate.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
