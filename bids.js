@@ -72,8 +72,8 @@ window.refreshSavedBids = async function() {
         let html = '';
         bidsArray.forEach(bid => {
             const dateStr = new Date(bid.created_at).toLocaleDateString();
-            const client = escapeHTML((bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client');
-            const project = escapeHTML(bid.project_name || 'Unnamed Project');
+            const client = window.escapeHTML((bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client');
+            const project = window.escapeHTML(bid.project_name || 'Unnamed Project');
             
             if (isClosed) {
                 const profitColor = parseFloat(bid.actual_profit) >= 0 ? '#10b981' : '#fb7185';
