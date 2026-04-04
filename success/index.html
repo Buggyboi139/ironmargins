@@ -367,7 +367,7 @@
             const progAmt = parseFloat(localStorage.getItem('im_progAmt')) || 0;
 
             const customTerms = localStorage.getItem('im_custom_terms');
-            if (customTerms) {
+            if (isPro && customTerms) {
                 document.getElementById('pdf-terms-text').innerHTML = `<strong>Terms & Conditions:</strong> ` + customTerms;
             }
 
@@ -408,7 +408,7 @@
                 watermark.style.marginTop = '40px';
                 watermark.style.borderTop = '1px solid #e2e8f0';
                 watermark.style.paddingTop = '15px';
-                watermark.textContent = 'Generated with IronMargins - Professional Estimating Software';
+                watermark.innerHTML = '<strong>⚡ Generated with IronMargins.com</strong> - Professional Estimating Software';
                 document.querySelector('.signature-section').appendChild(watermark);
             }
             
@@ -636,7 +636,7 @@
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
 
-                        if (currentUser && currentBidId && window.supabaseClient) {
+                        if (currentUser && currentBidId && window.supabaseClient && window.isPro) {
                             const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
                             
                             const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
