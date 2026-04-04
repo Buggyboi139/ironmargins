@@ -63,10 +63,16 @@ window.refreshSavedBids = async function() {
                             <span class="bid-title">${client} - ${project}</span>
                             <span class="bid-date">${dateStr}</span>
                         </div>
-                        <div class="bid-actions">
-                            <button onclick="window.duplicateBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#38bdf8;" title="Duplicate">Dup</button>
-                            <button onclick="window.openCloseout('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#34d399;" title="Close Out">Close</button>
-                            <button onclick="window.deleteBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#fb7185;" title="Delete">Del</button>
+                        <div class="bid-actions" style="display: flex; gap: 8px;">
+                            <button onclick="window.duplicateBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#38bdf8; background:rgba(56,189,248,0.1); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Duplicate">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                            <button onclick="window.openCloseout('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#34d399; background:rgba(52,211,153,0.1); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Close Out">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </button>
+                            <button onclick="window.deleteBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#fb7185; background:rgba(251,113,133,0.1); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Delete">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
                         </div>
                     </div>`;
             }
@@ -128,6 +134,8 @@ window.handleLoadBid = async function(bidId) {
 };
 
 window.duplicateBid = async function(bidId) {
+    if (!confirm("Duplicate Bid?\n\nThis will create an exact copy of this estimate in your active list. Proceed?")) return;
+    
     if (window.closeSideMenu) window.closeSideMenu();
     await window.loadBidFromCloud(bidId);
     window.currentBidId = null; 
@@ -146,7 +154,7 @@ window.duplicateBid = async function(bidId) {
 };
 
 window.deleteBid = async function(bidId) {
-    if (!confirm("Permanently delete this bid?")) return;
+    if (!confirm("Delete Bid?\n\nThis will permanently erase this estimate. This action cannot be undone. Proceed?")) return;
     
     const { error } = await window.supabaseClient.from('bids').delete().eq('id', bidId);
     if (!error) {
