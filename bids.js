@@ -94,7 +94,20 @@ window.handleLoadBid = async function(bidId) {
     if (error || !data) return;
 
     window.currentBidId = data.id;
-    document.getElementById('client-select').value = data.client_id || '';
+    
+    const clientIdEl = document.getElementById('client-id');
+    const clientDispEl = document.getElementById('client-display');
+    if (clientIdEl) clientIdEl.value = data.client_id || '';
+    
+    if (clientDispEl) {
+        if (data.client_id && window.clientsDb) {
+            const c = window.clientsDb.find(x => x.id == data.client_id);
+            clientDispEl.value = c ? c.name : '';
+        } else {
+            clientDispEl.value = '';
+        }
+    }
+
     document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
 
     if (data.bid_data) window.loadState(data.bid_data);
@@ -256,7 +269,7 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
 
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
-        const clientId = document.getElementById('client-select').value;
+        const clientId = document.getElementById('client-id')?.value;
         const parsedClientId = parseInt(clientId, 10);
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
 
@@ -291,7 +304,20 @@ window.loadBidFromCloud = async function(bidId) {
     if (error || !data) return;
 
     window.currentBidId = data.id;
-    document.getElementById('client-select').value = data.client_id || '';
+    
+    const clientIdEl = document.getElementById('client-id');
+    const clientDispEl = document.getElementById('client-display');
+    if (clientIdEl) clientIdEl.value = data.client_id || '';
+    
+    if (clientDispEl) {
+        if (data.client_id && window.clientsDb) {
+            const c = window.clientsDb.find(x => x.id == data.client_id);
+            clientDispEl.value = c ? c.name : '';
+        } else {
+            clientDispEl.value = '';
+        }
+    }
+
     document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
 
     if (data.bid_data) window.loadState(data.bid_data);
