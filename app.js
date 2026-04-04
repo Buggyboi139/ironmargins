@@ -13,12 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
             prompt.style.display = 'block';
             
-            if (isIOS) {
-                prompt.querySelector('p').innerHTML = 'Install IronMargins! Tap the <strong>Share</strong> icon at the bottom of Safari, then select <strong>Add to Home Screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
-            } else if (isChrome) {
-                prompt.querySelector('p').innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
-            } else {
-                prompt.querySelector('p').innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong> or Safari. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
+            const pText = prompt.querySelector('p');
+            if (pText) {
+                if (isIOS) {
+                    pText.innerHTML = 'Install IronMargins! Tap the <strong>Share</strong> icon at the bottom of Safari, then select <strong>Add to Home Screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
+                } else if (isChrome) {
+                    pText.innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
+                } else {
+                    pText.innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong> or Safari. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
+                }
             }
         }
     }
@@ -38,14 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (!localStorage.getItem('im_cookies_accepted')) {
-        document.getElementById('cookieBanner').style.display = 'block';
+    // Safely handle cookie banners in case adblockers remove the DOM nodes
+    const cookieBanner = document.getElementById('cookieBanner');
+    const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
+    
+    if (!localStorage.getItem('im_cookies_accepted') && cookieBanner) {
+        cookieBanner.style.display = 'block';
     }
     
-    document.getElementById('acceptCookiesBtn').addEventListener('click', () => {
-        localStorage.setItem('im_cookies_accepted', 'true');
-        document.getElementById('cookieBanner').style.display = 'none';
-    });
+    if (acceptCookiesBtn) {
+        acceptCookiesBtn.addEventListener('click', () => {
+            localStorage.setItem('im_cookies_accepted', 'true');
+            if (cookieBanner) cookieBanner.style.display = 'none';
+        });
+    }
 
     window.supabaseClient?.auth?.onAuthStateChange((event, session) => {
         const hasUser = !!(session && session.user);
@@ -59,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sideMenu = document.getElementById('sideMenu');
     const sideMenuOverlay = document.getElementById('sideMenuOverlay');
+    
     window.closeSideMenu = () => { 
         sideMenu?.classList.remove('show');
         sideMenuOverlay?.classList.remove('show'); 
@@ -74,31 +84,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('openClientModalBtn')?.addEventListener('click', () => {
         if(window.resetClientForm) window.resetClientForm();
-        document.getElementById('clientModal').classList.add('show');
+        document.getElementById('clientModal')?.classList.add('show');
     });
-    document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
+    document.getElementById('closeClientModal')?.addEventListener('click', () => {
+        document.getElementById('clientModal')?.classList.remove('show');
+    });
     
     document.getElementById('profileBtn')?.addEventListener('click', () => { 
         window.closeSideMenu(); 
-        document.getElementById('profileModal').classList.add('show'); 
+        document.getElementById('profileModal')?.classList.add('show'); 
     });
-    document.getElementById('closeProfileModal')?.addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
+    document.getElementById('closeProfileModal')?.addEventListener('click', () => {
+        document.getElementById('profileModal')?.classList.remove('show');
+    });
 
     document.getElementById('manageClientsSideBtn')?.addEventListener('click', () => { 
         window.closeSideMenu(); 
         if(window.resetClientForm) window.resetClientForm();
-        document.getElementById('clientModal').classList.add('show'); 
+        document.getElementById('clientModal')?.classList.add('show'); 
     });
 
     document.getElementById('openStarterTemplatesBtn')?.addEventListener('click', () => {
         const list = document.getElementById('starter-template-list');
-        list.innerHTML = (window.starterTemplates || []).map(t => `
-            <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
-                 onclick="window.loadStarterTemplate('${t.id}')">
-                <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
-            </div>
-        `).join('');
-        document.getElementById('starterTemplateModal').classList.add('show');
+        if (list) {
+            list.innerHTML = (window.starterTemplates || []).map(t => `
+                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
+                     onclick="window.loadStarterTemplate('${t.id}')">
+                    <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
+                </div>
+            `).join('');
+        }
+        document.getElementById('starterTemplateModal')?.classList.add('show');
     });
 
     window.loadStarterTemplate = function(id) {
@@ -106,11 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (t) {
             window.loadState(t.data);
             window.saveState();
-            document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-            document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
+            document.getElementById('results-view')?.classList.replace('active-view', 'hidden-view'); 
+            document.getElementById('setup-view')?.classList.replace('hidden-view', 'active-view');
             window.scrollTo(0,0);
         }
-        document.getElementById('starterTemplateModal').classList.remove('show');
+        document.getElementById('starterTemplateModal')?.classList.remove('show');
     }
 
     const materialsBtn = document.getElementById('materialsBtn');
@@ -122,15 +138,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(materialsBtn) materialsBtn.addEventListener('click', () => {
         window.closeSideMenu();
-        materialsModal.classList.add('show');
-        catManageSelect.innerHTML = window.categories.map(c => `<option value="${c}">${window.categoryNames[c]}</option>`).join('');
-        renderManageList();
+        if(materialsModal) materialsModal.classList.add('show');
+        if(catManageSelect) {
+            catManageSelect.innerHTML = window.categories.map(c => `<option value="${c}">${window.categoryNames[c]}</option>`).join('');
+            renderManageList();
+        }
     });
     
-    if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal.classList.remove('show'));
+    if(closeMaterialsModal) closeMaterialsModal.addEventListener('click', () => materialsModal?.classList.remove('show'));
     if(catManageSelect) catManageSelect.addEventListener('change', renderManageList);
 
     function renderManageList() {
+        if(!catManageSelect || !materialsManageList) return;
         const cat = catManageSelect.value;
         const items = window.materialsDb[cat] || [];
         materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => {
@@ -149,14 +168,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
         saveMaterialsBtn.textContent = 'Saving...';
-        const inputs = materialsManageList.querySelectorAll('.mat-price-edit');
+        const inputs = materialsManageList?.querySelectorAll('.mat-price-edit') || [];
         for(let inp of inputs) {
             const price = parseFloat(inp.value);
             const name = inp.dataset.name;
             const cat = inp.dataset.cat;
             const unit = inp.dataset.unit;
             
-            const defaultItem = window.materialsDb[cat].find(i => i.name === name);
+            const defaultItem = window.materialsDb[cat]?.find(i => i.name === name);
             if(defaultItem && defaultItem.price !== price) {
                 defaultItem.price = price;
                 await saveCustomMaterialToCloud(cat, name, price, unit);
@@ -165,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveMaterialsBtn.textContent = 'Saved!';
         setTimeout(() => {
             saveMaterialsBtn.textContent = 'Save Prices';
-            materialsModal.classList.remove('show');
+            materialsModal?.classList.remove('show');
         }, 1000);
     });
 
@@ -230,13 +249,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.editClient = function(id, name, phone, address) {
-        document.getElementById('edit-client-id').value = id;
-        document.getElementById('new-client-name').value = name;
-        document.getElementById('new-client-phone').value = phone;
-        document.getElementById('new-client-address').value = address;
-        document.getElementById('client-form-title').textContent = 'Edit Client';
-        document.getElementById('btn-save-client').textContent = 'Update Client';
-        document.getElementById('btn-cancel-edit-client').style.display = 'block';
+        const idField = document.getElementById('edit-client-id');
+        if (idField) idField.value = id;
+        const nameField = document.getElementById('new-client-name');
+        if (nameField) nameField.value = name;
+        const phoneField = document.getElementById('new-client-phone');
+        if (phoneField) phoneField.value = phone;
+        const addressField = document.getElementById('new-client-address');
+        if (addressField) addressField.value = address;
+        
+        const titleField = document.getElementById('client-form-title');
+        if (titleField) titleField.textContent = 'Edit Client';
+        
+        const saveBtn = document.getElementById('btn-save-client');
+        if (saveBtn) saveBtn.textContent = 'Update Client';
+        
+        const cancelBtn = document.getElementById('btn-cancel-edit-client');
+        if (cancelBtn) cancelBtn.style.display = 'block';
     };
 
     window.deleteClient = async function(id) {
@@ -256,8 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data && !error) {
             const clientSelect = document.getElementById('client-select');
-            const currentValue = clientSelect.value;
-            clientSelect.innerHTML = '<option value="">Select a Client...</option>';
+            const currentValue = clientSelect ? clientSelect.value : null;
+            if (clientSelect) clientSelect.innerHTML = '<option value="">Select a Client...</option>';
 
             const manageList = document.getElementById('client-manage-list');
             let manageHtml = '';
@@ -267,11 +296,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
             data.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.name;
-                option.dataset.address = client.address || '';
-                clientSelect.appendChild(option);
+                if (clientSelect) {
+                    const option = document.createElement('option');
+                    option.value = client.id;
+                    option.textContent = client.name;
+                    option.dataset.address = client.address || '';
+                    clientSelect.appendChild(option);
+                }
 
                 const safeName = escapeClientHTML(client.name);
                 const safePhone = escapeClientHTML(client.phone || '');
@@ -297,9 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.length === 0) {
                 manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
             }
-            const manageList = document.getElementById('client-manage-list');
             if (manageList) manageList.innerHTML = manageHtml;
-            if (currentValue) clientSelect.value = currentValue;
+            if (currentValue && clientSelect) clientSelect.value = currentValue;
         }
     };
 
@@ -356,9 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const idField = document.getElementById('edit-client-id');
         const id = idField ? idField.value : null;
-        const name = document.getElementById('new-client-name').value;
-        const address = document.getElementById('new-client-address').value;
-        const phone = document.getElementById('new-client-phone').value;
+        const name = document.getElementById('new-client-name')?.value;
+        const address = document.getElementById('new-client-address')?.value;
+        const phone = document.getElementById('new-client-phone')?.value;
 
         if (!name) return alert('Client Name is required.');
 
@@ -388,8 +418,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             alert('Network or execution error: ' + err.message);
         } finally {
-            btn.textContent = origText;
-            btn.disabled = false;
+            if (btn) {
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
         }
     });
 
@@ -443,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             btn.textContent = originalText;
             btn.disabled = false;
-            document.getElementById('profileModal').classList.remove('show');
+            document.getElementById('profileModal')?.classList.remove('show');
         }, 800);
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
@@ -474,8 +506,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const base64 = canvas.toDataURL('image/png', 0.8);
                     localStorage.setItem('im_logo', base64);
-                    logoPreview.src = base64;
-                    logoPreview.style.display = 'block';
+                    if (logoPreview) {
+                        logoPreview.src = base64;
+                        logoPreview.style.display = 'block';
+                    }
                 };
                 img.src = e.target.result;
             };
@@ -483,7 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('closeCloseoutModal')?.addEventListener('click', () => document.getElementById('closeoutModal').classList.remove('show'));
+    document.getElementById('closeCloseoutModal')?.addEventListener('click', () => {
+        document.getElementById('closeoutModal')?.classList.remove('show');
+    });
 
     const resetBtn = document.getElementById('resetBidBtn');
     if(resetBtn) {
@@ -491,7 +527,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if(confirm("Clear this bid and start fresh?")) { 
                 window.currentBidId = null;
                 document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
-                document.getElementById('client-select').value = '';
+                const clientSel = document.getElementById('client-select');
+                if (clientSel) clientSel.value = '';
+                
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
                     if(container) container.innerHTML = ''; 
@@ -499,11 +537,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const subsContainer = document.getElementById('subs-rows-container');
                 if (subsContainer) subsContainer.innerHTML = '';
                 
-                document.getElementById('closed-banner').style.display = 'none';
-                document.getElementById('setup-view').classList.replace('hidden-view', 'active-view');
-                document.getElementById('results-view').classList.replace('active-view', 'hidden-view');
-                document.getElementById('editBtn').style.display = 'block';
-                document.getElementById('payment-signature-section').style.display = 'block';
+                const banner = document.getElementById('closed-banner');
+                if (banner) banner.style.display = 'none';
+                
+                document.getElementById('setup-view')?.classList.replace('hidden-view', 'active-view');
+                document.getElementById('results-view')?.classList.replace('active-view', 'hidden-view');
+                
+                const editBtn = document.getElementById('editBtn');
+                if (editBtn) editBtn.style.display = 'block';
+                
+                const sigSection = document.getElementById('payment-signature-section');
+                if (sigSection) sigSection.style.display = 'block';
+                
                 document.querySelectorAll('.add-row-btn, .remove-row-btn, .add-shape-btn, .remove-shape-btn').forEach(el => el.style.display = '');
 
                 window.saveState();
@@ -514,17 +559,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const editBtn = document.getElementById('editBtn');
     if(editBtn) {
         editBtn.onclick = () => { 
-            document.getElementById('results-view').classList.replace('active-view', 'hidden-view'); 
-            setTimeout(() => document.getElementById('setup-view').classList.replace('hidden-view', 'active-view'), 300); 
+            document.getElementById('results-view')?.classList.replace('active-view', 'hidden-view'); 
+            setTimeout(() => document.getElementById('setup-view')?.classList.replace('hidden-view', 'active-view'), 300); 
         };
     }
 
     document.getElementById('manualSaveBtn')?.addEventListener('click', async () => {
         const manualSaveBtn = document.getElementById('manualSaveBtn');
-        manualSaveBtn.textContent = 'Saving...';
-        await window.saveBidToCloud(0, false);
-        manualSaveBtn.textContent = 'Saved!';
-        setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
+        if (manualSaveBtn) {
+            manualSaveBtn.textContent = 'Saving...';
+            await window.saveBidToCloud(0, false);
+            manualSaveBtn.textContent = 'Saved!';
+            setTimeout(() => manualSaveBtn.textContent = 'Save Bid', 2000);
+        }
     });
 
     document.getElementById('setup-view')?.addEventListener('input', (e) => { 
@@ -657,7 +704,7 @@ window.initApp = function() {
 
     if (globalComp && compInput) {
         compInput.value = globalComp;
-        appTitle.textContent = globalComp + ' Estimates';
+        if (appTitle) appTitle.textContent = globalComp + ' Estimates';
     }
     if (globalPhone && compPhoneInput) compPhoneInput.value = globalPhone;
     if (globalAddress && compAddressInput) compAddressInput.value = globalAddress;
@@ -666,7 +713,7 @@ window.initApp = function() {
 
     compInput?.addEventListener('input', (e) => {
         const val = e.target.value.trim();
-        appTitle.textContent = val ? val + ' Estimates' : 'Never Underbid Again';
+        if (appTitle) appTitle.textContent = val ? val + ' Estimates' : 'Never Underbid Again';
         localStorage.setItem('im_global_company', val);
     });
     
