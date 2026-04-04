@@ -7,7 +7,7 @@
     <title>IronMargins | Review & Sign</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
     <script>
-      window.dataLayer = window.dataLayer ||[];
+      window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-4WWZ1PYH4Q');
@@ -133,7 +133,7 @@
         .pdf-export {
             width: 816px !important;
             max-width: 816px !important;
-            padding: 48px !important;
+            padding: 40px !important;
         }
 
         @media screen and (max-width: 768px) {
@@ -587,6 +587,7 @@
                         const sigImg = document.createElement('img');
                         sigImg.src = tempCanvas.toDataURL('image/png');
                         sigImg.style.maxHeight = '55px';
+                        sigImg.style.width = 'auto';
                         sigImgContainer.appendChild(sigImg);
 
                         const dateContainer = document.getElementById('sig-date-container');
@@ -611,8 +612,8 @@
                         const filename = `${safeProject}_${safeClient}.pdf`;
 
                         const opt = {
-                            margin:       0.4,
-                            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
+                            margin:       0,
+                            pagebreak:    { mode: 'css', avoid: '.signature-section' },
                             filename:     filename,
                             image:        { type: 'jpeg', quality: 0.98 },
                             html2canvas:  { scale: 2, useCORS: true, windowWidth: 816, width: 816 },
