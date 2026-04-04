@@ -52,9 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.template-btn-auth').forEach(btn => {
             btn.style.display = hasUser ? 'block' : 'none';
         });
-        if (hasUser && typeof window.fetchUserProfile === 'function') {
-            window.fetchUserProfile();
-        }
     });
 
     const sideMenu = document.getElementById('sideMenu');
@@ -72,7 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('closeSideMenuBtn')?.addEventListener('click', window.closeSideMenu);
     sideMenuOverlay?.addEventListener('click', window.closeSideMenu);
 
-    document.getElementById('openClientModalBtn')?.addEventListener('click', () => document.getElementById('clientModal').classList.add('show'));
+    document.getElementById('openClientModalBtn')?.addEventListener('click', () => {
+        window.resetClientForm();
+        document.getElementById('clientModal').classList.add('show');
+    });
     document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
     
     document.getElementById('profileBtn')?.addEventListener('click', () => { 
@@ -80,6 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('profileModal').classList.add('show'); 
     });
     document.getElementById('closeProfileModal')?.addEventListener('click', () => document.getElementById('profileModal').classList.remove('show'));
+
+    document.getElementById('manageClientsSideBtn')?.addEventListener('click', () => { 
+        window.closeSideMenu(); 
+        window.resetClientForm();
+        document.getElementById('clientModal').classList.add('show'); 
+    });
 
     document.getElementById('openStarterTemplatesBtn')?.addEventListener('click', () => {
         const list = document.getElementById('starter-template-list');
@@ -127,11 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
         materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => {
             const safeName = String(i.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
             return `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-                <span style="font-size:0.9rem; flex:1; padding-right:10px;">${safeName}</span>
-                <div class="unit-wrapper icon-prefix" style="max-width:120px;">
-                    <span class="prefix">$</span>
-                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${safeName}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:8px; padding-left:25px; font-size:0.9rem !important;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; gap: 15px; margin-bottom: 8px;">
+                <span style="font-size:0.9rem; flex:1 1 auto; min-width:0; word-break: break-word; line-height: 1.3;">${safeName}</span>
+                <div class="unit-wrapper icon-prefix" style="flex:0 0 110px; width: 110px; max-width:110px;">
+                    <span class="prefix" style="left: 12px;">$</span>
+                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${safeName}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:10px 10px 10px 26px; font-size:0.9rem !important; width: 100%; box-sizing: border-box;">
                 </div>
             </div>
             `;
@@ -203,6 +209,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    window.resetClientForm = function() {
+        const idField = document.getElementById('edit-client-id');
+        if(idField) idField.value = '';
+        const nameField = document.getElementById('new-client-name');
+        if(nameField) nameField.value = '';
+        const phoneField = document.getElementById('new-client-phone');
+        if(phoneField) phoneField.value = '';
+        const addrField = document.getElementById('new-client-address');
+        if(addrField) addrField.value = '';
+        const titleField = document.getElementById('client-form-title');
+        if(titleField) titleField.textContent = 'Add New Client';
+        const saveBtn = document.getElementById('btn-save-client');
+        if(saveBtn) saveBtn.textContent = 'Save Client';
+        const cancelBtn = document.getElementById('btn-cancel-edit-client');
+        if(cancelBtn) cancelBtn.style.display = 'none';
+    };
+
+    window.editClient = function(id, name, phone, address) {
+        document.getElementById('edit-client-id').value = id;
+        document.getElementById('new-client-name').value = name;
+        document.getElementById('new-client-phone').value = phone;
+        document.getElementById('new-client-address').value = address;
+        document.getElementById('client-form-title').textContent = 'Edit Client';
+        document.getElementById('btn-save-client').textContent = 'Update Client';
+        document.getElementById('btn-cancel-edit-client').style.display = 'block';
+    };
+
+    window.deleteClient = async function(id) {
+        if(!confirm("Delete this client? This cannot be undone.")) return;
+        const { error } = await window.supabaseClient.from('clients').delete().eq('id', id);
+        if(!error) window.fetchClients();
+        else alert("Error deleting client: " + error.message);
+    };
+
     window.fetchClients = async function() {
         if (!window.currentUser || !window.supabaseClient) return;
         const { data, error } = await window.supabaseClient
@@ -215,13 +255,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const clientSelect = document.getElementById('client-select');
             const currentValue = clientSelect.value;
             clientSelect.innerHTML = '<option value="">Select a Client...</option>';
+
+            const manageList = document.getElementById('client-manage-list');
+            let manageHtml = '';
+            
+            const escapeClientHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
+            const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+            const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
             data.forEach(client => {
                 const option = document.createElement('option');
                 option.value = client.id;
                 option.textContent = client.name;
                 option.dataset.address = client.address || '';
                 clientSelect.appendChild(option);
+
+                const safeName = escapeClientHTML(client.name);
+                const safePhone = escapeClientHTML(client.phone || '');
+                const safeAddress = escapeClientHTML(client.address || '');
+
+                const jsSafeName = (client.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const jsSafePhone = (client.phone || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const jsSafeAddress = (client.address || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+                manageHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column; min-width: 0; padding-right: 10px;">
+                        <span style="font-weight:600; color:#f8fafc; font-size:0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeName}</span>
+                        <span style="color:var(--text-muted); font-size:0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safePhone || safeAddress || 'No details'}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-shrink: 0;">
+                        <button onclick="window.editClient('${client.id}', '${jsSafeName}', '${jsSafePhone}', '${jsSafeAddress}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);" title="Edit">${editIcon}</button>
+                        <button onclick="window.deleteClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#fb7185; border-color:rgba(251,113,133,0.3); background:rgba(251,113,133,0.1);" title="Delete">${delIcon}</button>
+                    </div>
+                </div>`;
             });
+
+            if (data.length === 0) {
+                manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
+            }
+            if (manageList) manageList.innerHTML = manageHtml;
             if (currentValue) clientSelect.value = currentValue;
         }
     };
@@ -273,30 +346,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-save-client')?.addEventListener('click', async () => {
+        const id = document.getElementById('edit-client-id').value;
         const name = document.getElementById('new-client-name').value;
         const address = document.getElementById('new-client-address').value;
         const phone = document.getElementById('new-client-phone').value;
 
         if (!name) return alert('Client Name is required.');
 
-        const payload = { user_id: window.currentUser.id, name, address, phone };
-        const { error } = await window.supabaseClient.from('clients').insert([payload]);
-
-        if (!error) {
-            document.getElementById('clientModal').classList.remove('show');
-            document.getElementById('new-client-name').value = '';
-            document.getElementById('new-client-address').value = '';
-            document.getElementById('new-client-phone').value = '';
-            await window.fetchClients(); 
-        }
-    });
-
-    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
-        const btn = document.getElementById('saveProfileBtn');
-        const originalText = btn.textContent;
+        const btn = document.getElementById('btn-save-client');
+        const origText = btn.textContent;
         btn.textContent = 'Saving...';
         btn.disabled = true;
 
+        const payload = { user_id: window.currentUser.id, name, address, phone };
+        
+        let error;
+        if (id) {
+            const res = await window.supabaseClient.from('clients').update(payload).eq('id', id);
+            error = res.error;
+        } else {
+            const res = await window.supabaseClient.from('clients').insert([payload]);
+            error = res.error;
+        }
+
+        btn.textContent = origText;
+        btn.disabled = false;
+
+        if (!error) {
+            window.resetClientForm();
+            await window.fetchClients(); 
+        } else {
+            alert('Error saving client: ' + error.message);
+        }
+    });
+
+    document.getElementById('btn-cancel-edit-client')?.addEventListener('click', () => {
+        window.resetClientForm();
+    });
+
+    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
         const paymentLinkInput = document.getElementById('payment-link');
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
@@ -304,18 +392,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const termsInput = document.getElementById('profile-custom-terms');
 
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
-        if (compInput) {
-            localStorage.setItem('im_global_company', compInput.value);
-            const appTitle = document.getElementById('app-main-title');
-            if (appTitle) appTitle.textContent = compInput.value ? compInput.value + ' Estimates' : 'Never Underbid Again';
-        }
+        if (compInput) localStorage.setItem('im_global_company', compInput.value);
         if (compPhoneInput) localStorage.setItem('im_global_phone', compPhoneInput.value);
         if (compAddressInput) localStorage.setItem('im_global_address', compAddressInput.value);
         if (termsInput) localStorage.setItem('im_custom_terms', termsInput.value);
 
         if (window.currentUser && window.supabaseClient) {
             const logoData = localStorage.getItem('im_logo');
-            const { error } = await window.supabaseClient.from('users').upsert({
+            await window.supabaseClient.from('users').upsert({
                 id: window.currentUser.id,
                 company_name: compInput ? compInput.value : '',
                 phone: compPhoneInput ? compPhoneInput.value : '',
@@ -324,22 +408,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 logo_data: logoData || '',
                 custom_terms: termsInput ? termsInput.value : ''
             });
-
-            if (error) {
-                alert("Failed to save profile to cloud: " + error.message);
-                btn.textContent = originalText;
-                btn.disabled = false;
-                return; 
-            }
         }
         
-        btn.textContent = 'Saved!';
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-            document.getElementById('profileModal').classList.remove('show');
-        }, 800);
-
+        document.getElementById('profileModal').classList.remove('show');
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
@@ -465,9 +536,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (e.target.classList.contains('add-shape-btn')) {
             const cat = row.dataset.category;
+            const xIconSmall = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            
             const html = cat === 'paint' 
-                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn">Del</button></div>` 
-                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn">Del</button></div>`;
+                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="1" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>` 
+                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>`;
             row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
             window.saveState();
         }
