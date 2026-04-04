@@ -229,7 +229,8 @@ window.openCloseout = async function(bidId) {
         data.bid_data.subs.forEach(item => { estSub += (parseFloat(item.price)||0); });
     }
 
-    const totalBid = data.total_amount || 0;
+    const taxAmount = data.bid_data.taxAmount || 0;
+    const totalBid = (data.total_amount || 0) - taxAmount;
     const estTotalCost = estMat + estLab + estSub;
 
     document.getElementById('closeout-bid-info').textContent = data.project_name || 'Unnamed Project';
@@ -265,11 +266,16 @@ window.openCloseout = async function(bidId) {
 window.submitCloseout = async function() {
     if (!window.activeCloseoutBidId) return;
 
+    const { data, error: fetchError } = await window.supabaseClient.from('bids').select('*').eq('id', window.activeCloseoutBidId).single();
+    if (fetchError || !data) return;
+
+    const taxAmount = data.bid_data.taxAmount || 0;
+    const totalBid = (data.total_amount || 0) - taxAmount;
+
     const actMat = parseFloat(document.getElementById('closeout-actual-mat').value) || 0;
     const actLab = parseFloat(document.getElementById('closeout-actual-lab').value) || 0;
     const actSub = parseFloat(document.getElementById('closeout-actual-sub').value) || 0;
     const actNotes = document.getElementById('closeout-notes').value;
-    const totalBid = parseFloat(document.getElementById('closeout-est-bid').textContent.replace('$', '')) || 0;
     const actProfit = totalBid - (actMat + actLab + actSub);
 
     const { error } = await window.supabaseClient.from('bids').update({
@@ -300,6 +306,8 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
 
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
+        bidData.taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
+
         const clientId = document.getElementById('client-id')?.value;
         const parsedClientId = parseInt(clientId, 10);
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
