@@ -231,14 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.resetClientForm = function() {
-        const idField = document.getElementById('edit-client-id');
-        if(idField) idField.value = '';
-        const nameField = document.getElementById('new-client-name');
-        if(nameField) nameField.value = '';
-        const phoneField = document.getElementById('new-client-phone');
-        if(phoneField) phoneField.value = '';
-        const addrField = document.getElementById('new-client-address');
-        if(addrField) addrField.value = '';
+        const ids = ['edit-client-id', 'new-client-name', 'new-client-phone', 'new-client-address', 'new-client-email', 'new-client-notes'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         const titleField = document.getElementById('client-form-title');
         if(titleField) titleField.textContent = 'Add New Client';
         const saveBtn = document.getElementById('btn-save-client');
@@ -247,15 +244,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if(cancelBtn) cancelBtn.style.display = 'none';
     };
 
-    window.editClient = function(id, name, phone, address) {
-        const idField = document.getElementById('edit-client-id');
-        if (idField) idField.value = id;
-        const nameField = document.getElementById('new-client-name');
-        if (nameField) nameField.value = name;
-        const phoneField = document.getElementById('new-client-phone');
-        if (phoneField) phoneField.value = phone;
-        const addressField = document.getElementById('new-client-address');
-        if (addressField) addressField.value = address;
+    window.editClient = function(id) {
+        const client = window.clientsDb?.find(c => c.id == id);
+        if (!client) return;
+        const setVal = (elId, val) => {
+            const el = document.getElementById(elId);
+            if (el) el.value = val || '';
+        };
+        setVal('edit-client-id', client.id);
+        setVal('new-client-name', client.name);
+        setVal('new-client-phone', client.phone);
+        setVal('new-client-address', client.address);
+        setVal('new-client-email', client.email);
+        setVal('new-client-notes', client.notes);
         
         const titleField = document.getElementById('client-form-title');
         if (titleField) titleField.textContent = 'Edit Client';
@@ -278,38 +279,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.currentUser || !window.supabaseClient) return;
         const { data, error } = await window.supabaseClient
             .from('clients')
-            .select('id, name, address, phone')
+            .select('id, name, address, phone, email, notes')
             .eq('user_id', window.currentUser.id)
             .order('name');
 
         if (data && !error) {
-            window.clientsDb = data; // Cache globally for quick lookup
+            window.clientsDb = data; 
             const manageList = document.getElementById('client-manage-list');
             let manageHtml = '';
             
-            const escapeClientHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
+            const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
             const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
             const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
             const selectIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
             data.forEach(client => {
-                const safeName = escapeClientHTML(client.name);
-                const safePhone = escapeClientHTML(client.phone || '');
-                const safeAddress = escapeClientHTML(client.address || '');
-
-                const jsSafeName = (client.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const jsSafePhone = (client.phone || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-                const jsSafeAddress = (client.address || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                const safeName = escapeHTML(client.name);
+                const contactSubtitle = [client.email, client.phone, client.address].filter(Boolean).map(escapeHTML).join(' • ') || 'No details';
 
                 manageHtml += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; flex-direction:column; min-width: 0; padding-right: 10px; cursor: pointer; flex: 1;" onclick="window.selectClient('${client.id}')">
                         <span style="font-weight:600; color:#f8fafc; font-size:0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeName}</span>
-                        <span style="color:var(--text-muted); font-size:0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safePhone || safeAddress || 'No details'}</span>
+                        <span style="color:var(--text-muted); font-size:0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${contactSubtitle}</span>
                     </div>
                     <div style="display:flex; gap:8px; flex-shrink: 0;">
                         <button onclick="window.selectClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#10b981; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.1);" title="Select Client">${selectIcon}</button>
-                        <button onclick="window.editClient('${client.id}', '${jsSafeName}', '${jsSafePhone}', '${jsSafeAddress}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);" title="Edit">${editIcon}</button>
+                        <button onclick="window.editClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);" title="Edit">${editIcon}</button>
                         <button onclick="window.deleteClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#fb7185; border-color:rgba(251,113,133,0.3); background:rgba(251,113,133,0.1);" title="Delete">${delIcon}</button>
                     </div>
                 </div>`;
@@ -323,8 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentId = document.getElementById('client-id')?.value;
             if (currentId) {
                 const activeClient = data.find(c => c.id == currentId);
-                if (activeClient && document.getElementById('client-display')) {
-                    document.getElementById('client-display').value = activeClient.name;
+                if (activeClient && document.getElementById('client-display-name')) {
+                    document.getElementById('client-display-name').textContent = activeClient.name;
                 }
             }
         }
@@ -334,9 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const client = window.clientsDb?.find(c => c.id == id);
         if (client) {
             const idInput = document.getElementById('client-id');
-            const displayInput = document.getElementById('client-display');
+            const displayInput = document.getElementById('client-display-name');
             if (idInput) idInput.value = client.id;
-            if (displayInput) displayInput.value = client.name;
+            if (displayInput) displayInput.textContent = client.name;
             localStorage.setItem('im_clientName', client.name);
             localStorage.setItem('im_clientAddress', client.address || '');
             window.saveState();
@@ -391,6 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('new-client-name')?.value;
         const address = document.getElementById('new-client-address')?.value;
         const phone = document.getElementById('new-client-phone')?.value;
+        const email = document.getElementById('new-client-email')?.value || '';
+        const notes = document.getElementById('new-client-notes')?.value || '';
 
         if (!name) return alert('Client Name is required.');
 
@@ -400,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            const payload = { user_id: window.currentUser.id, name, address, phone };
+            const payload = { user_id: window.currentUser.id, name, address, phone, email, notes };
             
             let error;
             if (id) {
@@ -531,9 +529,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
                 
                 const clientIdEl = document.getElementById('client-id');
-                const clientDispEl = document.getElementById('client-display');
+                const clientDispEl = document.getElementById('client-display-name');
                 if (clientIdEl) clientIdEl.value = '';
-                if (clientDispEl) clientDispEl.value = '';
+                if (clientDispEl) clientDispEl.textContent = 'None';
                 
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
