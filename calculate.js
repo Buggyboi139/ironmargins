@@ -24,7 +24,7 @@ window.saveDataForPdf = function() {
     const displayEl = document.getElementById('client-display-name');
     const idEl = document.getElementById('client-id');
     
-    const clientName = displayEl && displayEl.textContent !== 'None' && displayEl.textContent !== '' ? displayEl.textContent : 'Client';
+    const clientName = displayEl && displayEl.textContent !== 'None' && displayEl.textContent !== '+' && displayEl.textContent !== '' ? displayEl.textContent : 'Client';
     let clientAddress = '';
     
     if (idEl && idEl.value && window.clientsDb) {
