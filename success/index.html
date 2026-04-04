@@ -130,23 +130,20 @@
         .pdf-table td.item-name { width: 75%; font-weight: 500; }
         .pdf-table td.item-cost { width: 25%; text-align: right; font-weight: 700; color: #0f172a; }
 
+        /* Prevent elements from being sliced in half across pages */
         .pdf-quote-box, .signature-section, tr, .section-header, .pdf-header {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
 
+        /* Clean state for PDF capture without breaking layout */
         .pdf-export {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
             width: 816px !important;
             max-width: 816px !important;
             padding: 48px !important;
-            margin: 0 !important;
+            margin: 0 auto !important;
             background: #ffffff !important;
-            z-index: 9999 !important;
             box-shadow: none !important;
-            transform: none !important;
         }
 
         @media screen and (max-width: 768px) {
@@ -623,8 +620,11 @@
                         
                         document.body.style.overflow = 'visible';
                         document.documentElement.style.overflow = 'visible';
-
+                        
                         element.classList.add('pdf-export');
+
+                        // Wait a brief moment for the DOM to repaint after scroll and class application
+                        await new Promise(r => setTimeout(r, 100));
 
                         const safeProject = (project || 'Project').replace(/[^a-zA-Z0-9]/g, '_');
                         const safeClient = (client || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
@@ -632,10 +632,10 @@
 
                         const opt = {
                             margin:       0,
-                            pagebreak:    { mode: ['css', 'legacy'], avoid: ['.pdf-header', '.pdf-quote-box', '.signature-section', 'tr', '.section-header'] },
+                            pagebreak:    { mode: ['css', 'legacy'] },
                             filename:     filename,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, useCORS: true, windowWidth: 816, width: 816, scrollY: 0, scrollX: 0 },
+                            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
 
@@ -661,7 +661,7 @@
                         await html2pdf().from(element).set(opt).save();
 
                     } catch (e) {
-                        console.error(e);
+                        console.error('PDF Generation Error:', e);
                         window.print();
                     } finally {
                         if (element) {
