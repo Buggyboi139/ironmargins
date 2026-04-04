@@ -641,7 +641,7 @@
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
 
-                        if (currentUser && currentBidId && window.supabaseClient && window.isPro) {
+                        if (currentUser && currentBidId && window.supabaseClient && isPro) {
                             const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
                             
                             const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
