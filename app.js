@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Safely handle cookie banners in case adblockers remove the DOM nodes
     const cookieBanner = document.getElementById('cookieBanner');
     const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
     
@@ -284,26 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
             .order('name');
 
         if (data && !error) {
-            const clientSelect = document.getElementById('client-select');
-            const currentValue = clientSelect ? clientSelect.value : null;
-            if (clientSelect) clientSelect.innerHTML = '<option value="">Select a Client...</option>';
-
+            window.clientsDb = data; // Cache globally for quick lookup
             const manageList = document.getElementById('client-manage-list');
             let manageHtml = '';
             
             const escapeClientHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
             const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
             const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            const selectIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
             data.forEach(client => {
-                if (clientSelect) {
-                    const option = document.createElement('option');
-                    option.value = client.id;
-                    option.textContent = client.name;
-                    option.dataset.address = client.address || '';
-                    clientSelect.appendChild(option);
-                }
-
                 const safeName = escapeClientHTML(client.name);
                 const safePhone = escapeClientHTML(client.phone || '');
                 const safeAddress = escapeClientHTML(client.address || '');
@@ -314,11 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 manageHtml += `
                 <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display:flex; flex-direction:column; min-width: 0; padding-right: 10px;">
+                    <div style="display:flex; flex-direction:column; min-width: 0; padding-right: 10px; cursor: pointer; flex: 1;" onclick="window.selectClient('${client.id}')">
                         <span style="font-weight:600; color:#f8fafc; font-size:0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeName}</span>
                         <span style="color:var(--text-muted); font-size:0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safePhone || safeAddress || 'No details'}</span>
                     </div>
                     <div style="display:flex; gap:8px; flex-shrink: 0;">
+                        <button onclick="window.selectClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#10b981; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.1);" title="Select Client">${selectIcon}</button>
                         <button onclick="window.editClient('${client.id}', '${jsSafeName}', '${jsSafePhone}', '${jsSafeAddress}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);" title="Edit">${editIcon}</button>
                         <button onclick="window.deleteClient('${client.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#fb7185; border-color:rgba(251,113,133,0.3); background:rgba(251,113,133,0.1);" title="Delete">${delIcon}</button>
                     </div>
@@ -329,7 +319,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
             }
             if (manageList) manageList.innerHTML = manageHtml;
-            if (currentValue && clientSelect) clientSelect.value = currentValue;
+
+            const currentId = document.getElementById('client-id')?.value;
+            if (currentId) {
+                const activeClient = data.find(c => c.id == currentId);
+                if (activeClient && document.getElementById('client-display')) {
+                    document.getElementById('client-display').value = activeClient.name;
+                }
+            }
+        }
+    };
+
+    window.selectClient = function(id) {
+        const client = window.clientsDb?.find(c => c.id == id);
+        if (client) {
+            const idInput = document.getElementById('client-id');
+            const displayInput = document.getElementById('client-display');
+            if (idInput) idInput.value = client.id;
+            if (displayInput) displayInput.value = client.name;
+            localStorage.setItem('im_clientName', client.name);
+            localStorage.setItem('im_clientAddress', client.address || '');
+            window.saveState();
+            document.getElementById('clientModal')?.classList.remove('show');
         }
     };
 
@@ -369,15 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
-    document.getElementById('client-select')?.addEventListener('change', (e) => {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        if(selectedOption) {
-            localStorage.setItem('im_clientName', selectedOption.textContent);
-            localStorage.setItem('im_clientAddress', selectedOption.dataset.address || '');
-        }
-        window.saveState();
-    });
 
     document.getElementById('btn-save-client')?.addEventListener('click', async () => {
         if (!window.currentUser || !window.supabaseClient) {
@@ -527,8 +529,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if(confirm("Clear this bid and start fresh?")) { 
                 window.currentBidId = null;
                 document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
-                const clientSel = document.getElementById('client-select');
-                if (clientSel) clientSel.value = '';
+                
+                const clientIdEl = document.getElementById('client-id');
+                const clientDispEl = document.getElementById('client-display');
+                if (clientIdEl) clientIdEl.value = '';
+                if (clientDispEl) clientDispEl.value = '';
                 
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
