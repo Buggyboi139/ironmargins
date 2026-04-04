@@ -1,3 +1,14 @@
+window.isPro = false;
+window.bidCount = 0;
+
+window.triggerUpgradeModal = function(featureName) {
+    const m = document.getElementById('upgradeModal');
+    if(m) {
+        document.getElementById('upgradeModalFeatureText').textContent = `Upgrade to unlock ${featureName}.`;
+        m.classList.add('show');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
@@ -154,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.saveFullTemplate = async function() {
         if (!window.currentUser || !window.supabaseClient) return alert('Sign in to save templates.');
+        if (!window.isPro) return window.triggerUpgradeModal('Custom Templates');
+        
         const name = prompt('Enter a name for this new template:');
         if (!name) return;
 
@@ -180,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(btn) {
             btn.textContent = 'Saved!';
-            setTimeout(() => btn.textContent = 'Save as Custom Template', 2000);
+            setTimeout(() => btn.textContent = '⚡ Save as Custom Template', 2000);
         }
     };
 
@@ -290,6 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addCustomMatBtn = document.getElementById('addCustomMatBtn');
     if(addCustomMatBtn) addCustomMatBtn.addEventListener('click', async () => {
+        if (!window.isPro) return window.triggerUpgradeModal('Custom Material Saving');
+        
         const nameInput = document.getElementById('new-mat-name');
         const priceInput = document.getElementById('new-mat-price');
         const unitSelect = document.getElementById('new-mat-unit');
@@ -314,11 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         nameInput.value = '';
         priceInput.value = '';
-        addCustomMatBtn.textContent = '+ Add Material';
+        addCustomMatBtn.textContent = '⚡ Add Material';
         renderManageList();
     });
 
     if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
+        if (!window.isPro) return window.triggerUpgradeModal('Custom Material Saving');
+        
         saveMaterialsBtn.textContent = 'Saving...';
         const inputs = materialsManageList?.querySelectorAll('.mat-price-edit') || [];
         for(let inp of inputs) {
@@ -335,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         saveMaterialsBtn.textContent = 'Saved!';
         setTimeout(() => {
-            saveMaterialsBtn.textContent = 'Save Prices';
+            saveMaterialsBtn.textContent = '⚡ Save Prices';
             materialsModal?.classList.remove('show');
         }, 1000);
     });
@@ -419,6 +436,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const cancelBtn = document.getElementById('btn-cancel-edit-client');
         if (cancelBtn) cancelBtn.style.display = 'block';
+        
+        document.getElementById('add-client-container').style.display = 'block';
+        document.getElementById('client-limit-banner').style.display = 'none';
     };
 
     window.deleteClient = async function(id) {
@@ -468,6 +488,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
             }
             if (manageList) manageList.innerHTML = manageHtml;
+
+            const clientLimitCounter = document.getElementById('client-limit-counter');
+            if (clientLimitCounter) {
+                if (!window.isPro) {
+                    clientLimitCounter.style.display = 'block';
+                    clientLimitCounter.textContent = `${data.length}/3 Free Clients`;
+                } else {
+                    clientLimitCounter.style.display = 'none';
+                }
+            }
+
+            const addContainer = document.getElementById('add-client-container');
+            const limitBanner = document.getElementById('client-limit-banner');
+            if (!window.isPro && data.length >= 3) {
+                if (addContainer) addContainer.style.display = 'none';
+                if (limitBanner) limitBanner.style.display = 'block';
+            } else {
+                if (addContainer) addContainer.style.display = 'block';
+                if (limitBanner) limitBanner.style.display = 'none';
+            }
         }
     };
 
@@ -489,11 +529,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.currentUser || !window.supabaseClient) return;
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('company_name, phone, address, payment_link, logo_data, custom_terms')
+            .select('company_name, phone, address, payment_link, logo_data, custom_terms, subscription_status')
             .eq('id', window.currentUser.id)
             .single();
 
         if (data && !error) {
+            window.isPro = ['active', 'trialing'].includes(String(data.subscription_status).toLowerCase().trim()) || localStorage.getItem('im_temp_sub_active') === 'true';
+            localStorage.setItem('im_is_pro', window.isPro ? 'true' : 'false');
+            
             if (data.company_name) localStorage.setItem('im_global_company', data.company_name);
             if (data.phone) localStorage.setItem('im_global_phone', data.phone);
             if (data.address) localStorage.setItem('im_global_address', data.address);
@@ -529,6 +572,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const idField = document.getElementById('edit-client-id');
         const id = idField ? idField.value : null;
+
+        if (!id && !window.isPro && window.clientsDb && window.clientsDb.length >= 3) {
+            return window.triggerUpgradeModal('Unlimited Clients');
+        }
+
         const name = document.getElementById('new-client-name')?.value;
         const address = document.getElementById('new-client-address')?.value;
         const phone = document.getElementById('new-client-phone')?.value;
@@ -572,6 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-cancel-edit-client')?.addEventListener('click', () => {
         if(window.resetClientForm) window.resetClientForm();
+        if (!window.isPro && window.clientsDb && window.clientsDb.length >= 3) {
+            document.getElementById('add-client-container').style.display = 'none';
+            document.getElementById('client-limit-banner').style.display = 'block';
+        }
     });
 
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
@@ -713,6 +765,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('manualSaveBtn')?.addEventListener('click', async () => {
+        if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) {
+            return window.triggerUpgradeModal('Unlimited Saved Bids');
+        }
         const manualSaveBtn = document.getElementById('manualSaveBtn');
         if (manualSaveBtn) {
             manualSaveBtn.textContent = 'Saving...';
@@ -816,6 +871,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle()
                 .then(({data, error}) => {
                     if (!error && data) {
+                        window.isPro = ['active', 'trialing'].includes(String(data.subscription_status).toLowerCase().trim()) || localStorage.getItem('im_temp_sub_active') === 'true';
+                        localStorage.setItem('im_is_pro', window.isPro ? 'true' : 'false');
                         window.renderDownloadOptions();
                     }
                 });
