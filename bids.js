@@ -33,7 +33,34 @@ window.refreshSavedBids = async function() {
         .eq('user_id', window.currentUser.id)
         .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) {
+    if (error || !data) {
+        activeList.innerHTML = '<div class="dropdown-empty">No saved bids yet.</div>';
+        closedList.innerHTML = '<div class="dropdown-empty">No closed jobs yet.</div>';
+        window.bidCount = 0;
+        return;
+    }
+
+    window.bidCount = data.length;
+    
+    const bidLimitCounter = document.getElementById('bid-limit-counter');
+    const manualSaveBtn = document.getElementById('manualSaveBtn');
+
+    if (!window.isPro) {
+        if (bidLimitCounter) {
+            bidLimitCounter.style.display = 'block';
+            bidLimitCounter.textContent = `${window.bidCount}/3 Free Bids`;
+        }
+        if (manualSaveBtn && window.bidCount >= 3 && !window.currentBidId) {
+            manualSaveBtn.textContent = '⚡ Unlock Unlimited Bids';
+        } else if (manualSaveBtn) {
+            manualSaveBtn.textContent = 'Save Bid';
+        }
+    } else {
+        if (bidLimitCounter) bidLimitCounter.style.display = 'none';
+        if (manualSaveBtn) manualSaveBtn.textContent = 'Save Bid';
+    }
+
+    if (data.length === 0) {
         activeList.innerHTML = '<div class="dropdown-empty">No saved bids yet.</div>';
         closedList.innerHTML = '<div class="dropdown-empty">No closed jobs yet.</div>';
         return;
@@ -68,7 +95,7 @@ window.refreshSavedBids = async function() {
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                             </button>
                             <button onclick="window.openCloseout('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#34d399; background:rgba(52,211,153,0.1); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Close Out">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                ${window.isPro ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>' : '⚡'}
                             </button>
                             <button onclick="window.deleteBid('${bid.id}'); event.stopPropagation();" class="bid-action-btn" style="color:#fb7185; background:rgba(251,113,133,0.1); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Delete">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -102,9 +129,9 @@ window.handleLoadBid = async function(bidId) {
     if (clientDispEl) {
         if (data.client_id && window.clientsDb) {
             const c = window.clientsDb.find(x => x.id == data.client_id);
-            clientDispEl.textContent = c ? c.name : 'None';
+            clientDispEl.textContent = c ? c.name : '+';
         } else {
-            clientDispEl.textContent = 'None';
+            clientDispEl.textContent = '+';
         }
     }
 
@@ -147,6 +174,7 @@ window.handleLoadBid = async function(bidId) {
 };
 
 window.duplicateBid = async function(bidId) {
+    if (!window.isPro && window.bidCount >= 3) return window.triggerUpgradeModal('Unlimited Saved Bids');
     if (!confirm("Duplicate Bid?\n\nThis will create an exact copy of this estimate in your active list. Proceed?")) return;
     
     if (window.closeSideMenu) window.closeSideMenu();
@@ -177,6 +205,8 @@ window.deleteBid = async function(bidId) {
 };
 
 window.openCloseout = async function(bidId) {
+    if (!window.isPro) return window.triggerUpgradeModal('Job Closeouts & Profit Tracking');
+    
     document.getElementById('closeoutModal').classList.add('show');
     const { data, error } = await window.supabaseClient.from('bids').select('*').eq('id', bidId).single();
     if (error || !data) return;
@@ -261,6 +291,7 @@ window.submitCloseout = async function() {
 
 window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
     if (!window.currentUser || !window.supabaseClient) return false;
+    if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) return false;
     if (window._isSavingBid) return false;
     window._isSavingBid = true;
 
@@ -312,9 +343,9 @@ window.loadBidFromCloud = async function(bidId) {
     if (clientDispEl) {
         if (data.client_id && window.clientsDb) {
             const c = window.clientsDb.find(x => x.id == data.client_id);
-            clientDispEl.textContent = c ? c.name : 'None';
+            clientDispEl.textContent = c ? c.name : '+';
         } else {
-            clientDispEl.textContent = 'None';
+            clientDispEl.textContent = '+';
         }
     }
 
