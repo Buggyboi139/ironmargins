@@ -133,12 +133,25 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('openStarterTemplatesBtn')?.addEventListener('click', () => {
         const list = document.getElementById('starter-template-list');
         if (list) {
-            list.innerHTML = (window.starterTemplates || []).map(t => `
-                <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
-                     onclick="window.loadStarterTemplate('${t.id}')">
-                    <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
-                </div>
-            `).join('');
+            const templates = window.starterTemplates || [];
+            const grouped = templates.reduce((acc, t) => {
+                const cat = t.category || 'Uncategorized';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(t);
+                return acc;
+            }, {});
+    
+            let html = '';
+            for (const [category, items] of Object.entries(grouped)) {
+                html += `<div style="margin-top: 15px; margin-bottom: 10px; font-weight: 800; color: #f8fafc; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">${category}</div>`;
+                html += items.map(t => `
+                    <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
+                         onclick="window.loadStarterTemplate('${t.id}')">
+                        <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
+                    </div>
+                `).join('');
+            }
+            list.innerHTML = html || '<div style="color: var(--text-muted); text-align: center; padding: 15px;">No templates available.</div>';
         }
         document.getElementById('starterTemplateModal')?.classList.add('show');
     });
