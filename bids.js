@@ -3,6 +3,8 @@ window.activeCloseoutBidId = null;
 window.activeCloseoutBidData = {};
 window._isSavingBid = false;
 
+window.switchBidTab = function(tab) {
+
 const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
 
 window.switchBidTab = function(tab) {
