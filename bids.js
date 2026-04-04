@@ -96,15 +96,15 @@ window.handleLoadBid = async function(bidId) {
     window.currentBidId = data.id;
     
     const clientIdEl = document.getElementById('client-id');
-    const clientDispEl = document.getElementById('client-display');
+    const clientDispEl = document.getElementById('client-display-name');
     if (clientIdEl) clientIdEl.value = data.client_id || '';
     
     if (clientDispEl) {
         if (data.client_id && window.clientsDb) {
             const c = window.clientsDb.find(x => x.id == data.client_id);
-            clientDispEl.value = c ? c.name : '';
+            clientDispEl.textContent = c ? c.name : 'None';
         } else {
-            clientDispEl.value = '';
+            clientDispEl.textContent = 'None';
         }
     }
 
@@ -306,15 +306,15 @@ window.loadBidFromCloud = async function(bidId) {
     window.currentBidId = data.id;
     
     const clientIdEl = document.getElementById('client-id');
-    const clientDispEl = document.getElementById('client-display');
+    const clientDispEl = document.getElementById('client-display-name');
     if (clientIdEl) clientIdEl.value = data.client_id || '';
     
     if (clientDispEl) {
         if (data.client_id && window.clientsDb) {
             const c = window.clientsDb.find(x => x.id == data.client_id);
-            clientDispEl.value = c ? c.name : '';
+            clientDispEl.textContent = c ? c.name : 'None';
         } else {
-            clientDispEl.value = '';
+            clientDispEl.textContent = 'None';
         }
     }
 
