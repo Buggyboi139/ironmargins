@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.onclick = () => { 
             if(confirm("Clear this bid and start fresh?")) { 
                 window.currentBidId = null;
-                document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"], #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
+                document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"]:not(.inline-pct), #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
                 
                 const clientIdEl = document.getElementById('client-id');
                 const clientDispEl = document.getElementById('client-display-name');
@@ -782,6 +782,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = e.target.closest('.calc-row'); 
             if(row.dataset.category) window.calculateRowQuantity(row, row.dataset.category); 
         } 
+        if (e.target.classList.contains('inline-pct')) {
+            const module = e.target.closest('.module-container');
+            if (module) {
+                const cat = module.id.replace('module-', '');
+                if (window.categories.includes(cat)) {
+                    document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => window.calculateRowQuantity(row, cat));
+                }
+            }
+        }
         window.saveState(); 
     });
 
@@ -843,27 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.categories.forEach(c => {
         const btn = document.getElementById(`add-${c}-btn`);
         if (btn) btn.onclick = () => window.addMaterialRow(c, `${c}-rows-container`);
-    });
-
-    ['concrete', 'gravel', 'mulch', 'topsoil'].forEach(cat => {
-        const wasteBtn = document.getElementById(`${cat}-waste-check`);
-        if(wasteBtn) {
-            wasteBtn.addEventListener('change', () => {
-                document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => window.calculateRowQuantity(row, cat));
-                window.saveState();
-            });
-        }
-    });
-    
-    ['gravel-compaction-check', 'topsoil-settling-check', 'mulch-settling-check'].forEach(id => {
-        const btn = document.getElementById(id);
-        if(btn) {
-            btn.addEventListener('change', () => {
-                const cat = id.split('-')[0];
-                document.querySelectorAll(`#${cat}-rows-container .calc-row`).forEach(row => window.calculateRowQuantity(row, cat));
-                window.saveState();
-            });
-        }
     });
 
     window.addEventListener('focus', () => {
