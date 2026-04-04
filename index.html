@@ -143,7 +143,12 @@
                 <div id="module-labor" class="module-container">
                     <div class="module-header collapsible"><span>Labor & Fleet</span><span class="chevron">▼</span></div>
                     <div class="module-content">
-                        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);"><input type="checkbox" id="labor-burden-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.95rem; font-weight: 600; color: #f8fafc;">Add 25% Labor Burden (Taxes, Worker's Comp, Ins)</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
+                            <input type="checkbox" id="labor-burden-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="labor-burden-check" style="font-size: 0.95rem; font-weight: 600; color: #f8fafc; cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="labor-burden-pct" value="25" class="glass-input inline-pct">
+                            <label for="labor-burden-check" style="font-size: 0.95rem; font-weight: 600; color: #f8fafc; cursor: pointer; margin: 0;">% Labor Burden (Taxes, Worker's Comp, Ins)</label>
+                        </div>
                         <div id="labor-rows-container"></div>
                         <button id="add-laborer-btn" class="add-row-btn" style="margin-bottom: 10px;">+ Add Laborer (Crew Member)</button>
                         <button id="add-vehicle-btn" class="add-row-btn" style="background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);">+ Add Vehicle / Travel Run</button>
@@ -163,7 +168,12 @@
                     <div class="module-content">
                         <div id="wood-rows-container"></div>
                         <button id="add-wood-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="wood-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for shop consumables</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+                            <input type="checkbox" id="wood-consumables-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="wood-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="wood-consumables-pct" value="5" class="glass-input inline-pct">
+                            <label for="wood-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for shop consumables</label>
+                        </div>
                     </div>
                 </div>
 
@@ -172,7 +182,20 @@
                     <div class="module-content">
                         <div id="paint-rows-container"></div>
                         <button id="add-paint-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="paint-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                        <div style="display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="paint-consumables-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="paint-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="paint-consumables-pct" value="5" class="glass-input inline-pct">
+                                <label for="paint-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for supplies</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="paint-waste-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="paint-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="paint-waste-pct" value="10" class="glass-input inline-pct">
+                                <label for="paint-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for waste</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -181,7 +204,12 @@
                     <div class="module-content">
                         <div id="electrical-rows-container"></div>
                         <button id="add-electrical-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="electrical-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+                            <input type="checkbox" id="electrical-consumables-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="electrical-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="electrical-consumables-pct" value="5" class="glass-input inline-pct">
+                            <label for="electrical-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for supplies</label>
+                        </div>
                     </div>
                 </div>
 
@@ -190,7 +218,12 @@
                     <div class="module-content">
                         <div id="plumbing-rows-container"></div>
                         <button id="add-plumbing-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="plumbing-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for supplies</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+                            <input type="checkbox" id="plumbing-consumables-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="plumbing-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="plumbing-consumables-pct" value="5" class="glass-input inline-pct">
+                            <label for="plumbing-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for supplies</label>
+                        </div>
                     </div>
                 </div>
 
@@ -199,7 +232,12 @@
                     <div class="module-content">
                         <div id="fixtures-rows-container"></div>
                         <button id="add-fixtures-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="fixtures-consumables-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 5% for hardware/consumables</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+                            <input type="checkbox" id="fixtures-consumables-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="fixtures-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="fixtures-consumables-pct" value="5" class="glass-input inline-pct">
+                            <label for="fixtures-consumables-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for hardware/consumables</label>
+                        </div>
                     </div>
                 </div>
 
@@ -208,7 +246,12 @@
                     <div class="module-content">
                         <div id="concrete-rows-container"></div>
                         <button id="add-concrete-btn" class="add-row-btn">+ Add Item</button>
-                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;"><input type="checkbox" id="concrete-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste/spillage</span></label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
+                            <input type="checkbox" id="concrete-waste-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                            <label for="concrete-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                            <input type="number" id="concrete-waste-pct" value="10" class="glass-input inline-pct">
+                            <label for="concrete-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for waste/spillage</label>
+                        </div>
                     </div>
                 </div>
 
@@ -217,9 +260,19 @@
                     <div class="module-content">
                         <div id="gravel-rows-container"></div>
                         <button id="add-gravel-btn" class="add-row-btn">+ Add Item</button>
-                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="gravel-compaction-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 20% for compaction</span></label>
+                        <div style="display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="gravel-waste-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="gravel-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="gravel-waste-pct" value="10" class="glass-input inline-pct">
+                                <label for="gravel-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for waste</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="gravel-compaction-check" style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="gravel-compaction-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="gravel-compaction-pct" value="20" class="glass-input inline-pct">
+                                <label for="gravel-compaction-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for compaction</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -229,9 +282,19 @@
                     <div class="module-content">
                         <div id="mulch-rows-container"></div>
                         <button id="add-mulch-btn" class="add-row-btn">+ Add Item</button>
-                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="mulch-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
+                        <div style="display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="mulch-waste-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="mulch-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="mulch-waste-pct" value="10" class="glass-input inline-pct">
+                                <label for="mulch-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for waste</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="mulch-settling-check" style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="mulch-settling-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="mulch-settling-pct" value="10" class="glass-input inline-pct">
+                                <label for="mulch-settling-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for settling</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -241,9 +304,19 @@
                     <div class="module-content">
                         <div id="topsoil-rows-container"></div>
                         <button id="add-topsoil-btn" class="add-row-btn">+ Add Item</button>
-                        <div style="display: flex; gap: 20px; margin-top: 25px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-waste-check" checked style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for waste</span></label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;"><input type="checkbox" id="topsoil-settling-check" style="accent-color: #38bdf8;"><span style="font-size: 0.9rem; color: var(--text-muted);">Add 10% for settling</span></label>
+                        <div style="display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="topsoil-waste-check" checked style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="topsoil-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="topsoil-waste-pct" value="10" class="glass-input inline-pct">
+                                <label for="topsoil-waste-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for waste</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <input type="checkbox" id="topsoil-settling-check" style="accent-color: #38bdf8; width: 18px; height: 18px; cursor: pointer;">
+                                <label for="topsoil-settling-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">Add</label>
+                                <input type="number" id="topsoil-settling-pct" value="10" class="glass-input inline-pct">
+                                <label for="topsoil-settling-check" style="font-size: 0.9rem; color: var(--text-muted); cursor: pointer; margin: 0;">% for settling</label>
+                            </div>
                         </div>
                     </div>
                 </div>
