@@ -143,13 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
             let html = '';
             for (const [category, items] of Object.entries(grouped)) {
-                html += `<div style="margin-top: 15px; margin-bottom: 10px; font-weight: 800; color: #f8fafc; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">${category}</div>`;
+                html += `<div onclick="const content = this.nextElementSibling; const icon = this.querySelector('span'); if(content.style.display === 'none') { content.style.display = 'block'; icon.textContent = '▼'; } else { content.style.display = 'none'; icon.textContent = '▶'; }" 
+                              style="margin-top: 15px; margin-bottom: 10px; font-weight: 800; color: #f8fafc; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                            ${category} <span style="font-size: 0.75rem; color: #94a3b8;">▶</span>
+                         </div>`;
+                
+                html += `<div style="display: none;">`;
                 html += items.map(t => `
                     <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" 
                          onclick="window.loadStarterTemplate('${t.id}')">
                         <span style="font-weight:bold; color:#38bdf8;">${t.name}</span>
                     </div>
                 `).join('');
+                html += `</div>`;
             }
             list.innerHTML = html || '<div style="color: var(--text-muted); text-align: center; padding: 15px;">No templates available.</div>';
         }
