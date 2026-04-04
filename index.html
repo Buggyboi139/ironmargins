@@ -93,9 +93,11 @@
                     <div class="module-content">
                         <div class="input-row" style="background: transparent; border: none; padding: 0;">
                             <div class="input-group">
-                                <label>Client <span id="client-display-name" style="color: #38bdf8; margin-left: 8px;">None</span></label>
+                                <label>Client</label>
                                 <input type="hidden" id="client-id" value="">
-                                <button id="openClientModalBtn" class="secondary-btn" style="width: 100%; border-radius: 8px; font-size: 1.5rem; padding: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.2);">+</button>
+                                <button id="openClientModalBtn" class="secondary-btn" style="width: 100%; border-radius: 8px; padding: 12px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.2); font-weight: 600; color: #38bdf8; display: flex; align-items: center; justify-content: center;">
+                                    <span id="client-display-name" style="font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">+</span>
+                                </button>
                             </div>
                             <div class="input-group"><label>Project Name</label><input type="text" id="meta-project" class="glass-input" placeholder="e.g. Full Master Remodel"></div>
                             <div class="input-group"><label>Date</label><input type="date" id="meta-date" class="glass-input" style="color-scheme: dark;"></div>
@@ -346,6 +348,28 @@
             <div class="input-group" style="margin-bottom: 15px;">
                 <select id="cat-manage-select" class="glass-input"></select>
             </div>
+            
+            <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; margin-bottom: 10px; color: #f8fafc;">Add Custom Material</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="new-mat-name" class="glass-input" placeholder="Material Name" style="flex: 2;">
+                    <input type="number" id="new-mat-price" class="glass-input" placeholder="Price ($)" style="flex: 1;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="new-mat-unit" class="glass-input" style="flex: 1;">
+                        <option value="qty">Qty / Each</option>
+                        <option value="sqft">SqFt</option>
+                        <option value="lf">LnFt</option>
+                        <option value="yard">Yard</option>
+                        <option value="ton">Ton</option>
+                        <option value="gallon">Gallon</option>
+                        <option value="bag">Bag</option>
+                        <option value="piece">Piece</option>
+                    </select>
+                    <button id="addCustomMatBtn" class="primary-btn" style="margin-top: 0; padding: 10px; flex: 1; font-size: 0.9rem;">+ Add Material</button>
+                </div>
+            </div>
+            
             <div id="materials-manage-list" style="display:flex; flex-direction:column; gap:10px;"></div>
             <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">Save Prices</button>
         </div>
