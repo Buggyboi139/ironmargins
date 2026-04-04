@@ -55,19 +55,7 @@ window.renderDownloadOptions = async function() {
         return;
     }
 
-    let subStatus = '';
-    let metaSubStatus = '';
-    if (window.supabaseClient) {
-        const { data } = await window.supabaseClient.from('users').select('subscription_status').eq('id', window.currentUser.id).maybeSingle();
-        subStatus = data && data.subscription_status ? String(data.subscription_status).toLowerCase().trim() : '';
-    }
-    metaSubStatus = window.currentUser.user_metadata?.subscription_status ? String(window.currentUser.user_metadata.subscription_status).toLowerCase().trim() : '';
-    
-    const isSubActive = ['active', 'trialing'].includes(subStatus) || ['active', 'trialing'].includes(metaSubStatus);
-    const isTempActive = localStorage.getItem('im_temp_sub_active') === 'true';
-    const isPro = isSubActive || isTempActive;
-
-    localStorage.setItem('im_is_pro', isPro ? 'true' : 'false');
+    const isPro = window.isPro;
 
     let warningEl = document.getElementById('branding-warning');
     if (isPro && !localStorage.getItem('im_global_company')) {
@@ -88,7 +76,7 @@ window.renderDownloadOptions = async function() {
         warningEl.style.display = 'none';
     }
 
-    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
+    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "⚡ Review & Generate (Watermarked)";
     downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
     downloadBtn.style.border = "none";
     downloadBtn.style.color = "#0f172a";
@@ -97,37 +85,19 @@ window.renderDownloadOptions = async function() {
     downloadBtn.onclick = async () => {
         window.saveDataForPdf();
         const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-        const saveResult = await window.saveBidToCloud(totalAmount, false);
-        if (saveResult === 'LIMIT_REACHED') return;
+        
+        let saveAllowed = true;
+        if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) {
+            saveAllowed = false; 
+        } else {
+            await window.saveBidToCloud(totalAmount, false);
+        }
         
         if (window.currentBidId) {
             localStorage.setItem('im_current_bid_id', window.currentBidId);
         }
         window.location.href = './success';
     };
-
-    let upgradeBtn = document.getElementById('upgradeProBtn');
-    if (!isPro) {
-        if (!upgradeBtn) {
-            upgradeBtn = document.createElement('button');
-            upgradeBtn.id = 'upgradeProBtn';
-            upgradeBtn.className = 'secondary-btn';
-            upgradeBtn.style.width = '100%';
-            upgradeBtn.style.marginTop = '15px';
-            upgradeBtn.textContent = 'Upgrade to Pro (Remove Watermark & Add Logo)';
-            upgradeBtn.onclick = () => {
-                if(window.gtag) window.gtag('event', 'begin_checkout', { currency: 'USD', value: 12.99, items:[{item_id: 'pro_sub'}] });
-                window.saveDataForPdf();
-                const checkoutUrl = new URL('https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03');
-                checkoutUrl.searchParams.set('client_reference_id', window.currentUser.id);
-                window.location.href = checkoutUrl.toString();
-            };
-            downloadBtn.parentNode.insertBefore(upgradeBtn, downloadBtn.nextSibling);
-        }
-        upgradeBtn.style.display = 'block';
-    } else if (upgradeBtn) {
-        upgradeBtn.style.display = 'none';
-    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -290,6 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('exportCSVBtn').onclick = () => {
+        if (!window.isPro) return window.triggerUpgradeModal('QuickBooks CSV Export');
+        
         const csv = localStorage.getItem('im_csvData') || 'No data generated';
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
