@@ -1,3 +1,6 @@
+================================================
+FILE: calculate.js
+================================================
 window.updatePaymentSchedule = function() {
     const total = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
     const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
@@ -129,11 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const costs = { wood: getCost('wood-rows-container'), paint: getCost('paint-rows-container'), electrical: getCost('electrical-rows-container'), plumbing: getCost('plumbing-rows-container'), fixtures: getCost('fixtures-rows-container'), concrete: getCost('concrete-rows-container'), gravel: getCost('gravel-rows-container'), mulch: getCost('mulch-rows-container'), topsoil: getCost('topsoil-rows-container'), demo: getCost('demo-rows-container') };
         raw = Object.values(costs).reduce((a, b) => a + b, 0);
         
-        if (document.getElementById('wood-consumables-check')?.checked) cons += costs.wood * 0.05;
-        if (document.getElementById('paint-consumables-check')?.checked) cons += costs.paint * 0.05;
-        if (document.getElementById('electrical-consumables-check')?.checked) cons += costs.electrical * 0.05;
-        if (document.getElementById('plumbing-consumables-check')?.checked) cons += costs.plumbing * 0.05;
-        if (document.getElementById('fixtures-consumables-check')?.checked) cons += costs.fixtures * 0.05;
+        if (document.getElementById('wood-consumables-check')?.checked) cons += costs.wood * ((parseFloat(document.getElementById('wood-consumables-pct')?.value) || 5) / 100);
+        if (document.getElementById('paint-consumables-check')?.checked) cons += costs.paint * ((parseFloat(document.getElementById('paint-consumables-pct')?.value) || 5) / 100);
+        if (document.getElementById('electrical-consumables-check')?.checked) cons += costs.electrical * ((parseFloat(document.getElementById('electrical-consumables-pct')?.value) || 5) / 100);
+        if (document.getElementById('plumbing-consumables-check')?.checked) cons += costs.plumbing * ((parseFloat(document.getElementById('plumbing-consumables-pct')?.value) || 5) / 100);
+        if (document.getElementById('fixtures-consumables-check')?.checked) cons += costs.fixtures * ((parseFloat(document.getElementById('fixtures-consumables-pct')?.value) || 5) / 100);
         
         let baseLabor = 0;
         let laborByPhase = {};
@@ -169,7 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const laborBurden = document.getElementById('labor-burden-check')?.checked ? baseLabor * 0.25 : 0;
+        const laborBurdenPct = document.getElementById('labor-burden-check')?.checked ? (parseFloat(document.getElementById('labor-burden-pct')?.value) || 25) / 100 : 0;
+        const laborBurden = baseLabor * laborBurdenPct;
         const laborTotal = baseLabor + laborBurden;
 
         const breakeven = raw + cons + laborTotal + subTotal;
@@ -178,8 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const mult = 1 + markupPct; 
 
         const taxRate = parseFloat(document.getElementById('meta-tax').value) || 0;
-        const taxAmount = (raw + cons) * (taxRate / 100);
         const materialsCostForClient = (raw + cons) * mult;
+        const taxAmount = materialsCostForClient * (taxRate / 100);
 
         localStorage.setItem('im_csvData', csvData);
         localStorage.setItem('im_laborByPhase', JSON.stringify(laborByPhase));
