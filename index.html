@@ -63,7 +63,10 @@
         <button id="manageClientsSideBtn" class="side-menu-link">Clients</button>
         
         <div class="side-menu-divider"></div>
-        <div class="side-menu-label">Saved Bids</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="side-menu-label" style="margin: 0;">Saved Bids</div>
+            <div id="bid-limit-counter" style="font-size: 0.8rem; color: #94a3b8; font-weight: 600; display: none;"></div>
+        </div>
         
         <div class="menu-tabs">
             <button class="menu-tab-btn active" id="tab-active" onclick="window.switchBidTab('active')">Active</button>
@@ -254,7 +257,7 @@
                 </div>
 
                 <button class="primary-btn" id="calculateBtn">Calculate Breakdown</button>
-                <button class="secondary-btn" id="saveAsTemplateBtn" style="display: none; width: 100%; margin-top: 15px; padding: 15px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">Save as Custom Template</button>
+                <button class="secondary-btn" id="saveAsTemplateBtn" style="display: none; width: 100%; margin-top: 15px; padding: 15px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">⚡ Save as Custom Template</button>
             </div>
         </div>
         
@@ -291,7 +294,7 @@
                     <div class="gt-label">Client Quote</div>
                     <div class="gt-value" id="res-client-total" style="background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">$0</div>
                     <div class="line-items" id="client-dynamic-breakdown"></div>
-                    <button class="secondary-btn" id="exportCSVBtn" style="width: 100%; padding: 15px; margin-top: 25px; font-size: 1rem;">Export Materials to QuickBooks (CSV)</button>
+                    <button class="secondary-btn" id="exportCSVBtn" style="width: 100%; padding: 15px; margin-top: 25px; font-size: 1rem;">⚡ Export Materials to QuickBooks (CSV)</button>
                 </div>
             </div>
         </div>
@@ -300,12 +303,15 @@
     <div id="clientModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
             <button id="closeClientModal" class="close-btn">&times;</button>
-            <h2>Client Management</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Client Management</h2>
+                <div id="client-limit-counter" style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; display: none;"></div>
+            </div>
             <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Manage your CRM or select a client.</p>
             
             <div id="client-manage-list" style="margin-bottom: 25px; max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
             
-            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+            <div id="add-client-container" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
                 <h3 id="client-form-title" style="font-size: 1.1rem; margin-bottom: 15px; color: #f8fafc;">Add New Client</h3>
                 <input type="hidden" id="edit-client-id" value="">
                 <div class="input-row" style="border: none; padding: 0; background: transparent; margin-bottom: 15px;">
@@ -337,6 +343,10 @@
                     <button class="secondary-btn" id="btn-cancel-edit-client" style="margin-top: 0; padding: 15px; flex: 1; display: none;">Cancel</button>
                 </div>
             </div>
+            <div id="client-limit-banner" style="display: none; background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; padding: 20px; border-radius: 12px; text-align: center; margin-top: 20px;">
+                <p style="color: #fb7185; font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">Your CRM is full.</p>
+                <button class="primary-btn" style="margin: 0; padding: 12px; width: 100%; font-size: 0.95rem;" onclick="window.triggerUpgradeModal('Unlimited Clients')">⚡ Upgrade to Unlock</button>
+            </div>
         </div>
     </div>
 
@@ -366,12 +376,12 @@
                         <option value="bag">Bag</option>
                         <option value="piece">Piece</option>
                     </select>
-                    <button id="addCustomMatBtn" class="primary-btn" style="margin-top: 0; padding: 10px; flex: 1; font-size: 0.9rem;">+ Add Material</button>
+                    <button id="addCustomMatBtn" class="primary-btn" style="margin-top: 0; padding: 10px; flex: 1; font-size: 0.9rem;">⚡ Add Material</button>
                 </div>
             </div>
             
             <div id="materials-manage-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-            <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">Save Prices</button>
+            <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">⚡ Save Prices</button>
         </div>
     </div>
 
@@ -505,6 +515,25 @@
             </div>
             
             <button class="primary-btn" onclick="window.submitCloseout()" style="margin-top: 0; padding: 15px; width: 100%;">Save & Archive</button>
+        </div>
+    </div>
+
+    <div id="upgradeModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="text-align: center;">
+            <button class="close-btn" onclick="document.getElementById('upgradeModal').classList.remove('show')">&times;</button>
+            <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
+            <h2 style="margin-bottom: 10px;">Upgrade to Pro</h2>
+            <p class="subtitle" style="margin-bottom: 25px; font-size: 0.95rem; color: #38bdf8;" id="upgradeModalFeatureText">Unlock unlimited scaling for your business.</p>
+            <ul style="text-align: left; margin-bottom: 30px; font-size: 0.95rem; color: #f8fafc; line-height: 1.8; list-style: none; padding: 0;">
+                <li>✓ <strong>Branded Proposals</strong> (Logo & Custom Terms)</li>
+                <li>✓ <strong>Unlimited</strong> Saved Bids</li>
+                <li>✓ <strong>Unlimited</strong> Client CRM</li>
+                <li>✓ Job Closeout & Profit Tracking</li>
+                <li>✓ Custom Bid Templates</li>
+                <li>✓ QuickBooks CSV Export</li>
+            </ul>
+            <button class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;" onclick="window.location.href='https://buy.stripe.com/bJefZj3KD32BdlU6ka0co03?client_reference_id=' + (window.currentUser ? window.currentUser.id : '')">Upgrade Now - $12.99/mo</button>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 15px;">Cancel anytime.</p>
         </div>
     </div>
 
