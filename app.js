@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(btn) {
             btn.textContent = 'Saved!';
-            setTimeout(() => btn.textContent = 'Save as Template', 2000);
+            setTimeout(() => btn.textContent = 'Save as Custom Template', 2000);
         }
     };
 
