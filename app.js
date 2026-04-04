@@ -52,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.template-btn-auth').forEach(btn => {
             btn.style.display = hasUser ? 'block' : 'none';
         });
+        if (hasUser && typeof window.fetchUserProfile === 'function') {
+            window.fetchUserProfile();
+        }
     });
 
     const sideMenu = document.getElementById('sideMenu');
@@ -70,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sideMenuOverlay?.addEventListener('click', window.closeSideMenu);
 
     document.getElementById('openClientModalBtn')?.addEventListener('click', () => {
-        window.resetClientForm();
+        if(window.resetClientForm) window.resetClientForm();
         document.getElementById('clientModal').classList.add('show');
     });
     document.getElementById('closeClientModal')?.addEventListener('click', () => document.getElementById('clientModal').classList.remove('show'));
@@ -83,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('manageClientsSideBtn')?.addEventListener('click', () => { 
         window.closeSideMenu(); 
-        window.resetClientForm();
+        if(window.resetClientForm) window.resetClientForm();
         document.getElementById('clientModal').classList.add('show'); 
     });
 
@@ -294,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.length === 0) {
                 manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
             }
+            const manageList = document.getElementById('client-manage-list');
             if (manageList) manageList.innerHTML = manageHtml;
             if (currentValue) clientSelect.value = currentValue;
         }
@@ -346,7 +350,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-save-client')?.addEventListener('click', async () => {
-        const id = document.getElementById('edit-client-id').value;
+        if (!window.currentUser || !window.supabaseClient) {
+            return alert('You must be signed in to save clients to your CRM.');
+        }
+
+        const idField = document.getElementById('edit-client-id');
+        const id = idField ? idField.value : null;
         const name = document.getElementById('new-client-name').value;
         const address = document.getElementById('new-client-address').value;
         const phone = document.getElementById('new-client-phone').value;
@@ -358,33 +367,42 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Saving...';
         btn.disabled = true;
 
-        const payload = { user_id: window.currentUser.id, name, address, phone };
-        
-        let error;
-        if (id) {
-            const res = await window.supabaseClient.from('clients').update(payload).eq('id', id);
-            error = res.error;
-        } else {
-            const res = await window.supabaseClient.from('clients').insert([payload]);
-            error = res.error;
-        }
+        try {
+            const payload = { user_id: window.currentUser.id, name, address, phone };
+            
+            let error;
+            if (id) {
+                const res = await window.supabaseClient.from('clients').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                const res = await window.supabaseClient.from('clients').insert([payload]);
+                error = res.error;
+            }
 
-        btn.textContent = origText;
-        btn.disabled = false;
-
-        if (!error) {
-            window.resetClientForm();
-            await window.fetchClients(); 
-        } else {
-            alert('Error saving client: ' + error.message);
+            if (!error) {
+                if(window.resetClientForm) window.resetClientForm();
+                await window.fetchClients(); 
+            } else {
+                alert('Database Error: ' + error.message);
+            }
+        } catch (err) {
+            alert('Network or execution error: ' + err.message);
+        } finally {
+            btn.textContent = origText;
+            btn.disabled = false;
         }
     });
 
     document.getElementById('btn-cancel-edit-client')?.addEventListener('click', () => {
-        window.resetClientForm();
+        if(window.resetClientForm) window.resetClientForm();
     });
 
     document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('saveProfileBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
         const paymentLinkInput = document.getElementById('payment-link');
         const compInput = document.getElementById('meta-company');
         const compPhoneInput = document.getElementById('meta-company-phone');
@@ -392,14 +410,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const termsInput = document.getElementById('profile-custom-terms');
 
         if (paymentLinkInput) localStorage.setItem('im_payment_link', paymentLinkInput.value);
-        if (compInput) localStorage.setItem('im_global_company', compInput.value);
+        if (compInput) {
+            localStorage.setItem('im_global_company', compInput.value);
+            const appTitle = document.getElementById('app-main-title');
+            if (appTitle) appTitle.textContent = compInput.value ? compInput.value + ' Estimates' : 'Never Underbid Again';
+        }
         if (compPhoneInput) localStorage.setItem('im_global_phone', compPhoneInput.value);
         if (compAddressInput) localStorage.setItem('im_global_address', compAddressInput.value);
         if (termsInput) localStorage.setItem('im_custom_terms', termsInput.value);
 
         if (window.currentUser && window.supabaseClient) {
             const logoData = localStorage.getItem('im_logo');
-            await window.supabaseClient.from('users').upsert({
+            const { error } = await window.supabaseClient.from('users').upsert({
                 id: window.currentUser.id,
                 company_name: compInput ? compInput.value : '',
                 phone: compPhoneInput ? compPhoneInput.value : '',
@@ -408,9 +430,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 logo_data: logoData || '',
                 custom_terms: termsInput ? termsInput.value : ''
             });
+
+            if (error) {
+                alert("Failed to save profile to cloud: " + error.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return; 
+            }
         }
         
-        document.getElementById('profileModal').classList.remove('show');
+        btn.textContent = 'Saved!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+            document.getElementById('profileModal').classList.remove('show');
+        }, 800);
+
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     });
 
