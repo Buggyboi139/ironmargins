@@ -266,12 +266,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         window.updatePaymentSchedule();
         
-        window.scrollTo(0, 0);
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
-        
+
         setTimeout(() => { 
             document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); 
-            window.scrollTo(0, 0); 
+            
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            
         }, 300);
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
