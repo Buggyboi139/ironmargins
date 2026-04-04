@@ -11,7 +11,7 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-4WWZ1PYH4Q');
-      gtag('config', 'AW-000000000');
+      gtag('config', 'AW-YOUR_ADS_ID');
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -298,6 +298,11 @@
     </div>
     
     <script>
+        const escapeHTML = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
+        };
+
         const SUPABASE_URL = 'https://xorefugfztewghiambkz.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvcmVmdWdmenRld2doaWFtYmt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MDc1MDMsImV4cCI6MjA5MDA4MzUwM30.QncelfMky_DyIFV_7aq-NUlM9TBsxFAdj8TyLZcrD64'; 
         window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -311,7 +316,7 @@
             if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
                 if (window.gtag) {
                     gtag('event', 'conversion', {
-                        'send_to': 'AW-000000000/DUMMY_CONVERSION_LABEL',
+                        'send_to': 'AW-YOUR_ADS_ID/YOUR_CONVERSION_LABEL',
                         'value': 1.0,
                         'currency': 'USD'
                     });
@@ -368,7 +373,7 @@
 
             const customTerms = localStorage.getItem('im_custom_terms');
             if (isPro && customTerms) {
-                document.getElementById('pdf-terms-text').innerHTML = `<strong>Terms & Conditions:</strong> ` + customTerms;
+                document.getElementById('pdf-terms-text').innerHTML = `<strong>Terms & Conditions:</strong> ` + escapeHTML(customTerms);
             }
 
             if(!client) {
@@ -383,12 +388,12 @@
             let brandHtml = '';
             if (isPro) {
                 const logoData = localStorage.getItem('im_logo');
-                const compName = localStorage.getItem('im_global_company');
-                const compPhone = localStorage.getItem('im_global_phone') || '';
-                const compAddress = localStorage.getItem('im_global_address') || '';
+                const compName = escapeHTML(localStorage.getItem('im_global_company') || '');
+                const compPhone = escapeHTML(localStorage.getItem('im_global_phone') || '');
+                const compAddress = escapeHTML(localStorage.getItem('im_global_address') || '');
 
                 if (logoData) {
-                    brandHtml += `<img src="${logoData}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
+                    brandHtml += `<img src="${escapeHTML(logoData)}" style="max-height: 80px; max-width: 330px; display: block; margin-bottom: 10px;">`;
                 }
                 if (compName) {
                     brandHtml += `<h2>${compName}</h2><p>Official Project Proposal</p>`;
@@ -439,7 +444,7 @@
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
                     const qrContainer = document.createElement('div');
                     qrContainer.style.textAlign = 'right';
-                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${qrUrl}" style="width: 105px; height: 105px; border-radius: 10px;">`;
+                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${escapeHTML(qrUrl)}" style="width: 105px; height: 105px; border-radius: 10px;">`;
                     document.querySelector('.pdf-quote-box').appendChild(qrContainer);
                 }
             }
@@ -454,7 +459,7 @@
             }
 
             if (notes) {
-                const notesHtml = `<div class="section-header" style="margin-top:20px;">Project Notes & Exclusions</div><p style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:40px; white-space:pre-wrap;">${notes}</p>`;
+                const notesHtml = `<div class="section-header" style="margin-top:20px;">Project Notes & Exclusions</div><p style="font-size:14px; color:#334155; line-height:1.6; margin-bottom:40px; white-space:pre-wrap;">${escapeHTML(notes)}</p>`;
                 document.querySelector('.section-header').insertAdjacentHTML('beforebegin', notesHtml);
             }
 
@@ -466,7 +471,7 @@
             let matsHTML = '';
             for (const [key, val] of Object.entries(costs)) {
                 if (val > 0) {
-                    matsHTML += `<tr><td class="item-name">• ${categoryNames[key]}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
+                    matsHTML += `<tr><td class="item-name">• ${escapeHTML(categoryNames[key])}</td><td class="item-cost">${format(val * mult)}</td></tr>`;
                 }
             }
             
@@ -476,7 +481,7 @@
             
             if (taxAmount > 0) {
                 matsHTML += `<tr>
-                    <td class="item-name" style="color: #64748b; font-weight: 500;">Estimated Sales Tax (${taxRate}%)</td>
+                    <td class="item-name" style="color: #64748b; font-weight: 500;">Estimated Sales Tax (${escapeHTML(taxRate)}%)</td>
                     <td class="item-cost" style="color: #64748b; font-weight: 500;">${format(taxAmount)}</td>
                 </tr>`;
             }
@@ -485,7 +490,7 @@
             if (subsList.length > 0) {
                 let subsHTML = '';
                 subsList.forEach(s => {
-                    subsHTML += `<tr><td class="item-name">• Subcontractor: ${s.name} <span style="display:block; font-size:12px; color:#94a3b8; font-weight:400; margin-top:4px;">${s.desc}</span></td><td class="item-cost" style="vertical-align:top;">${format(s.price * mult)}</td></tr>`;
+                    subsHTML += `<tr><td class="item-name">• Subcontractor: ${escapeHTML(s.name)} <span style="display:block; font-size:12px; color:#94a3b8; font-weight:400; margin-top:4px;">${escapeHTML(s.desc)}</span></td><td class="item-cost" style="vertical-align:top;">${format(s.price * mult)}</td></tr>`;
                 });
                 document.getElementById('pdf-subs-body').innerHTML = subsHTML;
             }
