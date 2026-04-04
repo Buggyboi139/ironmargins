@@ -309,12 +309,11 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
         bidData.taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
 
         const clientId = document.getElementById('client-id')?.value;
-        const parsedClientId = parseInt(clientId, 10);
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
 
         const payload = {
             user_id: window.currentUser.id,
-            client_id: isNaN(parsedClientId) ? null : parsedClientId,
+            client_id: clientId ? clientId : null,
             project_name: projectName,
             total_amount: totalAmount,
             bid_data: bidData
