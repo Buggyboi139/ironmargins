@@ -57,9 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.supabaseClient?.auth?.onAuthStateChange((event, session) => {
         const hasUser = !!(session && session.user);
-        document.querySelectorAll('.template-btn-auth').forEach(btn => {
-            btn.style.display = hasUser ? 'block' : 'none';
-        });
+        
+        const saveTemplateBtn = document.getElementById('saveAsTemplateBtn');
+        if (saveTemplateBtn) saveTemplateBtn.style.display = hasUser ? 'block' : 'none';
+        
+        const manualSaveBtn = document.getElementById('manualSaveBtn');
+        if (manualSaveBtn) manualSaveBtn.style.display = hasUser ? 'block' : 'none';
+
+        const myTemplatesSideBtn = document.getElementById('myTemplatesSideBtn');
+        if (myTemplatesSideBtn) myTemplatesSideBtn.style.display = hasUser ? 'block' : 'none';
+
         if (hasUser && typeof window.fetchUserProfile === 'function') {
             window.fetchUserProfile();
         }
@@ -103,6 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('clientModal')?.classList.add('show'); 
     });
 
+    document.getElementById('myTemplatesSideBtn')?.addEventListener('click', () => {
+        window.closeSideMenu();
+        if(window.fetchMyTemplates) window.fetchMyTemplates();
+        document.getElementById('myTemplatesModal')?.classList.add('show');
+    });
+    document.getElementById('closeMyTemplatesModal')?.addEventListener('click', () => {
+        document.getElementById('myTemplatesModal')?.classList.remove('show');
+    });
+
     document.getElementById('openStarterTemplatesBtn')?.addEventListener('click', () => {
         const list = document.getElementById('starter-template-list');
         if (list) {
@@ -119,6 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadStarterTemplate = function(id) {
         const t = (window.starterTemplates || []).find(x => x.id === id);
         if (t) {
+            window.currentBidId = null;
+            const cId = document.getElementById('client-id');
+            const cDisp = document.getElementById('client-display-name');
+            const proj = document.getElementById('meta-project');
+            if(cId) cId.value = '';
+            if(cDisp) cDisp.textContent = 'None';
+            if(proj) proj.value = '';
+
             window.loadState(t.data);
             window.saveState();
             document.getElementById('results-view')?.classList.replace('active-view', 'hidden-view'); 
@@ -127,6 +151,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.getElementById('starterTemplateModal')?.classList.remove('show');
     }
+
+    window.saveFullTemplate = async function() {
+        if (!window.currentUser || !window.supabaseClient) return alert('Sign in to save templates.');
+        const name = prompt('Enter a name for this new template:');
+        if (!name) return;
+
+        window.saveState(true);
+        const stateStr = localStorage.getItem('im_v5_data') || '{}';
+        const bidData = JSON.parse(stateStr);
+        
+        if(bidData.meta) {
+            delete bidData.meta['client-id'];
+            delete bidData.meta['client-display-name'];
+            delete bidData.meta['meta-project'];
+        }
+
+        const btn = document.getElementById('saveAsTemplateBtn');
+        if(btn) btn.textContent = 'Saving...';
+
+        const { error } = await window.supabaseClient.from('user_templates').insert([{
+            user_id: window.currentUser.id,
+            name: name,
+            template_data: bidData
+        }]);
+
+        if (error) alert('Error saving template: ' + error.message);
+        
+        if(btn) {
+            btn.textContent = 'Saved!';
+            setTimeout(() => btn.textContent = 'Save as Template', 2000);
+        }
+    };
+
+    document.getElementById('saveAsTemplateBtn')?.addEventListener('click', window.saveFullTemplate);
+
+    window.fetchMyTemplates = async function() {
+        if (!window.currentUser || !window.supabaseClient) return;
+        const { data, error } = await window.supabaseClient.from('user_templates').select('*').eq('user_id', window.currentUser.id).order('created_at', { ascending: false });
+        if (!error && data) {
+            window.myTemplatesDb = data;
+            const list = document.getElementById('my-templates-list');
+            if (!list) return;
+            
+            if (data.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No custom templates saved yet.</div>';
+                return;
+            }
+
+            const editIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+            const delIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+            list.innerHTML = data.map(t => {
+                const safeName = String(t.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
+                const jsSafeName = (t.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                return `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column; min-width: 0; padding-right: 10px; cursor: pointer; flex: 1;" onclick="window.loadMyTemplate('${t.id}')">
+                        <span style="font-weight:600; color:#38bdf8; font-size:0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeName}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-shrink: 0;">
+                        <button onclick="window.renameMyTemplate('${t.id}', '${jsSafeName}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);" title="Rename">${editIcon}</button>
+                        <button onclick="window.deleteMyTemplate('${t.id}')" class="secondary-btn" style="padding: 8px; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#fb7185; border-color:rgba(251,113,133,0.3); background:rgba(251,113,133,0.1);" title="Delete">${delIcon}</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    };
+
+    window.loadMyTemplate = function(id) {
+        const t = (window.myTemplatesDb || []).find(x => x.id === id);
+        if (t && t.template_data) {
+            window.currentBidId = null;
+            const cId = document.getElementById('client-id');
+            const cDisp = document.getElementById('client-display-name');
+            const proj = document.getElementById('meta-project');
+            if(cId) cId.value = '';
+            if(cDisp) cDisp.textContent = 'None';
+            if(proj) proj.value = '';
+            window.loadState(t.template_data);
+            window.saveState();
+            document.getElementById('results-view')?.classList.replace('active-view', 'hidden-view');
+            document.getElementById('setup-view')?.classList.replace('hidden-view', 'active-view');
+            window.scrollTo(0,0);
+        }
+        document.getElementById('myTemplatesModal')?.classList.remove('show');
+    };
+
+    window.renameMyTemplate = async function(id, currentName) {
+        const newName = prompt("Rename template:", currentName);
+        if (!newName || newName === currentName) return;
+        const { error } = await window.supabaseClient.from('user_templates').update({ name: newName }).eq('id', id);
+        if (!error) window.fetchMyTemplates();
+    };
+
+    window.deleteMyTemplate = async function(id) {
+        if (!confirm("Delete this template? This cannot be undone.")) return;
+        const { error } = await window.supabaseClient.from('user_templates').delete().eq('id', id);
+        if (!error) window.fetchMyTemplates();
+    };
 
     const materialsBtn = document.getElementById('materialsBtn');
     const materialsModal = document.getElementById('materialsModal');
@@ -315,14 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 manageHtml = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No clients saved yet.</div>';
             }
             if (manageList) manageList.innerHTML = manageHtml;
-
-            const currentId = document.getElementById('client-id')?.value;
-            if (currentId) {
-                const activeClient = data.find(c => c.id == currentId);
-                if (activeClient && document.getElementById('client-display-name')) {
-                    document.getElementById('client-display-name').textContent = activeClient.name;
-                }
-            }
         }
     };
 
@@ -531,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clientIdEl = document.getElementById('client-id');
                 const clientDispEl = document.getElementById('client-display-name');
                 if (clientIdEl) clientIdEl.value = '';
-                if (clientDispEl) clientDispEl.textContent = '+ Select Client';
+                if (clientDispEl) clientDispEl.textContent = 'None';
                 
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
