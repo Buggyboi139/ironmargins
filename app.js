@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cDisp = document.getElementById('client-display-name');
             const proj = document.getElementById('meta-project');
             if(cId) cId.value = '';
-            if(cDisp) cDisp.textContent = 'None';
+            if(cDisp) cDisp.textContent = '+';
             if(proj) proj.value = '';
 
             window.loadState(t.data);
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cDisp = document.getElementById('client-display-name');
             const proj = document.getElementById('meta-project');
             if(cId) cId.value = '';
-            if(cDisp) cDisp.textContent = 'None';
+            if(cDisp) cDisp.textContent = '+';
             if(proj) proj.value = '';
             window.loadState(t.template_data);
             window.saveState();
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!catManageSelect || !materialsManageList) return;
         const cat = catManageSelect.value;
         const items = window.materialsDb[cat] || [];
-        materialsManageList.innerHTML = items.filter(i => !i.id.startsWith('custom_')).map(i => {
+        materialsManageList.innerHTML = items.map(i => {
             const safeName = String(i.name).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[m]);
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; gap: 15px; margin-bottom: 8px;">
@@ -287,6 +287,36 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
     }
+
+    const addCustomMatBtn = document.getElementById('addCustomMatBtn');
+    if(addCustomMatBtn) addCustomMatBtn.addEventListener('click', async () => {
+        const nameInput = document.getElementById('new-mat-name');
+        const priceInput = document.getElementById('new-mat-price');
+        const unitSelect = document.getElementById('new-mat-unit');
+        const cat = catManageSelect.value;
+        
+        const name = nameInput.value.trim();
+        const price = parseFloat(priceInput.value);
+        
+        if(!name || isNaN(price)) return alert("Please enter a valid material name and price.");
+        
+        addCustomMatBtn.textContent = 'Adding...';
+        
+        if (!window.materialsDb[cat]) window.materialsDb[cat] = [];
+        window.materialsDb[cat].push({
+            id: `custom_${Date.now()}`,
+            name: name,
+            unit: unitSelect.value,
+            price: price
+        });
+
+        await saveCustomMaterialToCloud(cat, name, price, unitSelect.value);
+        
+        nameInput.value = '';
+        priceInput.value = '';
+        addCustomMatBtn.textContent = '+ Add Material';
+        renderManageList();
+    });
 
     if(saveMaterialsBtn) saveMaterialsBtn.addEventListener('click', async () => {
         saveMaterialsBtn.textContent = 'Saving...';
@@ -646,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clientIdEl = document.getElementById('client-id');
                 const clientDispEl = document.getElementById('client-display-name');
                 if (clientIdEl) clientIdEl.value = '';
-                if (clientDispEl) clientDispEl.textContent = 'None';
+                if (clientDispEl) clientDispEl.textContent = '+';
                 
                 window.categories.concat(['labor']).forEach(c => { 
                     const container = document.getElementById(`${c}-rows-container`); 
