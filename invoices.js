@@ -1,151 +1,79 @@
-window.generateInvoices = async function(bidId) {
-    if (!window.currentUser || !window.supabaseClient || !window.isPro) return;
-    const { data: existingInvoices } = await window.supabaseClient.from('invoices').select('invoice_type, is_paid').eq('bid_id', bidId).eq('is_paid', true);
-    if (existingInvoices && existingInvoices.length > 0) {
-        alert('Cannot regenerate invoices: Payments have already been recorded.');
+window.fetchInvoices = async function(filter = 'all') {
+    if (!window.currentUser || !window.supabaseClient) return;
+    let query = window.supabaseClient
+        .from('invoices')
+        .select('*')
+        .eq('user_id', window.currentUser.id)
+        .order('created_at', { ascending: false });
+    if (filter === 'paid') query = query.eq('is_paid', true);
+    if (filter === 'unpaid') query = query.eq('is_paid', false);
+    const { data, error } = await query;
+    if (error || !data) return;
+    const list = document.getElementById('invoices-list');
+    if (!list) return;
+    if (data.length === 0) {
+        list.innerHTML = `<div class="dropdown-empty" style="width:100%;">No invoices yet. Generate a proposal to create invoices.</div>`;
         return;
     }
-    await window.supabaseClient.from('invoices').delete().eq('bid_id', bidId);
-    const total = Math.round((parseFloat(localStorage.getItem('im_grandTotal')) || 0) * 100);
-    const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
-    const progQty = parseInt(document.getElementById('progress-payments').value) || 0;
-    const clientName = localStorage.getItem('im_clientName') || 'Client';
-    const projectName = localStorage.getItem('im_projectName') || 'Project';
-    const depAmtCents = Math.round(total * (depPct / 100));
-    let remAmtCents = total - depAmtCents;
-    const baseProgAmtCents = progQty > 0 ? Math.floor(remAmtCents / progQty) : 0;
-    const today = new Date();
-    const invoices = [];
-    let invoiceNum = 1;
-    const baseInvStr = `INV-${Math.floor(Date.now() / 1000)}`;
-    if (depAmtCents > 0) {
-        invoices.push({
-            user_id: window.currentUser.id,
-            bid_id: bidId,
-            client_name: clientName,
-            project_name: projectName,
-            invoice_number: `${baseInvStr}-${invoiceNum}`,
-            invoice_type: 'deposit',
-            amount: depAmtCents / 100,
-            due_date: today.toISOString().split('T')[0],
-            is_paid: false
+    list.innerHTML = data.map(inv => {
+        const amt = parseFloat(inv.amount).toLocaleString(undefined, {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
         });
-        invoiceNum++;
-    }
-    for (let i = 0; i < progQty; i++) {
-        const dueDate = new Date(today);
-        dueDate.setDate(dueDate.getDate() + (30 * (i + 1)));
-        let currentProgAmtCents = baseProgAmtCents;
-        if (i === progQty - 1) {
-            currentProgAmtCents = remAmtCents;
-        }
-        remAmtCents -= currentProgAmtCents;
-        invoices.push({
-            user_id: window.currentUser.id,
-            bid_id: bidId,
-            client_name: clientName,
-            project_name: projectName,
-            invoice_number: `${baseInvStr}-${invoiceNum}`,
-            invoice_type: i === progQty - 1 ? 'final' : 'progress',
-            amount: currentProgAmtCents / 100,
-            due_date: dueDate.toISOString().split('T')[0],
-            is_paid: false
-        });
-        invoiceNum++;
-    }
-    if (progQty === 0 && remAmtCents > 0) {
-        const dueDate = new Date(today);
-        dueDate.setDate(dueDate.getDate() + 30);
-        invoices.push({
-            user_id: window.currentUser.id,
-            bid_id: bidId,
-            client_name: clientName,
-            project_name: projectName,
-            invoice_number: `${baseInvStr}-${invoiceNum}`,
-            invoice_type: 'final',
-            amount: remAmtCents / 100,
-            due_date: dueDate.toISOString().split('T')[0],
-            is_paid: false
-        });
-    }
-    if (invoices.length > 0) {
-        await window.supabaseClient.from('invoices').insert(invoices);
-    }
+        const typeLabel = inv.invoice_type === 'deposit' ? 'Deposit' : inv.invoice_type === 'final' ? 'Final Balance' : 'Progress Payment';
+        const statusColor = inv.is_paid ? '#10b981' : '#fb7185';
+        const statusText = inv.is_paid ? 'PAID' : 'UNPAID';
+        const dueDate = new Date(inv.due_date).toLocaleDateString();
+        const safeName = window.escapeHTML(inv.client_name);
+        const safeProject = window.escapeHTML(inv.project_name);
+        const companyName = window.escapeHTML(localStorage.getItem('im_global_company') || 'Your Company');
+        const mailSubject = encodeURIComponent(`Invoice: ${inv.project_name} — ${typeLabel}`);
+        const mailBody = encodeURIComponent(`Hi ${inv.client_name},\n\nThis is an invoice for ${inv.project_name}.\n\nType: ${typeLabel}\nAmount Due: $${amt}\nDue Date: ${dueDate}\n\nThank you,\n${companyName}`);
+        const clientEmail = window.escapeHTML(localStorage.getItem('im_clientEmail') || '');
+        return `
+        <div style="flex: 1 1 calc(50% - 6px); min-width: 260px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.75rem; font-weight:700; color:${statusColor}; text-transform:uppercase; letter-spacing:1px;">${statusText}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${window.escapeHTML(inv.invoice_number)}</span>
+            </div>
+            <div>
+                <div style="font-weight:700; font-size:1.1rem; color:#f8fafc;">${safeName}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">${safeProject}</div>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">${typeLabel} — Due ${dueDate}</div>
+            <div style="font-size:1.4rem; font-weight:800; color:#f8fafc;">$${amt}</div>
+            <div style="display:flex; gap:8px; margin-top:auto; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+                <button onclick="window.toggleInvoicePaid('${inv.id}', ${!inv.is_paid})" class="secondary-btn" style="flex:1; padding:10px; border-radius:10px; font-size:0.85rem; color:${inv.is_paid ? '#fb7185' : '#10b981'}; border-color:${inv.is_paid ? 'rgba(251,113,133,0.3)' : 'rgba(16,185,129,0.3)'}; background:${inv.is_paid ? 'rgba(251,113,133,0.1)' : 'rgba(16,185,129,0.1)'};">
+                    ${inv.is_paid ? '↩ Unpaid' : '✓ Mark Paid'}
+                </button>
+                <a href="mailto:${clientEmail}?subject=${mailSubject}&body=${mailBody}" class="secondary-btn" style="padding:10px 14px; border-radius:10px; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0 -1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </a>
+                <button onclick="window.deleteInvoice('${inv.id}')" class="secondary-btn" style="padding:10px 14px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fb7185; border-color:rgba(251,113,133,0.3); background:rgba(251,113,133,0.1);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
 };
 
-window.saveDataForPdf = function() {
-    const displayEl = document.getElementById('client-display-name');
-    const idEl = document.getElementById('client-id');
-    const clientName = displayEl && displayEl.textContent !== 'None' && displayEl.textContent !== '+' && displayEl.textContent !== '' ? displayEl.textContent : 'Client';
-    let clientAddress = '';
-    let clientEmail = '';
-    if (idEl && idEl.value && window.clientsDb) {
-        const cObj = window.clientsDb.find(c => c.id == idEl.value);
-        if (cObj) {
-            if (cObj.address) clientAddress = cObj.address;
-            if (cObj.email) clientEmail = cObj.email;
-        }
-    }
-    localStorage.setItem('im_clientName', clientName);
-    localStorage.setItem('im_clientAddress', clientAddress);
-    localStorage.setItem('im_clientEmail', clientEmail);
-    localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
-}
+window.toggleInvoicePaid = async function(id, newStatus) {
+    const update = { is_paid: newStatus };
+    if (newStatus) update.paid_date = new Date().toISOString().split('T')[0];
+    else update.paid_date = null;
+    await window.supabaseClient.from('invoices').update(update).eq('id', id);
+    window.fetchInvoices(window._currentInvoiceFilter || 'all');
+};
 
-window.renderDownloadOptions = async function() {
-    const downloadBtn = document.getElementById('downloadPdfTrigger');
-    if(!downloadBtn) return;
-    const parent = downloadBtn.parentElement;
-    if (!window.currentUser) {
-        downloadBtn.textContent = "Sign in to Generate Proposal";
-        downloadBtn.style.background = "transparent";
-        downloadBtn.style.border = "1px solid var(--border-glass)";
-        downloadBtn.style.color = "var(--text-main)";
-        downloadBtn.style.display = 'block';
-        downloadBtn.onclick = () => {
-            const am = document.getElementById('authModal');
-            if(am) am.classList.add('show');
-        };
-        return;
-    }
-    const isPro = window.isPro;
-    let warningEl = document.getElementById('branding-warning');
-    if (isPro && !localStorage.getItem('im_global_company')) {
-        if (!warningEl) {
-            warningEl = document.createElement('div');
-            warningEl.id = 'branding-warning';
-            warningEl.innerHTML = `<strong>Your PDF is currently unbranded.</strong><br>Click here to add your Company Name & Logo to the top.`;
-            warningEl.style.cssText = "background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; color: #fb7185; padding: 15px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px; font-size: 0.95rem; cursor: pointer; text-align: left; line-height: 1.4;";
-            warningEl.onclick = () => {
-                const pm = document.getElementById('profileModal');
-                if(pm) pm.classList.add('show');
-            };
-            parent.insertBefore(warningEl, downloadBtn);
-        } else {
-            warningEl.style.display = 'block';
-        }
-    } else if (warningEl) {
-        warningEl.style.display = 'none';
-    }
-    downloadBtn.textContent = isPro ? "Review & Generate Proposal" : "Review & Generate (Watermarked)";
-    downloadBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)";
-    downloadBtn.style.border = "none";
-    downloadBtn.style.color = "#0f172a";
-    downloadBtn.style.display = 'block';
-    
-    downloadBtn.onclick = async () => {
-        window.saveDataForPdf();
-        const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-        let saveAllowed = true;
-        if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) {
-            saveAllowed = false; 
-        } else {
-            await window.saveBidToCloud(totalAmount, false);
-        }
-        if (window.currentBidId) {
-            await window.generateInvoices(window.currentBidId);
-            localStorage.setItem('im_current_bid_id', window.currentBidId);
-        }
-        window.location.href = './success';
-    };
+window.deleteInvoice = async function(id) {
+    if (!confirm('Delete this invoice?')) return;
+    await window.supabaseClient.from('invoices').delete().eq('id', id);
+    window.fetchInvoices(window._currentInvoiceFilter || 'all');
+};
+
+window.filterInvoices = function(filter) {
+    window._currentInvoiceFilter = filter;
+    document.querySelectorAll('#invoices-filter .menu-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === filter);
+    });
+    window.fetchInvoices(filter);
 };
