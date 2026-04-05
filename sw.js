@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironmargins-v2';
+const CACHE_NAME = 'ironmargins-v3';
 const ASSETS = [
     '/',
     '/index.html',
@@ -8,6 +8,8 @@ const ASSETS = [
     '/builder.js',
     '/calculate.js',
     '/bids.js',
+    '/invoices.js',
+    '/analytics.js',
     '/materials.json',
     '/templates.json',
     '/logo.png',
@@ -37,7 +39,19 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
-
+    if (event.request.url.includes('chart.umd.min.js')) {
+        event.respondWith(
+            caches.match(event.request).then(response => {
+                return response || fetch(event.request).then(fetchRes => {
+                    return caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request.url, fetchRes.clone());
+                        return fetchRes;
+                    });
+                });
+            })
+        );
+        return;
+    }
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             const fetchPromise = fetch(event.request).then(networkResponse => {
@@ -51,7 +65,6 @@ self.addEventListener('fetch', event => {
             }).catch(() => {
                 return cachedResponse;
             });
-            
             return cachedResponse || fetchPromise;
         })
     );
