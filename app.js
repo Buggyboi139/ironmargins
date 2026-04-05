@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const items = window.materialsDb[cat] || [];
         materialsManageList.innerHTML = items.map(i => {
             const safeName = window.escapeHTML(i.name);
-            const attrName = i.name.replace(/"/g, '&quot;');
+            const attrName = window.escapeHTML(i.name);
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; gap: 15px; margin-bottom: 8px;">
                 <span style="font-size:0.9rem; flex:1 1 auto; min-width:0; word-break: break-word; line-height: 1.3;">${safeName}</span>
