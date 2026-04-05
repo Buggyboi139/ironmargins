@@ -308,12 +308,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const items = window.materialsDb[cat] || [];
         materialsManageList.innerHTML = items.map(i => {
             const safeName = window.escapeHTML(i.name);
+            const attrName = i.name.replace(/"/g, '&quot;');
             return `
             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; gap: 15px; margin-bottom: 8px;">
                 <span style="font-size:0.9rem; flex:1 1 auto; min-width:0; word-break: break-word; line-height: 1.3;">${safeName}</span>
                 <div class="unit-wrapper icon-prefix" style="flex:0 0 110px; width: 110px; max-width:110px;">
                     <span class="prefix" style="left: 12px;">$</span>
-                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${safeName}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:10px 10px 10px 26px; font-size:0.9rem !important; width: 100%; box-sizing: border-box;">
+                    <input type="number" class="glass-input mat-price-edit" data-cat="${cat}" data-name="${attrName}" data-unit="${i.unit}" value="${parseFloat(i.price).toFixed(2)}" style="padding:10px 10px 10px 26px; font-size:0.9rem !important; width: 100%; box-sizing: border-box;">
                 </div>
             </div>
             `;
@@ -363,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cat = inp.dataset.cat;
             const unit = inp.dataset.unit;
             
-            const defaultItem = window.materialsDb[cat]?.find(i => window.escapeHTML(i.name) === name || i.name === name);
+            const defaultItem = window.materialsDb[cat]?.find(i => i.name === name);
             if(defaultItem && defaultItem.price !== price) {
                 defaultItem.price = price;
                 await saveCustomMaterialToCloud(cat, name, price, unit);
@@ -463,7 +464,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteClient = async function(id) {
         if(!confirm("Delete this client? This cannot be undone.")) return;
         const { error } = await window.supabaseClient.from('clients').delete().eq('id', id);
-        if(!error) window.fetchClients();
+        if(!error) {
+            window.fetchClients();
+            const activeClientId = document.getElementById('client-id');
+            if (activeClientId && activeClientId.value === id) {
+                activeClientId.value = '';
+                const displayInput = document.getElementById('client-display-name');
+                if (displayInput) displayInput.textContent = '+';
+                localStorage.removeItem('im_clientName');
+                localStorage.removeItem('im_clientAddress');
+                window.saveState();
+            }
+        }
         else alert("Error deleting client: " + error.message);
     };
 
@@ -720,7 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     const base64 = canvas.toDataURL('image/png', 0.8);
-                    localStorage.setItem('im_logo', base64);
+                    try {
+                        localStorage.setItem('im_logo', base64);
+                    } catch (err) {
+                        alert('Storage limit reached. Cannot save logo.');
+                    }
                     if (logoPreview) {
                         logoPreview.src = base64;
                         logoPreview.style.display = 'block';
