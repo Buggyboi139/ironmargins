@@ -313,6 +313,9 @@ window.submitCloseout = async function() {
 window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
     if (!window.currentUser || !window.supabaseClient) return false;
     if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) return false;
+    
+    if (isAutosaving && !window.currentBidId) return false;
+
     if (window._isSavingBid) return false;
     window._isSavingBid = true;
 
