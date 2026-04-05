@@ -70,13 +70,14 @@ window.refreshSavedBids = async function() {
             const dateStr = new Date(bid.created_at).toLocaleDateString();
             const client = window.escapeHTML((bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client');
             const project = window.escapeHTML(bid.project_name || 'Unnamed Project');
+            const pdfBadge = bid.pdf_url ? `<a href="${bid.pdf_url}" target="_blank" onclick="event.stopPropagation();" style="margin-left: 8px; background: rgba(251,113,133,0.1); color: #fb7185; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-decoration: none; border: 1px solid rgba(251,113,133,0.3); display: inline-flex; align-items: center; gap: 4px;" title="View Signed PDF"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF</a>` : '';
             
             if (isClosed) {
                 const profitColor = parseFloat(bid.actual_profit) >= 0 ? '#10b981' : '#fb7185';
                 html += `
                     <div class="nav-bid-item" onclick="window.handleLoadBid('${bid.id}')" style="cursor:pointer; flex-direction:column; align-items:flex-start;">
                         <div style="display:flex; justify-content:space-between; width:100%;">
-                            <span class="bid-title">${client} - ${project}</span>
+                            <span class="bid-title">${client} - ${project} ${pdfBadge}</span>
                             <span style="color:${profitColor}; font-weight:700; font-size:0.9rem;">$${parseFloat(bid.actual_profit||0).toFixed(2)}</span>
                         </div>
                         <span class="bid-date">${dateStr}</span>
@@ -85,7 +86,7 @@ window.refreshSavedBids = async function() {
                 html += `
                     <div class="nav-bid-item">
                         <div onclick="window.handleLoadBid('${bid.id}')" style="flex:1; cursor:pointer;">
-                            <span class="bid-title">${client} - ${project}</span>
+                            <span class="bid-title">${client} - ${project} ${pdfBadge}</span>
                             <span class="bid-date">${dateStr}</span>
                         </div>
                         <div class="bid-actions" style="display: flex; gap: 8px;">
@@ -275,8 +276,15 @@ window.submitCloseout = async function() {
 
     const taxAmount = data.bid_data.taxAmount || 0;
     let totalBid = data.total_amount || 0;
+    
     if (totalBid > 0) {
         totalBid = totalBid - taxAmount;
+    } else {
+        let estMat = 0, estLab = 0, estSub = 0;
+        if (data.bid_data.categories) Object.values(data.bid_data.categories).forEach(c => c.forEach(i => estMat += (parseFloat(i.qty)||0)*(parseFloat(i.price)||0)));
+        if (data.bid_data.labor) data.bid_data.labor.forEach(i => estLab += (parseFloat(i.qty)||0)*(parseFloat(i.price)||0));
+        if (data.bid_data.subs) data.bid_data.subs.forEach(i => estSub += parseFloat(i.price)||0);
+        totalBid = estMat + estLab + estSub;
     }
 
     const actMat = parseFloat(document.getElementById('closeout-actual-mat').value) || 0;
@@ -314,6 +322,10 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
         const stateStr = localStorage.getItem('im_v5_data') || '{}';
         const bidData = JSON.parse(stateStr);
         bidData.taxAmount = parseFloat(localStorage.getItem('im_taxAmount')) || 0;
+        
+        if (!totalAmount) {
+            totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
+        }
 
         const clientId = document.getElementById('client-id')?.value;
         const projectName = document.getElementById('meta-project').value || 'Draft Project';
@@ -341,29 +353,4 @@ window.saveBidToCloud = async function(totalAmount = 0, isAutosaving = false) {
     } finally {
         window._isSavingBid = false;
     }
-};
-
-window.loadBidFromCloud = async function(bidId) {
-    if (!window.supabaseClient) return;
-    const { data, error } = await window.supabaseClient.from('bids').select('*').eq('id', bidId).single();
-    if (error || !data) return;
-
-    window.currentBidId = data.id;
-    
-    const clientIdEl = document.getElementById('client-id');
-    const clientDispEl = document.getElementById('client-display-name');
-    if (clientIdEl) clientIdEl.value = data.client_id || '';
-    
-    if (clientDispEl) {
-        if (data.client_id && window.clientsDb) {
-            const c = window.clientsDb.find(x => x.id == data.client_id);
-            clientDispEl.textContent = c ? c.name : '+';
-        } else {
-            clientDispEl.textContent = '+';
-        }
-    }
-
-    document.getElementById('meta-project').value = data.project_name === 'Draft Project' ? '' : data.project_name;
-
-    if (data.bid_data) window.loadState(data.bid_data);
 };
