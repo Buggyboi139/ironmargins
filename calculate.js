@@ -207,7 +207,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('calculateBtn').onclick = () => {
         let raw = 0, cons = 0;
         let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
-        const csvEscape = (text) => `"${(text||'').replace(/"/g, '""')}"`;
+        const csvEscape = (text) => {
+            let sanitized = text || '';
+            if (/^[=+\-@]/.test(sanitized)) {
+                sanitized = "'" + sanitized;
+            }
+            return `"${sanitized.replace(/"/g, '""')}"`;
+        };
 
         const getCost = (catId) => {
             let c = 0; const el = document.getElementById(catId);
