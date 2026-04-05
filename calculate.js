@@ -2,7 +2,6 @@ window.updatePaymentSchedule = function() {
     const total = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
     const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
     const progQty = parseInt(document.getElementById('progress-payments').value) || 0;
-    
     const depAmt = total * (depPct / 100);
     const remAmt = total - depAmt;
     const progAmt = progQty > 0 ? remAmt / progQty : 0;
@@ -26,16 +25,116 @@ window.saveDataForPdf = function() {
     
     const clientName = displayEl && displayEl.textContent !== 'None' && displayEl.textContent !== '+' && displayEl.textContent !== '' ? displayEl.textContent : 'Client';
     let clientAddress = '';
+    let clientEmail = '';
     
     if (idEl && idEl.value && window.clientsDb) {
         const cObj = window.clientsDb.find(c => c.id == idEl.value);
-        if (cObj && cObj.address) clientAddress = cObj.address;
+        if (cObj) {
+            if (cObj.address) clientAddress = cObj.address;
+            if (cObj.email) clientEmail = cObj.email;
+        }
     }
 
     localStorage.setItem('im_clientName', clientName);
     localStorage.setItem('im_clientAddress', clientAddress);
+    localStorage.setItem('im_clientEmail', clientEmail);
     localStorage.setItem('im_projectName', document.getElementById('meta-project').value || 'Project');
 }
+
+window.generateInvoices = async function(bidId) {
+    if (!window.currentUser || !window.supabaseClient || !window.isPro) return;
+
+    const { data: existingInvoices } = await window.supabaseClient
+        .from('invoices')
+        .select('invoice_type, is_paid')
+        .eq('bid_id', bidId)
+        .eq('is_paid', true);
+
+    if (existingInvoices && existingInvoices.length > 0) {
+        alert('Cannot regenerate invoices: Payments have already been recorded.');
+        return;
+    }
+
+    await window.supabaseClient
+        .from('invoices')
+        .delete()
+        .eq('bid_id', bidId);
+
+    const total = Math.round((parseFloat(localStorage.getItem('im_grandTotal')) || 0) * 100);
+    const depPct = parseFloat(document.getElementById('deposit-pct').value) || 0;
+    const progQty = parseInt(document.getElementById('progress-payments').value) || 0;
+    
+    const clientName = localStorage.getItem('im_clientName') || 'Client';
+    const projectName = localStorage.getItem('im_projectName') || 'Project';
+
+    const depAmtCents = Math.round(total * (depPct / 100));
+    let remAmtCents = total - depAmtCents;
+    const baseProgAmtCents = progQty > 0 ? Math.floor(remAmtCents / progQty) : 0;
+    
+    const today = new Date();
+    const invoices = [];
+    let invoiceNum = 1;
+    const baseInvStr = `INV-${Math.floor(Date.now() / 1000)}`;
+
+    if (depAmtCents > 0) {
+        invoices.push({
+            user_id: window.currentUser.id,
+            bid_id: bidId,
+            client_name: clientName,
+            project_name: projectName,
+            invoice_number: `${baseInvStr}-${invoiceNum}`,
+            invoice_type: 'deposit',
+            amount: depAmtCents / 100,
+            due_date: today.toISOString().split('T')[0],
+            is_paid: false
+        });
+        invoiceNum++;
+    }
+
+    for (let i = 0; i < progQty; i++) {
+        const dueDate = new Date(today);
+        dueDate.setDate(dueDate.getDate() + (30 * (i + 1)));
+        
+        let currentProgAmtCents = baseProgAmtCents;
+        if (i === progQty - 1) {
+            currentProgAmtCents = remAmtCents;
+        }
+        remAmtCents -= currentProgAmtCents;
+
+        invoices.push({
+            user_id: window.currentUser.id,
+            bid_id: bidId,
+            client_name: clientName,
+            project_name: projectName,
+            invoice_number: `${baseInvStr}-${invoiceNum}`,
+            invoice_type: i === progQty - 1 ? 'final' : 'progress',
+            amount: currentProgAmtCents / 100,
+            due_date: dueDate.toISOString().split('T')[0],
+            is_paid: false
+        });
+        invoiceNum++;
+    }
+
+    if (progQty === 0 && remAmtCents > 0) {
+        const dueDate = new Date(today);
+        dueDate.setDate(dueDate.getDate() + 30);
+        invoices.push({
+            user_id: window.currentUser.id,
+            bid_id: bidId,
+            client_name: clientName,
+            project_name: projectName,
+            invoice_number: `${baseInvStr}-${invoiceNum}`,
+            invoice_type: 'final',
+            amount: remAmtCents / 100,
+            due_date: dueDate.toISOString().split('T')[0],
+            is_paid: false
+        });
+    }
+
+    if (invoices.length > 0) {
+        await window.supabaseClient.from('invoices').insert(invoices);
+    }
+};
 
 window.renderDownloadOptions = async function() {
     const downloadBtn = document.getElementById('downloadPdfTrigger');
@@ -94,6 +193,7 @@ window.renderDownloadOptions = async function() {
         }
         
         if (window.currentBidId) {
+            await window.generateInvoices(window.currentBidId);
             localStorage.setItem('im_current_bid_id', window.currentBidId);
         }
         window.location.href = './success';
