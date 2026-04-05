@@ -3,8 +3,6 @@ window.activeCloseoutBidId = null;
 window.activeCloseoutBidData = {};
 window._isSavingBid = false;
 
-const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
-
 window.switchBidTab = function(tab) {
     document.getElementById('tab-active').classList.toggle('active', tab === 'active');
     document.getElementById('tab-closed').classList.toggle('active', tab === 'closed');
@@ -230,7 +228,13 @@ window.openCloseout = async function(bidId) {
     }
 
     const taxAmount = data.bid_data.taxAmount || 0;
-    const totalBid = (data.total_amount || 0) - taxAmount;
+    let totalBid = data.total_amount || 0;
+    if (totalBid > 0) {
+        totalBid = totalBid - taxAmount;
+    } else {
+        totalBid = estMat + estLab + estSub;
+    }
+    
     const estTotalCost = estMat + estLab + estSub;
 
     document.getElementById('closeout-bid-info').textContent = data.project_name || 'Unnamed Project';
@@ -270,7 +274,10 @@ window.submitCloseout = async function() {
     if (fetchError || !data) return;
 
     const taxAmount = data.bid_data.taxAmount || 0;
-    const totalBid = (data.total_amount || 0) - taxAmount;
+    let totalBid = data.total_amount || 0;
+    if (totalBid > 0) {
+        totalBid = totalBid - taxAmount;
+    }
 
     const actMat = parseFloat(document.getElementById('closeout-actual-mat').value) || 0;
     const actLab = parseFloat(document.getElementById('closeout-actual-lab').value) || 0;
