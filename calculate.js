@@ -132,7 +132,10 @@ window.generateInvoices = async function(bidId) {
     }
 
     if (invoices.length > 0) {
-        await window.supabaseClient.from('invoices').insert(invoices);
+        const { error } = await window.supabaseClient.from('invoices').insert(invoices);
+        if (error) {
+            alert("Failed to generate invoices: " + error.message);
+        }
     }
 };
 
