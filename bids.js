@@ -66,19 +66,32 @@ window.refreshSavedBids = async function() {
 
     const buildHtml = (bidsArray, isClosed) => {
         let html = '';
+        
+        if (isClosed && bidsArray.length > 0) {
+            html += `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+                <button onclick="window.openAnalytics()" class="secondary-btn" style="padding:8px 16px; border-radius:10px; font-size:0.85rem; color:#38bdf8; border-color:rgba(56,189,248,0.3); background:rgba(56,189,248,0.1); display:flex; align-items:center; gap:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    ${window.isPro ? 'Analytics' : '⚡ Analytics'}
+                </button>
+            </div>`;
+        }
+
         bidsArray.forEach(bid => {
             const dateStr = new Date(bid.created_at).toLocaleDateString();
             const client = window.escapeHTML((bid.clients && bid.clients.name) ? bid.clients.name : 'Draft Client');
             const project = window.escapeHTML(bid.project_name || 'Unnamed Project');
-            const pdfBadge = bid.pdf_url ? `<a href="${bid.pdf_url}" target="_blank" onclick="event.stopPropagation();" style="margin-left: 8px; background: rgba(251,113,133,0.1); color: #fb7185; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-decoration: none; border: 1px solid rgba(251,113,133,0.3); display: inline-flex; align-items: center; gap: 4px;" title="View Signed PDF"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF</a>` : '';
+            
+            const pdfBadge = bid.pdf_url ? `<a href="${bid.pdf_url}" target="_blank" onclick="event.stopPropagation();" style="margin-left: 8px; background: rgba(56,189,248,0.1); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-decoration: none; border: 1px solid rgba(56,189,248,0.3); display: inline-flex; align-items: center; gap: 4px;" title="View Signed PDF"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> PDF</a>` : '';
             
             if (isClosed) {
                 const profitColor = parseFloat(bid.actual_profit) >= 0 ? '#10b981' : '#fb7185';
+                const analyticsIcon = `<span onclick="window.openJobProfit('${bid.id}'); event.stopPropagation();" style="cursor:pointer; color:#38bdf8; margin-left:8px;" title="View profit breakdown"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></span>`;
+                
                 html += `
                     <div class="nav-bid-item" onclick="window.handleLoadBid('${bid.id}')" style="cursor:pointer; flex-direction:column; align-items:flex-start;">
                         <div style="display:flex; justify-content:space-between; width:100%;">
                             <span class="bid-title">${client} - ${project} ${pdfBadge}</span>
-                            <span style="color:${profitColor}; font-weight:700; font-size:0.9rem;">$${parseFloat(bid.actual_profit||0).toFixed(2)}</span>
+                            <span style="color:${profitColor}; font-weight:700; font-size:0.9rem;">$${parseFloat(bid.actual_profit||0).toFixed(2)} ${analyticsIcon}</span>
                         </div>
                         <span class="bid-date">${dateStr}</span>
                     </div>`;
@@ -230,10 +243,12 @@ window.openCloseout = async function(bidId) {
 
     const taxAmount = data.bid_data.taxAmount || 0;
     let totalBid = data.total_amount || 0;
+    
     if (totalBid > 0) {
         totalBid = totalBid - taxAmount;
     } else {
-        totalBid = estMat + estLab + estSub;
+        const mult = 1 + (parseFloat(data.bid_data.meta?.markupSlider) || 0) / 100;
+        totalBid = (estMat + estLab + estSub) * mult;
     }
     
     const estTotalCost = estMat + estLab + estSub;
@@ -284,7 +299,9 @@ window.submitCloseout = async function() {
         if (data.bid_data.categories) Object.values(data.bid_data.categories).forEach(c => c.forEach(i => estMat += (parseFloat(i.qty)||0)*(parseFloat(i.price)||0)));
         if (data.bid_data.labor) data.bid_data.labor.forEach(i => estLab += (parseFloat(i.qty)||0)*(parseFloat(i.price)||0));
         if (data.bid_data.subs) data.bid_data.subs.forEach(i => estSub += parseFloat(i.price)||0);
-        totalBid = estMat + estLab + estSub;
+        
+        const mult = 1 + (parseFloat(data.bid_data.meta?.markupSlider) || 0) / 100;
+        totalBid = (estMat + estLab + estSub) * mult;
     }
 
     const actMat = parseFloat(document.getElementById('closeout-actual-mat').value) || 0;
