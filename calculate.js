@@ -42,7 +42,11 @@ window.saveDataForPdf = function() {
 }
 
 window.generateInvoices = async function(bidId) {
-    if (!window.currentUser || !window.supabaseClient || !window.isPro) return;
+    if (!window.currentUser || !window.supabaseClient) return;
+    if (!window.isPro) {
+        console.warn("Invoice generation requires a Pro subscription.");
+        return; 
+    }
 
     const { data: existingInvoices } = await window.supabaseClient
         .from('invoices')
