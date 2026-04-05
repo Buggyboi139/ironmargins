@@ -576,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .single();
 
         if (data && !error) {
-            window.isPro = ['active', 'trialing'].includes(String(data.subscription_status).toLowerCase().trim()) || localStorage.getItem('im_temp_sub_active') === 'true';
+            window.isPro = ['active', 'trialing'].includes(String(data.subscription_status).toLowerCase().trim());
             localStorage.setItem('im_is_pro', window.isPro ? 'true' : 'false');
             
             if (data.company_name) localStorage.setItem('im_global_company', data.company_name);
