@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('invoicesSideBtn')?.addEventListener('click', () => {
         window.closeSideMenu();
-        if (window.fetchInvoices) window.fetchInvoices('all');
+        if (window.filterInvoices) window.filterInvoices('all'); // Updates the UI tabs AND fetches
         document.getElementById('invoicesModal')?.classList.add('show');
     });
     document.getElementById('closeInvoicesModal')?.addEventListener('click', () => {
