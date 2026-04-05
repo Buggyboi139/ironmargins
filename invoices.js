@@ -7,10 +7,17 @@ window.fetchInvoices = async function(filter = 'all') {
         .order('created_at', { ascending: false });
     if (filter === 'paid') query = query.eq('is_paid', true);
     if (filter === 'unpaid') query = query.eq('is_paid', false);
-    const { data, error } = await query;
-    if (error || !data) return;
     const list = document.getElementById('invoices-list');
     if (!list) return;
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        list.innerHTML = `<div class="dropdown-empty" style="color:#fb7185;">Error loading invoices: ${error.message}</div>`;
+        return;
+    }
+    
+    if (!data) return;
     if (data.length === 0) {
         list.innerHTML = `<div class="dropdown-empty" style="width:100%;">No invoices yet. Generate a proposal to create invoices.</div>`;
         return;
