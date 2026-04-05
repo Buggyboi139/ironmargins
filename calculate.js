@@ -285,8 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const mult = 1 + markupPct; 
 
         const taxRate = parseFloat(document.getElementById('meta-tax').value) || 0;
+        const taxLabor = document.getElementById('meta-tax-labor')?.checked;
+        const taxSubs = document.getElementById('meta-tax-subs')?.checked;
+        
         const materialsCostForClient = (raw + cons) * mult;
-        const taxAmount = materialsCostForClient * (taxRate / 100);
+        const laborCostForClient = laborTotal * mult;
+        const subsCostForClient = subTotal * mult;
+        
+        let taxableBase = materialsCostForClient;
+        if (taxLabor) taxableBase += laborCostForClient;
+        if (taxSubs) taxableBase += subsCostForClient;
+        
+        const taxAmount = taxableBase * (taxRate / 100);
 
         localStorage.setItem('im_csvData', csvData);
         localStorage.setItem('im_laborByPhase', JSON.stringify(laborByPhase));
