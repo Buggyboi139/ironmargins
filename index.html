@@ -61,6 +61,7 @@
         <button id="profileBtn" class="side-menu-link">Company Profile</button>
         <button id="myTemplatesSideBtn" class="side-menu-link" style="display: none;">My Templates</button>
         <button id="manageClientsSideBtn" class="side-menu-link">Clients</button>
+        <button id="invoicesSideBtn" class="side-menu-link" style="display: none;">Invoices</button>
         
         <div class="side-menu-divider"></div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -610,6 +611,40 @@
         </div>
     </div>
 
+    <div id="invoicesModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height:90vh; overflow-y:auto; max-width:700px;">
+            <button class="close-btn" id="closeInvoicesModal">&times;</button>
+            <h2>Invoices</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size:0.95rem; color:#38bdf8;">Track payments across all your projects.</p>
+            <div id="invoices-filter" style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="menu-tab-btn active" onclick="window.filterInvoices('all')">All</button>
+                <button class="menu-tab-btn" onclick="window.filterInvoices('unpaid')">Unpaid</button>
+                <button class="menu-tab-btn" onclick="window.filterInvoices('paid')">Paid</button>
+            </div>
+            <div id="invoices-list" style="display:flex; flex-wrap:wrap; gap:12px;"></div>
+        </div>
+    </div>
+
+    <div id="profitModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height:90vh; overflow-y:auto; max-width:550px;">
+            <button class="close-btn" onclick="document.getElementById('profitModal').classList.remove('show')">&times;</button>
+            <h2 id="profit-modal-title">Job Profit/Loss</h2>
+            <div id="profit-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="analyticsModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height:90vh; overflow-y:auto; max-width:700px;">
+            <button class="close-btn" onclick="document.getElementById('analyticsModal').classList.remove('show')">&times;</button>
+            <h2>Business Analytics</h2>
+            <p class="subtitle" style="margin-bottom:20px; font-size:0.95rem; color:#38bdf8;">Profit & loss across all closed jobs.</p>
+            <div id="analytics-summary" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:25px;"></div>
+            <div style="background:rgba(0,0,0,0.2); border-radius:16px; padding:20px; border:1px solid rgba(255,255,255,0.05);">
+                <canvas id="profitChart" style="width:100%; height:250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
     <div id="cookieBanner" class="cookie-banner" style="display: none;">
         <div class="cookie-content">
             <p>We use cookies and local storage to save your estimates and improve your experience. <a href="/cookies">Learn more</a>.</p>
@@ -640,10 +675,13 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="auth.js"></script>
     <script src="builder.js"></script>
     <script src="bids.js"></script>
     <script src="calculate.js"></script>
+    <script src="invoices.js"></script>
+    <script src="analytics.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
