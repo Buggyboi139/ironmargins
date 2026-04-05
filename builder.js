@@ -211,7 +211,10 @@ window.saveState = function(skipAutosave = false) {
         });
     }
 
-    localStorage.setItem('im_v5_data', JSON.stringify(state));
+    try {
+        localStorage.setItem('im_v5_data', JSON.stringify(state));
+    } catch (e) {
+    }
 
     if (!skipAutosave && window.currentUser && window.saveBidToCloud) {
         clearTimeout(window.autoSaveTimer);
