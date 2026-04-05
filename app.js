@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const myTemplatesSideBtn = document.getElementById('myTemplatesSideBtn');
         if (myTemplatesSideBtn) myTemplatesSideBtn.style.display = hasUser ? 'block' : 'none';
 
+        const invoicesSideBtn = document.getElementById('invoicesSideBtn');
+        if (invoicesSideBtn) invoicesSideBtn.style.display = hasUser ? 'block' : 'none';
+
         if (hasUser && typeof window.fetchUserProfile === 'function') {
             window.fetchUserProfile();
         }
@@ -98,6 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('closeSideMenuBtn')?.addEventListener('click', window.closeSideMenu);
     sideMenuOverlay?.addEventListener('click', window.closeSideMenu);
+
+    document.getElementById('invoicesSideBtn')?.addEventListener('click', () => {
+        window.closeSideMenu();
+        if (window.fetchInvoices) window.fetchInvoices('all');
+        document.getElementById('invoicesModal')?.classList.add('show');
+    });
+    document.getElementById('closeInvoicesModal')?.addEventListener('click', () => {
+        document.getElementById('invoicesModal')?.classList.remove('show');
+    });
 
     document.getElementById('openClientModalBtn')?.addEventListener('click', () => {
         if(window.resetClientForm) window.resetClientForm();
