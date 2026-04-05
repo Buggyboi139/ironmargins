@@ -105,15 +105,18 @@
                             </div>
                             <div class="input-group"><label>Project Name</label><input type="text" id="meta-project" class="glass-input" placeholder="e.g. Full Master Remodel"></div>
                             <div class="input-group"><label>Date</label><input type="date" id="meta-date" class="glass-input" style="color-scheme: dark;"></div>
-                            <div class="input-group">
-                                <label>Sales Tax (%)</label>
-                                <input type="number" id="meta-tax" class="glass-input" placeholder="0" value="0" step="0.1">
-                                <div style="display: flex; gap: 10px; margin-top: 8px;">
-                                    <label style="font-size: 0.8rem; color: #f8fafc;"><input type="checkbox" id="meta-tax-labor" style="accent-color: #38bdf8;"> Tax Labor</label>
-                                    <label style="font-size: 0.8rem; color: #f8fafc;"><input type="checkbox" id="meta-tax-subs" style="accent-color: #38bdf8;"> Tax Subs</label>
-                                </div>
-                            </div>
+                            <div class="input-group"><label>Sales Tax (%)</label><input type="number" id="meta-tax" class="glass-input" placeholder="0" value="0" step="0.1"></div>
                         </div>
+                        
+                        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                            <label style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="meta-tax-labor" style="accent-color: #38bdf8; width: 16px; height: 16px;"> Tax Labor
+                            </label>
+                            <label style="font-size: 0.85rem; color: #f8fafc; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="meta-tax-subs" style="accent-color: #38bdf8; width: 16px; height: 16px;"> Tax Subs
+                            </label>
+                        </div>
+                        
                         <div class="input-row" style="background: transparent; border: none; padding: 0; margin-top: 15px;">
                             <div class="input-group" style="width: 100%;">
                                 <label>Project Notes / Scope Exclusions</label>
