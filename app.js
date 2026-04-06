@@ -18,6 +18,12 @@ window.triggerUpgradeModal = function(featureName) {
     if(m) {
         document.getElementById('upgradeModalFeatureText').textContent = `Upgrade to unlock ${featureName}.`;
         m.classList.add('show');
+        
+        if (window.gtag) {
+            gtag('event', 'paywall_viewed', {
+                locked_feature: featureName
+            });
+        }
     }
 };
 
