@@ -1,5 +1,17 @@
 window.isPro = false;
 window.bidCount = 0;
+window.materialsDb = {};
+window.categories = ['wood', 'paint', 'electrical', 'plumbing', 'fixtures', 'concrete', 'gravel', 'mulch', 'topsoil', 'demo'];
+window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes', electrical: 'Electrical & Wire', plumbing: 'Plumbing & Pipe', fixtures: 'Fixtures & Cabinetry', concrete: 'Concrete & Flatwork', gravel: 'Gravel & Rock', mulch: 'Mulch & Landscape', topsoil: 'Topsoil & Dirt', demo: 'Demo & Hauls' };
+window.sessionCustomSaved = new Set();
+window.autoSaveTimer = null;
+window.tempTemplateData = [];
+window.lastCloudState = null;
+
+window.escapeHTML = function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
+};
 
 window.triggerUpgradeModal = function(featureName) {
     const m = document.getElementById('upgradeModal');
@@ -8,6 +20,385 @@ window.triggerUpgradeModal = function(featureName) {
         m.classList.add('show');
     }
 };
+
+window.saveCustomMaterialToCloud = async function(category, name, price, unit) {
+    if (!window.currentUser || !window.supabaseClient) return;
+    const uniqueKey = `${category}_${name}_${price}`;
+    if (window.sessionCustomSaved.has(uniqueKey)) return;
+
+    const { data } = await window.supabaseClient.from('custom_materials')
+        .select('id').eq('user_id', window.currentUser.id).eq('category', category).eq('name', name).maybeSingle();
+    
+    if (data) {
+        await window.supabaseClient.from('custom_materials').update({ price, unit }).eq('id', data.id);
+    } else {
+        await window.supabaseClient.from('custom_materials').insert([{ user_id: window.currentUser.id, category, name, price, unit }]);
+    }
+    window.sessionCustomSaved.add(uniqueKey);
+};
+
+window.calculateRowQuantity = function(row, cat) {
+    const shapes = row.querySelectorAll('.shape-row');
+    if (shapes.length === 0) return;
+
+    const itemId = row.querySelector('.item-select').value;
+    const itemData = window.materialsDb[cat]?.find(i => i.id === itemId);
+    const unit = itemData?.unit || 'qty';
+    const isCustom = itemId === 'CUSTOM';
+
+    let total = 0;
+    if (cat === 'paint') {
+        shapes.forEach(s => {
+            const dl = s.querySelector('.d-l');
+            const dh = s.querySelector('.d-h');
+            const dc = s.querySelector('.d-coats');
+            const l = dl ? (parseFloat(dl.value) || 0) : 0;
+            const h = dh ? (parseFloat(dh.value) || 0) : 0;
+            const c = dc ? (parseFloat(dc.value) || 1) : 1;
+            total += (l * h * c);
+        });
+
+        const coverage = isCustom ? 350 : (itemData?.coverage || 350);
+        let wasteFactor = 1.0;
+        const wasteBox = document.getElementById(`paint-waste-check`);
+        if (wasteBox && wasteBox.checked) {
+            const pct = parseFloat(document.getElementById('paint-waste-pct')?.value) || 10;
+            wasteFactor += (pct / 100);
+        }
+
+        row.querySelector('.qty-input').value = Math.ceil((total * wasteFactor) / coverage);
+        return;
+    }
+
+    shapes.forEach(s => {
+        const dl = s.querySelector('.d-l');
+        const dw = s.querySelector('.d-w');
+        const dd = s.querySelector('.d-d');
+        const l = dl ? (parseFloat(dl.value) || 0) : 0;
+        const w = dw ? (parseFloat(dw.value) || 0) : 0;
+        const d = dd ? (parseFloat(dd.value) || 0) : 0;
+        total += (l * w * (d / 12)) / 27;
+    });
+
+    let wasteFactor = 1.0;
+    const wasteBox = document.getElementById(`${cat}-waste-check`);
+    if (wasteBox && wasteBox.checked) {
+        const pct = parseFloat(document.getElementById(`${cat}-waste-pct`)?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
+
+    if (cat === 'gravel' && document.getElementById('gravel-compaction-check')?.checked) {
+        const pct = parseFloat(document.getElementById('gravel-compaction-pct')?.value) || 20;
+        wasteFactor += (pct / 100);
+    }
+    if (cat === 'topsoil' && document.getElementById('topsoil-settling-check')?.checked) {
+        const pct = parseFloat(document.getElementById('topsoil-settling-pct')?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
+    if (cat === 'mulch' && document.getElementById('mulch-settling-check')?.checked) {
+        const pct = parseFloat(document.getElementById('mulch-settling-pct')?.value) || 10;
+        wasteFactor += (pct / 100);
+    }
+
+    let final = total * wasteFactor;
+
+    if (cat === 'concrete' && unit === 'bag') {
+        if (itemId.includes('60lb')) final *= 60;
+        else if (itemId.includes('50lb')) final *= 72;
+        else final *= 45;
+    } else if (cat === 'mulch' && unit === 'bag') { final *= 13.5; }
+      else if (cat === 'topsoil' && unit === 'bag') { final *= 36; }
+      else if (unit === 'ton') {
+          const density = isCustom ? 1.4 : (itemData?.density || 1.4);
+          final *= density;
+      }
+
+    row.querySelector('.qty-input').value = final.toFixed(1);
+}
+
+window.addMaterialRow = function(cat, containerId) {
+    if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
+    const items = window.materialsDb[cat] || [];
+    let opts = items.map(i => {
+        const displayName = i.isNationalAvg ? `${i.name} - National Avg` : i.name;
+        return `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}" data-unverified="${i.isNationalAvg ? 'true' : 'false'}">${window.escapeHTML(displayName)}</div>`;
+    }).join('');
+    opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">+ Custom Material...</div>`;
+    
+    const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: '', isNationalAvg: false};
+    const defaultNameDisplay = def.isNationalAvg ? `${def.name} - National Avg` : def.name;
+    const inputColorStyle = def.isNationalAvg ? 'color: #fbbf24;' : '';
+    const warningIcon = def.isNationalAvg ? `<span class="price-warning" title="National Avg - Verify Local Cost" style="position: absolute; right: 8px; pointer-events: none;">⚠️</span>` : '';
+    const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
+
+    document.getElementById(containerId).insertAdjacentHTML('beforeend', `
+        <div class="calc-row" data-category="${cat}">
+            <div class="input-row">
+                <div class="input-group" style="flex:2;">
+                    <label>Material/Item</label>
+                    <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${window.escapeHTML(defaultNameDisplay)}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
+                    <div class="custom-mat-wrapper" style="display:none;"><input type="text" class="glass-input custom-mat-input" placeholder="Name..."><button class="reset-mat-btn">↺</button></div>
+                </div>
+                <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
+                <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}" style="padding-right: 25px; ${inputColorStyle}">${warningIcon}</div></div>
+                <button class="remove-row-btn" title="Remove Item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>${shapes}
+        </div>`);
+    window.saveState();
+}
+
+window.addLaborRow = function(type) {
+    if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: 'labor_' + type });
+    const container = document.getElementById('labor-rows-container');
+    const isVehicle = type === 'vehicle';
+    const defaultPhase = isVehicle ? 'Travel' : 'General';
+    const xIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+    const phaseSelect = `
+        <div class="input-group">
+            <label>Phase</label>
+            <select class="glass-input phase-select">
+                ${['Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Travel','General','Other']
+                  .map(p => `<option value="${p}" ${p === defaultPhase ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+        </div>`;
+
+    const html = `
+        <div class="calc-row labor-entry" data-type="${type}">
+            <div class="input-row">
+                ${phaseSelect}
+                <div class="input-group" style="flex:2;"><label>${isVehicle ? 'Vehicle / Run Name' : 'Crew Member Name'}</label><input type="text" class="glass-input" placeholder="${isVehicle ? 'Service Truck' : 'Lead Builder'}"></div>
+                <div class="input-group"><label>${isVehicle ? 'Miles' : 'Hours'}</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="${isVehicle ? 0 : 40}"><span class="unit">${isVehicle ? 'mi' : 'hrs'}</span></div></div>
+                <div class="input-group"><label>${isVehicle ? 'IRS Rate' : 'Hourly Rate'}</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${isVehicle ? 0.67 : 65.00}"></div></div>
+                <button class="remove-row-btn" title="Remove Labor">${xIcon}</button>
+            </div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    window.saveState();
+}
+
+window.addSubRow = function() {
+    if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: 'subcontractor' });
+    const container = document.getElementById('subs-rows-container');
+    const xIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    const html = `
+        <div class="calc-row sub-entry">
+            <div class="input-row">
+                <div class="input-group"><label>Subcontractor Name</label><input type="text" class="glass-input sub-name" placeholder="e.g. ABC Electric"></div>
+                <div class="input-group" style="flex:2;"><label>Scope Description</label><input type="text" class="glass-input sub-desc" placeholder="e.g. Wire 3 new outlets"></div>
+                <div class="input-group"><label>Flat Quote</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input sub-price" value="0"></div></div>
+                <button class="remove-row-btn" title="Remove Sub">${xIcon}</button>
+            </div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    window.saveState();
+}
+
+window.saveState = function(skipAutosave = false) {
+    const state = { categories: {}, labor: [], subs: [], meta: {} };
+
+    document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display-name, #setup-view input[type="checkbox"], #markupSlider, #setup-view .inline-pct').forEach(el => {
+        const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
+        state.meta[key] = el.type === 'checkbox' ? el.checked : (el.id === 'client-display-name' ? el.textContent : el.value);
+    });
+
+    window.categories.forEach(cat => {
+        state.categories[cat] = [];
+        const container = document.getElementById(`${cat}-rows-container`);
+        if (container) {
+            container.querySelectorAll('.calc-row').forEach(row => {
+                const item = row.querySelector('.item-select').value;
+                const customName = row.querySelector('.custom-mat-input').value;
+                const qty = row.querySelector('.qty-input').value;
+                const price = row.querySelector('.price-input').value;
+                const shapes = [];
+                row.querySelectorAll('.shape-row').forEach(s => {
+                    shapes.push({ l: s.querySelector('.d-l')?.value || '', w: s.querySelector('.d-w')?.value || '', h: s.querySelector('.d-h')?.value || '', d: s.querySelector('.d-d')?.value || '', coats: s.querySelector('.d-coats')?.value || '' });
+                });
+                state.categories[cat].push({ item, customName, qty, price, shapes });
+            });
+        }
+    });
+
+    const laborContainer = document.getElementById('labor-rows-container');
+    if (laborContainer) {
+        laborContainer.querySelectorAll('.calc-row').forEach(row => {
+            state.labor.push({
+                type: row.dataset.type,
+                phase: row.querySelector('.phase-select').value,
+                name: row.querySelector('.glass-input[type="text"]').value,
+                qty: row.querySelector('.qty-input').value,
+                price: row.querySelector('.price-input').value
+            });
+        });
+    }
+
+    const subsContainer = document.getElementById('subs-rows-container');
+    if (subsContainer) {
+        subsContainer.querySelectorAll('.calc-row').forEach(row => {
+            state.subs.push({
+                name: row.querySelector('.sub-name').value,
+                desc: row.querySelector('.sub-desc').value,
+                price: row.querySelector('.sub-price').value
+            });
+        });
+    }
+
+    const stateString = JSON.stringify(state);
+
+    try {
+        localStorage.setItem('im_v5_data', stateString);
+    } catch (e) {
+    }
+
+    if (!skipAutosave && window.currentUser && window.saveBidToCloud) {
+        if (window.lastCloudState === stateString) return;
+
+        clearTimeout(window.autoSaveTimer);
+
+        window.autoSaveTimer = setTimeout(() => {
+            const manualSaveBtn = document.getElementById('manualSaveBtn');
+            if (manualSaveBtn) manualSaveBtn.textContent = 'Autosaving...';
+
+            window.saveBidToCloud(0, true).then((success) => {
+                if (success && success !== "LIMIT_REACHED") {
+                    window.lastCloudState = stateString;
+
+                    if (manualSaveBtn) {
+                        manualSaveBtn.textContent = 'Saved!';
+                        setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
+                    }
+                } else if (manualSaveBtn && !window.isPro && window.bidCount >= 3 && !window.currentBidId) {
+                    manualSaveBtn.textContent = 'Unlock Unlimited Bids';
+                }
+            });
+        }, 10000);
+    }
+}
+
+window.loadState = function(dataOverride) {
+    const dataStr = localStorage.getItem('im_v5_data');
+    if (!dataStr && !dataOverride) return;
+
+    if (!dataOverride) window.lastCloudState = dataStr;
+
+    const state = dataOverride || JSON.parse(dataStr);
+    if (!state) return;
+
+    if (dataOverride) {
+        document.querySelectorAll('.module-toggle').forEach(t => t.checked = false);
+    }
+
+    if (state.meta) {
+        Object.keys(state.meta).forEach(key => {
+            let el = document.getElementById(key);
+            if (!el && key.startsWith('toggle-')) el = document.querySelector(`input.module-toggle[value="${key.replace('toggle-', '')}"]`);
+            if (!el) el = document.querySelector(`input[name="${key}"]`);
+            if (!el) el = document.querySelector(`input[value="${key}"]`);
+            if (el) {
+                if (el.type === 'checkbox') el.checked = state.meta[key];
+                else if (el.id === 'client-display-name') el.textContent = state.meta[key];
+                else el.value = state.meta[key];
+            }
+        });
+    }
+
+    const laborContainer = document.getElementById('labor-rows-container');
+    if (laborContainer && state.labor && state.labor.length > 0) {
+        const t = document.querySelector(`input.module-toggle[value="labor"]`);
+        if (t) t.checked = true;
+        laborContainer.innerHTML = '';
+        state.labor.forEach(l => {
+            window.addLaborRow(l.type);
+            const row = laborContainer.lastElementChild;
+            row.querySelector('.phase-select').value = l.phase || 'General';
+            row.querySelector('.glass-input[type="text"]').value = l.name;
+            row.querySelector('.qty-input').value = l.qty;
+            row.querySelector('.price-input').value = l.price;
+        });
+    }
+
+    const subsContainer = document.getElementById('subs-rows-container');
+    if (subsContainer && state.subs && state.subs.length > 0) {
+        const t = document.querySelector(`input.module-toggle[value="subs"]`);
+        if (t) t.checked = true;
+        subsContainer.innerHTML = '';
+        state.subs.forEach(s => {
+            window.addSubRow();
+            const row = subsContainer.lastElementChild;
+            row.querySelector('.sub-name').value = s.name;
+            row.querySelector('.sub-desc').value = s.desc;
+            row.querySelector('.sub-price').value = s.price;
+        });
+    }
+
+    const xIconSmall = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+    if (state.categories) {
+        window.categories.forEach(cat => {
+            const container = document.getElementById(`${cat}-rows-container`);
+            if (container && state.categories[cat] && state.categories[cat].length > 0) {
+                const t = document.querySelector(`input.module-toggle[value="${cat}"]`);
+                if (t) t.checked = true;
+                container.innerHTML = '';
+                state.categories[cat].forEach(c => {
+                    window.addMaterialRow(cat, `${cat}-rows-container`);
+                    const row = container.lastElementChild;
+
+                    const opt = row.querySelector(`.custom-option[data-value="${c.item}"]`);
+                    if (opt) {
+                        row.querySelector('.custom-select-text').textContent = opt.textContent;
+                        row.querySelector('.item-select').value = c.item;
+                        row.querySelector('.unit').textContent = opt.dataset.unit + 's';
+                        if (opt.dataset.unverified === 'true') {
+                            row.querySelector('.price-input').style.color = '#fbbf24';
+                            const wrapper = row.querySelector('.price-input').closest('.unit-wrapper');
+                            if(!wrapper.querySelector('.price-warning')) {
+                                wrapper.insertAdjacentHTML('beforeend', `<span class="price-warning" title="National Avg - Verify Local Cost" style="position: absolute; right: 8px; pointer-events: none;">⚠️</span>`);
+                            }
+                        }
+                    }
+
+                    if (c.item === 'CUSTOM') {
+                        row.querySelector('.custom-select-container').style.display = 'none';
+                        row.querySelector('.custom-mat-wrapper').style.display = 'flex';
+                        row.querySelector('.custom-mat-input').value = c.customName;
+                        row.querySelector('.price-input').style.color = '';
+                        const warning = row.querySelector('.price-warning');
+                        if (warning) warning.remove();
+                    }
+
+                    row.querySelector('.qty-input').value = c.qty;
+                    row.querySelector('.price-input').value = c.price;
+
+                    if (c.shapes && c.shapes.length > 0) {
+                        c.shapes.forEach(s => {
+                            const html = cat === 'paint'
+                                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>`
+                                : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" value="${s.w}" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" value="${s.d}" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>`;
+                            row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    document.querySelectorAll('.module-toggle').forEach(t => {
+        const d = document.getElementById(t.getAttribute('data-target'));
+        if(t.checked && d) {
+            d.classList.add('active');
+            d.classList.remove('collapsed');
+        }
+        else if(d) d.classList.remove('active');
+    });
+
+    const markupDisplay = document.getElementById('markupDisplay');
+    const markupSlider = document.getElementById('markupSlider');
+    if(markupDisplay && markupSlider) {
+        markupDisplay.textContent = markupSlider.value + '%';
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
@@ -368,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isNationalAvg: false
         });
 
-        await saveCustomMaterialToCloud(cat, name, price, unitSelect.value);
+        await window.saveCustomMaterialToCloud(cat, name, price, unitSelect.value);
         
         nameInput.value = '';
         priceInput.value = '';
@@ -390,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultItem = window.materialsDb[cat]?.find(i => i.name === name);
             if(defaultItem && defaultItem.price !== price) {
                 defaultItem.price = price;
-                await saveCustomMaterialToCloud(cat, name, price, unit);
+                await window.saveCustomMaterialToCloud(cat, name, price, unit);
             }
         }
         saveMaterialsBtn.textContent = 'Saved!';
@@ -399,22 +790,6 @@ document.addEventListener('DOMContentLoaded', () => {
             materialsModal?.classList.remove('show');
         }, 1000);
     });
-
-    async function saveCustomMaterialToCloud(category, name, price, unit) {
-        if (!window.currentUser || !window.supabaseClient) return;
-        const uniqueKey = `${category}_${name}_${price}`;
-        if (window.sessionCustomSaved.has(uniqueKey)) return;
-
-        const { data } = await window.supabaseClient.from('custom_materials')
-            .select('id').eq('user_id', window.currentUser.id).eq('category', category).eq('name', name).maybeSingle();
-        
-        if (data) {
-            await window.supabaseClient.from('custom_materials').update({ price, unit }).eq('id', data.id);
-        } else {
-            await window.supabaseClient.from('custom_materials').insert([{ user_id: window.currentUser.id, category, name, price, unit }]);
-        }
-        window.sessionCustomSaved.add(uniqueKey);
-    }
 
     window.fetchCustomMaterials = async function() {
         if (!window.supabaseClient || !window.currentUser) return;
@@ -843,6 +1218,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('setup-view')?.addEventListener('input', (e) => { 
         if(e.target.closest('.calc-row')) { 
             const row = e.target.closest('.calc-row'); 
+            if (e.target.classList.contains('price-input')) {
+                e.target.style.color = '';
+                const warning = e.target.closest('.unit-wrapper')?.querySelector('.price-warning');
+                if (warning) warning.remove();
+            }
             if(row.dataset.category) window.calculateRowQuantity(row, row.dataset.category); 
         } 
         if (e.target.classList.contains('inline-pct')) {
@@ -855,6 +1235,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         window.saveState(); 
+    });
+
+    document.getElementById('setup-view')?.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('custom-mat-input') || e.target.classList.contains('price-input')) {
+            const row = e.target.closest('.calc-row');
+            if (!row || !row.dataset.category) return;
+            const wrapper = row.querySelector('.custom-mat-wrapper');
+            if (wrapper && wrapper.style.display !== 'none') {
+                const cat = row.dataset.category;
+                const name = row.querySelector('.custom-mat-input')?.value.trim();
+                const price = parseFloat(row.querySelector('.price-input')?.value);
+                const unitText = row.querySelector('.unit')?.textContent || 'qty';
+                const unit = unitText.replace(/s$/, '');
+                
+                if (name && !isNaN(price)) {
+                    if (!window.materialsDb[cat]) window.materialsDb[cat] = [];
+                    let existing = window.materialsDb[cat].find(m => m.name === name);
+                    if (existing) {
+                        existing.price = price;
+                        existing.isNationalAvg = false;
+                    } else {
+                        window.materialsDb[cat].push({
+                            id: `custom_${Date.now()}`,
+                            name: name,
+                            unit: unit,
+                            price: price,
+                            isNationalAvg: false
+                        });
+                    }
+                    if (window.saveCustomMaterialToCloud) {
+                        await window.saveCustomMaterialToCloud(cat, name, price, unit);
+                    }
+                }
+            }
+        }
     });
 
     document.getElementById('setup-view')?.addEventListener('click', (e) => {
@@ -876,14 +1291,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.style.display = 'none'; 
                 row.querySelector('.custom-mat-wrapper').style.display = 'flex'; 
                 priceInput.style.color = '';
+                const warning = row.querySelector('.price-warning');
+                if (warning) warning.remove();
             } else { 
                 priceInput.value = parseFloat(o.dataset.price).toFixed(2); 
                 row.querySelector('.unit').textContent = o.dataset.unit + 's'; 
                 const isUnverified = o.dataset.unverified === 'true';
+                const wrapper = priceInput.closest('.unit-wrapper');
                 if(isUnverified) {
                     priceInput.style.color = '#fbbf24';
+                    if(!wrapper.querySelector('.price-warning')) {
+                        wrapper.insertAdjacentHTML('beforeend', `<span class="price-warning" title="National Avg - Verify Local Cost" style="position: absolute; right: 8px; pointer-events: none;">⚠️</span>`);
+                    }
                 } else {
                     priceInput.style.color = '';
+                    const warning = wrapper.querySelector('.price-warning');
+                    if (warning) warning.remove();
                 }
             }
             window.calculateRowQuantity(row, row.dataset.category); 
