@@ -44,7 +44,6 @@ window.saveDataForPdf = function() {
 window.generateInvoices = async function(bidId) {
     if (!window.currentUser || !window.supabaseClient) return;
     if (!window.isPro) {
-        console.warn("Invoice generation requires a Pro subscription.");
         return; 
     }
 
@@ -203,6 +202,13 @@ window.renderDownloadOptions = async function() {
             await window.generateInvoices(window.currentBidId);
             localStorage.setItem('im_current_bid_id', window.currentBidId);
         }
+
+        if (window.gtag) {
+            gtag('event', 'generate_proposal', {
+                is_watermarked: window.isPro ? 'false' : 'true'
+            });
+        }
+
         window.location.href = './success';
     };
 };
@@ -368,6 +374,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('client-dynamic-breakdown').innerHTML = clientHTML;
         
         window.updatePaymentSchedule();
+
+        if (window.gtag) {
+            gtag('event', 'calculate_bid', {
+                bid_total_value: total,
+                margin_percentage: markupPct * 100
+            });
+        }
         
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
 
