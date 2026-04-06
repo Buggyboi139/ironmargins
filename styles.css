@@ -338,3 +338,41 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
     .inline-pct { margin: 5px 0; }
     label[style*="display: flex"] { flex-wrap: wrap; }
 }
+.help-link-banner {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-glass);
+}
+
+.help-link-banner:hover {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: #38bdf8;
+}
+
+@media (max-width: 768px) {
+    .title-banner-container {
+        justify-content: flex-start;
+        text-align: left;
+    }
+    
+    .title-banner-container h1 {
+        font-size: 2rem;
+        padding-right: 50px;
+    }
+
+    .help-link-banner {
+        top: 5px;
+        transform: none;
+    }
+}
