@@ -9,6 +9,19 @@ function updateAuthUI() {
     const manualSaveBtn = document.getElementById('manualSaveBtn');
     const pwaPrompt = document.getElementById('pwa-prompt');
     
+    if (window.gtag) {
+        gtag('set', 'user_properties', {
+            'user_tier': window.isPro ? 'pro' : 'free',
+            'logged_in': window.currentUser ? 'true' : 'false'
+        });
+        
+        if (window.currentUser) {
+            gtag('config', 'G-4WWZ1PYH4Q', {
+                'user_id': window.currentUser.id
+            });
+        }
+    }
+
     if (window.currentUser) {
         if (authBtn) authBtn.textContent = 'Sign Out';
         if (manualSaveBtn) manualSaveBtn.style.display = 'block';
