@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="dark">
+    <title>Operations Manual | IronMargins</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .help-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        .search-wrapper { position: sticky; top: 90px; z-index: 50; margin-bottom: 40px; }
+        .search-wrapper input { width: 100%; padding: 20px; font-size: 1.2rem; border-radius: 16px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid var(--border-highlight); color: #f8fafc; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .search-wrapper input:focus { border-color: #38bdf8; outline: none; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
+        .help-section { margin-bottom: 50px; }
+        .help-section h2 { color: #38bdf8; margin-bottom: 20px; font-size: 1.8rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 10px; }
+        .help-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 25px; border-radius: 16px; margin-bottom: 15px; transition: 0.3s; }
+        .help-card h3 { color: #f8fafc; margin-bottom: 15px; font-size: 1.25rem; }
+        .help-card ol { margin-left: 20px; color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; }
+        .help-card li { margin-bottom: 10px; padding-left: 5px; }
+        .help-card strong { color: #f8fafc; }
+        mark { background: rgba(56, 189, 248, 0.4); color: #fff; padding: 0 2px; border-radius: 3px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="left-color-bar"></div>
+    <nav>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="/" class="logo-container" id="logoBtn">
+                <img src="/logo_nb.png" alt="IronMargins Logo" class="logo-img">
+                <span class="logo-text">IronMargins</span>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <a href="/" class="nav-link neutral">Back to App</a>
+        </div>
+    </nav>
+
+    <div class="help-container">
+        <h1 style="text-align: center; margin-bottom: 10px;">Operations Manual</h1>
+        <p class="subtitle" style="text-align: center; margin-bottom: 40px;">Step-by-step procedures for standardizing and protecting your margins.</p>
+
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="glass-input" placeholder="Search the manual...">
+        </div>
+
+        <div id="helpContent">
+            <div class="help-section">
+                <h2>Core Workflows</h2>
+                
+                <div class="help-card">
+                    <h3>How to Construct a New Bid</h3>
+                    <ol>
+                        <li>Navigate to the main dashboard and click <strong>Clear Bid</strong> in the top navigation if residual data is present.</li>
+                        <li>Click the <strong>+</strong> icon under Project Details to select an existing client from the CRM, or manually enter a new Project Name and Date.</li>
+                        <li>Scroll to the <strong>Required Modules</strong> grid. Check the specific trades required for the scope of work.</li>
+                        <li>Input your raw material quantities and expected labor hours into the newly expanded module panels below.</li>
+                    </ol>
+                </div>
+
+                <div class="help-card">
+                    <h3>How to Obfuscate Profit Margins</h3>
+                    <ol>
+                        <li>Locate the <strong>Invisible Client Markup</strong> slider within the control panel.</li>
+                        <li>Drag the slider to establish your required gross profit percentage.</li>
+                        <li>The system automatically distributes this percentage across all raw material and labor line items.</li>
+                        <li>When calculating the breakdown, your client proposal will only display the inflated line-item totals, effectively hiding your true margins.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h2>Labor & Materials Management</h2>
+                
+                <div class="help-card">
+                    <h3>How to Accurately Price Labor Overhead</h3>
+                    <ol>
+                        <li>Expand the <strong>Labor & Fleet</strong> module.</li>
+                        <li>Verify the <strong>Labor Burden</strong> percentage checkbox is active. Adjust the value to cover your specific payroll taxes, insurance, and worker's compensation liabilities.</li>
+                        <li>Click <strong>+ Add Laborer</strong> to input a crew member.</li>
+                        <li>Enter their hourly rate. The system automatically calculates their true cost to the business before applying the global markup.</li>
+                    </ol>
+                </div>
+
+                <div class="help-card">
+                    <h3>How to Calibrate Material Catalogs</h3>
+                    <ol>
+                        <li>Click the hamburger menu in the top left to deploy the side panel.</li>
+                        <li>Select <strong>Materials Catalog</strong>.</li>
+                        <li>Use the category dropdown to select a trade (e.g., Lumber, Concrete).</li>
+                        <li>Overwrite the baseline national average prices with specific quotes from your local suppliers.</li>
+                        <li>Click <strong>Save Prices</strong> to persist these localized values to your account for all future estimates.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h2>Execution & Analysis</h2>
+                
+                <div class="help-card">
+                    <h3>How to Generate the Client Proposal</h3>
+                    <ol>
+                        <li>Confirm all inputs and click the <strong>Calculate Breakdown</strong> button at the bottom of the Setup View.</li>
+                        <li>Review the output on the dual-pane dashboard, comparing <strong>Your Estimate</strong> against the final <strong>Client Quote</strong>.</li>
+                        <li>Define the project payment schedule by adjusting the <strong>Deposit (%)</strong> and <strong>Progress Payments (Qty)</strong> fields.</li>
+                        <li>Click <strong>Review & Generate Proposal</strong> to compile the data into a branded PDF document.</li>
+                    </ol>
+                </div>
+
+                <div class="help-card">
+                    <h3>How to Close Out a Job and Audit Profit</h3>
+                    <ol>
+                        <li>Open the Side Menu and switch the toggle to the <strong>History</strong> tab.</li>
+                        <li>Locate an active bid and click its respective closeout icon.</li>
+                        <li>In the dialog modal, input the actual, finalized costs from your vendor and subcontractor receipts.</li>
+                        <li>Click <strong>Save & Archive</strong>. The system will compare the estimated parameters against actual expenditures and log the true net profit to your Business Analytics.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.help-card');
+            const sections = document.querySelectorAll('.help-section');
+
+            cards.forEach(card => {
+                const originalHTML = card.getAttribute('data-raw-html') || card.innerHTML;
+                if (!card.hasAttribute('data-raw-html')) {
+                    card.setAttribute('data-raw-html', originalHTML);
+                }
+
+                if (term === '') {
+                    card.innerHTML = originalHTML;
+                    card.classList.remove('hidden');
+                    return;
+                }
+
+                const textContent = card.innerText.toLowerCase();
+                if (textContent.includes(term)) {
+                    card.classList.remove('hidden');
+                    
+                    const regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + ')', 'gi');
+                    
+                    let tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = originalHTML;
+                    
+                    function traverseAndMark(node) {
+                        if (node.nodeType === 3) {
+                            const val = node.nodeValue;
+                            if (regex.test(val)) {
+                                const span = document.createElement('span');
+                                span.innerHTML = val.replace(regex, '<mark>$1</mark>');
+                                node.parentNode.replaceChild(span, node);
+                            }
+                        } else if (node.nodeType === 1 && node.nodeName !== 'MARK') {
+                            Array.from(node.childNodes).forEach(traverseAndMark);
+                        }
+                    }
+                    
+                    traverseAndMark(tempDiv);
+                    card.innerHTML = tempDiv.innerHTML;
+                } else {
+                    card.classList.add('hidden');
+                    card.innerHTML = originalHTML;
+                }
+            });
+
+            sections.forEach(sec => {
+                const visible = sec.querySelectorAll('.help-card:not(.hidden)');
+                if (visible.length === 0 && term !== '') {
+                    sec.classList.add('hidden');
+                } else {
+                    sec.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
