@@ -364,7 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
             id: `custom_${Date.now()}`,
             name: name,
             unit: unitSelect.value,
-            price: price
+            price: price,
+            isNationalAvg: false
         });
 
         await saveCustomMaterialToCloud(cat, name, price, unitSelect.value);
@@ -939,11 +940,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetch('materials.json')
         .then(res => res.json())
-        .then(data => { 
+        .then(async data => { 
             for (let cat in data) {
                 data[cat].forEach(item => item.isNationalAvg = true);
             }
             window.materialsDb = data; 
+            if (window.currentUser && window.supabaseClient) {
+                await window.fetchCustomMaterials();
+            }
             window.initApp(); 
         })
         .catch(() => window.initApp());
