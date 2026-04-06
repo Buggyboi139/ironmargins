@@ -640,8 +640,7 @@
                 <li>✓ Custom Bid Templates</li>
                 <li>✓ QuickBooks CSV Export</li>
             </ul>
-            <button class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;" onclick="window.location.href='https://buy.stripe.com/aFadRb4OH32BepY0ZQ0co04?client_reference_id=' + (window.currentUser ? window.currentUser.id : '')">Upgrade Now - $14.99/mo</button>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 15px;">Cancel anytime.</p>
+            <button class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;" onclick="if(window.gtag){gtag('event', 'begin_checkout', {currency: 'USD', value: 14.99, items: [{item_id: 'pro_tier_monthly', item_name: 'IronMargins Pro (Monthly)', price: 14.99, quantity: 1}]});}; window.location.href='https://buy.stripe.com/aFadRb4OH32BepY0ZQ0co04?client_reference_id=' + (window.currentUser ? window.currentUser.id : '')">Upgrade Now - $14.99/mo</button>            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 15px;">Cancel anytime.</p>
         </div>
     </div>
 
