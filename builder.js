@@ -4,6 +4,7 @@ window.categoryNames = { wood: 'Construction Lumber', paint: 'Paint & Finishes',
 window.sessionCustomSaved = new Set();
 window.autoSaveTimer = null;
 window.tempTemplateData = [];
+window.lastCloudState = null;
 
 window.escapeHTML = function(str) {
     if (str === null || str === undefined) return '';
@@ -14,16 +15,16 @@ const xIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" strok
 const xIconSmall = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
 window.calculateRowQuantity = function(row, cat) {
-    const shapes = row.querySelectorAll('.shape-row'); 
+    const shapes = row.querySelectorAll('.shape-row');
     if (shapes.length === 0) return;
-    
+
     const itemId = row.querySelector('.item-select').value;
     const itemData = window.materialsDb[cat]?.find(i => i.id === itemId);
     const unit = itemData?.unit || 'qty';
     const isCustom = itemId === 'CUSTOM';
-    
+
     let total = 0;
-    if (cat === 'paint') { 
+    if (cat === 'paint') {
         shapes.forEach(s => {
             const dl = s.querySelector('.d-l');
             const dh = s.querySelector('.d-h');
@@ -33,7 +34,7 @@ window.calculateRowQuantity = function(row, cat) {
             const c = dc ? (parseFloat(dc.value) || 1) : 1;
             total += (l * h * c);
         });
-        
+
         const coverage = isCustom ? 350 : (itemData?.coverage || 350);
         let wasteFactor = 1.0;
         const wasteBox = document.getElementById(`paint-waste-check`);
@@ -41,11 +42,11 @@ window.calculateRowQuantity = function(row, cat) {
             const pct = parseFloat(document.getElementById('paint-waste-pct')?.value) || 10;
             wasteFactor += (pct / 100);
         }
-        
-        row.querySelector('.qty-input').value = Math.ceil((total * wasteFactor) / coverage); 
-        return; 
+
+        row.querySelector('.qty-input').value = Math.ceil((total * wasteFactor) / coverage);
+        return;
     }
-    
+
     shapes.forEach(s => {
         const dl = s.querySelector('.d-l');
         const dw = s.querySelector('.d-w');
@@ -55,7 +56,7 @@ window.calculateRowQuantity = function(row, cat) {
         const d = dd ? (parseFloat(dd.value) || 0) : 0;
         total += (l * w * (d / 12)) / 27;
     });
-    
+
     let wasteFactor = 1.0;
     const wasteBox = document.getElementById(`${cat}-waste-check`);
     if (wasteBox && wasteBox.checked) {
@@ -75,20 +76,20 @@ window.calculateRowQuantity = function(row, cat) {
         const pct = parseFloat(document.getElementById('mulch-settling-pct')?.value) || 10;
         wasteFactor += (pct / 100);
     }
-    
+
     let final = total * wasteFactor;
-    
+
     if (cat === 'concrete' && unit === 'bag') {
         if (itemId.includes('60lb')) final *= 60;
         else if (itemId.includes('50lb')) final *= 72;
         else final *= 45;
-    } else if (cat === 'mulch' && unit === 'bag') { final *= 13.5; } 
-      else if (cat === 'topsoil' && unit === 'bag') { final *= 36; } 
-      else if (unit === 'ton') { 
+    } else if (cat === 'mulch' && unit === 'bag') { final *= 13.5; }
+      else if (cat === 'topsoil' && unit === 'bag') { final *= 36; }
+      else if (unit === 'ton') {
           const density = isCustom ? 1.4 : (itemData?.density || 1.4);
-          final *= density; 
+          final *= density;
       }
-    
+
     row.querySelector('.qty-input').value = final.toFixed(1);
 }
 
@@ -104,7 +105,7 @@ window.addMaterialRow = function(cat, containerId) {
     const defaultNameDisplay = def.isNationalAvg ? `${def.name} - National Avg` : def.name;
     const inputColorStyle = def.isNationalAvg ? 'color: #fbbf24;' : '';
     const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
-    
+
     document.getElementById(containerId).insertAdjacentHTML('beforeend', `
         <div class="calc-row" data-category="${cat}">
             <div class="input-row">
@@ -126,7 +127,7 @@ window.addLaborRow = function(type) {
     const container = document.getElementById('labor-rows-container');
     const isVehicle = type === 'vehicle';
     const defaultPhase = isVehicle ? 'Travel' : 'General';
-    
+
     const phaseSelect = `
         <div class="input-group">
             <label>Phase</label>
@@ -168,7 +169,7 @@ window.addSubRow = function() {
 
 window.saveState = function(skipAutosave = false) {
     const state = { categories: {}, labor: [], subs: [], meta: {} };
-    
+
     document.querySelectorAll('#setup-view .glass-input[id^="meta-"], #setup-view #client-id, #setup-view #client-display-name, #setup-view input[type="checkbox"], #markupSlider, #setup-view .inline-pct').forEach(el => {
         const key = el.id || (el.classList.contains('module-toggle') ? 'toggle-' + el.value : el.name);
         state.meta[key] = el.type === 'checkbox' ? el.checked : (el.id === 'client-display-name' ? el.textContent : el.value);
@@ -216,31 +217,44 @@ window.saveState = function(skipAutosave = false) {
         });
     }
 
+    const stateString = JSON.stringify(state);
+
     try {
-        localStorage.setItem('im_v5_data', JSON.stringify(state));
+        localStorage.setItem('im_v5_data', stateString);
     } catch (e) {
     }
 
     if (!skipAutosave && window.currentUser && window.saveBidToCloud) {
+        if (window.lastCloudState === stateString) return;
+
         clearTimeout(window.autoSaveTimer);
+
         window.autoSaveTimer = setTimeout(() => {
             const manualSaveBtn = document.getElementById('manualSaveBtn');
             if (manualSaveBtn) manualSaveBtn.textContent = 'Autosaving...';
+
             window.saveBidToCloud(0, true).then((success) => {
-                if (manualSaveBtn && success && success !== "LIMIT_REACHED") {
-                    manualSaveBtn.textContent = 'Saved!';
-                    setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
+                if (success && success !== "LIMIT_REACHED") {
+                    window.lastCloudState = stateString;
+
+                    if (manualSaveBtn) {
+                        manualSaveBtn.textContent = 'Saved!';
+                        setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
+                    }
                 } else if (manualSaveBtn && !window.isPro && window.bidCount >= 3 && !window.currentBidId) {
                     manualSaveBtn.textContent = 'Unlock Unlimited Bids';
                 }
             });
-        }, 3000);
+        }, 10000);
     }
 }
 
 window.loadState = function(dataOverride) {
     const dataStr = localStorage.getItem('im_v5_data');
     if (!dataStr && !dataOverride) return;
+
+    if (!dataOverride) window.lastCloudState = dataStr;
+
     const state = dataOverride || JSON.parse(dataStr);
     if (!state) return;
 
@@ -301,7 +315,7 @@ window.loadState = function(dataOverride) {
                 state.categories[cat].forEach(c => {
                     window.addMaterialRow(cat, `${cat}-rows-container`);
                     const row = container.lastElementChild;
-                    
+
                     const opt = row.querySelector(`.custom-option[data-value="${c.item}"]`);
                     if (opt) {
                         row.querySelector('.custom-select-text').textContent = opt.textContent;
@@ -311,21 +325,21 @@ window.loadState = function(dataOverride) {
                             row.querySelector('.price-input').style.color = '#fbbf24';
                         }
                     }
-                    
+
                     if (c.item === 'CUSTOM') {
                         row.querySelector('.custom-select-container').style.display = 'none';
                         row.querySelector('.custom-mat-wrapper').style.display = 'flex';
                         row.querySelector('.custom-mat-input').value = c.customName;
                         row.querySelector('.price-input').style.color = '';
                     }
-                    
+
                     row.querySelector('.qty-input').value = c.qty;
                     row.querySelector('.price-input').value = c.price;
 
                     if (c.shapes && c.shapes.length > 0) {
                         c.shapes.forEach(s => {
-                            const html = cat === 'paint' 
-                                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>` 
+                            const html = cat === 'paint'
+                                ? `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-h" value="${s.h}" placeholder="Height"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-coats" value="${s.coats}" placeholder="Coats"><span class="unit">ct</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>`
                                 : `<div class="shape-row"><div class="shape-inputs"><div class="unit-wrapper"><input type="number" class="glass-input d-l" value="${s.l}" placeholder="Length"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-w" value="${s.w}" placeholder="Width"><span class="unit">ft</span></div><div class="unit-wrapper"><input type="number" class="glass-input d-d" value="${s.d}" placeholder="Depth"><span class="unit">in</span></div></div><button class="remove-shape-btn" title="Remove Area">${xIconSmall}</button></div>`;
                             row.querySelector('.shapes-list').insertAdjacentHTML('beforeend', html);
                         });
@@ -335,15 +349,15 @@ window.loadState = function(dataOverride) {
         });
     }
 
-    document.querySelectorAll('.module-toggle').forEach(t => { 
-        const d = document.getElementById(t.getAttribute('data-target')); 
+    document.querySelectorAll('.module-toggle').forEach(t => {
+        const d = document.getElementById(t.getAttribute('data-target'));
         if(t.checked && d) {
-            d.classList.add('active'); 
+            d.classList.add('active');
             d.classList.remove('collapsed');
         }
-        else if(d) d.classList.remove('active'); 
+        else if(d) d.classList.remove('active');
     });
-    
+
     const markupDisplay = document.getElementById('markupDisplay');
     const markupSlider = document.getElementById('markupSlider');
     if(markupDisplay && markupSlider) {
