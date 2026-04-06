@@ -95,9 +95,14 @@ window.calculateRowQuantity = function(row, cat) {
 window.addMaterialRow = function(cat, containerId) {
     if (window.gtag) window.gtag('event', 'add_to_cart', { item_category: cat });
     const items = window.materialsDb[cat] || [];
-    let opts = items.map(i => `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}">${window.escapeHTML(i.name)}</div>`).join('');
+    let opts = items.map(i => {
+        const displayName = i.isNationalAvg ? `${i.name} - National Avg` : i.name;
+        return `<div class="custom-option" data-value="${i.id}" data-price="${i.price}" data-unit="${i.unit}" data-unverified="${i.isNationalAvg ? 'true' : 'false'}">${window.escapeHTML(displayName)}</div>`;
+    }).join('');
     opts += `<div class="custom-option custom-escape" data-value="CUSTOM" data-price="0" data-unit="qty">+ Custom Material...</div>`;
-    const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: ''};
+    const def = items[0] || {name: 'Select...', price: 0, unit: 'qty', id: '', isNationalAvg: false};
+    const defaultNameDisplay = def.isNationalAvg ? `${def.name} - National Avg` : def.name;
+    const inputColorStyle = def.isNationalAvg ? 'color: #fbbf24;' : '';
     const shapes = ['concrete', 'gravel', 'mulch', 'topsoil', 'paint'].includes(cat) ? `<div class="shapes-container"><div class="shapes-list"></div><button class="add-shape-btn">+ Add Area</button></div>` : '';
     
     document.getElementById(containerId).insertAdjacentHTML('beforeend', `
@@ -105,11 +110,11 @@ window.addMaterialRow = function(cat, containerId) {
             <div class="input-row">
                 <div class="input-group" style="flex:2;">
                     <label>Material/Item</label>
-                    <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${window.escapeHTML(def.name)}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
+                    <div class="custom-select-container"><div class="custom-select-trigger glass-input"><span class="custom-select-text">${window.escapeHTML(defaultNameDisplay)}</span><span class="custom-select-arrow">▼</span></div><div class="custom-select-dropdown">${opts}</div><input type="hidden" class="item-select" value="${def.id}"></div>
                     <div class="custom-mat-wrapper" style="display:none;"><input type="text" class="glass-input custom-mat-input" placeholder="Name..."><button class="reset-mat-btn">↺</button></div>
                 </div>
                 <div class="input-group"><label>Amount</label><div class="unit-wrapper"><input type="number" class="glass-input qty-input" value="1" step="0.1"><span class="unit">${def.unit}s</span></div></div>
-                <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}"></div></div>
+                <div class="input-group"><label>Cost</label><div class="unit-wrapper icon-prefix"><span class="prefix">$</span><input type="number" class="glass-input price-input" value="${parseFloat(def.price).toFixed(2)}" style="padding-right: 25px; ${inputColorStyle}"></div></div>
                 <button class="remove-row-btn" title="Remove Item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>${shapes}
         </div>`);
@@ -226,7 +231,7 @@ window.saveState = function(skipAutosave = false) {
                     manualSaveBtn.textContent = 'Saved!';
                     setTimeout(() => { manualSaveBtn.textContent = 'Save Bid'; }, 2000);
                 } else if (manualSaveBtn && !window.isPro && window.bidCount >= 3 && !window.currentBidId) {
-                    manualSaveBtn.textContent = '⚡ Unlock Unlimited Bids';
+                    manualSaveBtn.textContent = 'Unlock Unlimited Bids';
                 }
             });
         }, 3000);
@@ -302,12 +307,16 @@ window.loadState = function(dataOverride) {
                         row.querySelector('.custom-select-text').textContent = opt.textContent;
                         row.querySelector('.item-select').value = c.item;
                         row.querySelector('.unit').textContent = opt.dataset.unit + 's';
+                        if (opt.dataset.unverified === 'true') {
+                            row.querySelector('.price-input').style.color = '#fbbf24';
+                        }
                     }
                     
                     if (c.item === 'CUSTOM') {
                         row.querySelector('.custom-select-container').style.display = 'none';
                         row.querySelector('.custom-mat-wrapper').style.display = 'flex';
                         row.querySelector('.custom-mat-input').value = c.customName;
+                        row.querySelector('.price-input').style.color = '';
                     }
                     
                     row.querySelector('.qty-input').value = c.qty;
