@@ -330,26 +330,25 @@
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('checkout') && urlParams.get('checkout') === 'success') {
                 if (window.gtag) {
-                    gtag('event', 'conversion', {
-                        'send_to': 'AW-YOUR_ADS_ID/YOUR_CONVERSION_LABEL',
-                        'value': 1.0,
-                        'currency': 'USD'
-                    });
-
                     gtag('event', 'purchase', {
-                        transaction_id: 'TXN_' + Date.now(),
+                        transaction_id: 'SUB_' + Date.now(),
                         value: 14.99,
                         currency: 'USD',
-                        items:[
-                            {
-                                item_id: 'pro_sub',
-                                item_name: 'Unlimited PDFs Subscription',
-                                price: 14.99,
-                                quantity: 1
-                            }
-                        ]
+                        items: [{
+                            item_id: 'pro_tier_monthly',
+                            item_name: 'IronMargins Pro (Monthly)',
+                            price: 14.99,
+                            quantity: 1
+                        }]
                     });
+                    gtag('event', 'pro_upgrade_success');
                 }
+                
+                window.uetq = window.uetq || [];
+                window.uetq.push('event', 'purchase', {
+                    "revenue_value": 14.99,
+                    "currency": "USD"
+                });
                 
                 localStorage.setItem('im_temp_sub_active', 'true'); 
                 localStorage.removeItem('im_pending_purchase_value');
