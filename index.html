@@ -341,7 +341,7 @@
                 </div>
 
                 <button class="primary-btn" id="calculateBtn">Calculate Breakdown</button>
-                <button class="secondary-btn" id="saveAsTemplateBtn" style="display: none; width: 100%; margin-top: 15px; padding: 15px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">⚡ Save as Custom Template</button>
+                <button class="secondary-btn" id="saveAsTemplateBtn" style="display: none; width: 100%; margin-top: 15px; padding: 15px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">Save as Custom Template</button>
             </div>
         </div>
         
@@ -378,7 +378,7 @@
                     <div class="gt-label">Client Quote</div>
                     <div class="gt-value" id="res-client-total" style="background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">$0</div>
                     <div class="line-items" id="client-dynamic-breakdown"></div>
-                    <button class="secondary-btn" id="exportCSVBtn" style="width: 100%; padding: 15px; margin-top: 25px; font-size: 1rem;">⚡ Export Materials to QuickBooks (CSV)</button>
+                    <button class="secondary-btn" id="exportCSVBtn" style="width: 100%; padding: 15px; margin-top: 25px; font-size: 1rem;">Export Materials to QuickBooks (CSV)</button>
                 </div>
             </div>
         </div>
@@ -429,7 +429,7 @@
             </div>
             <div id="client-limit-banner" style="display: none; background: rgba(251, 113, 133, 0.1); border: 1px solid #fb7185; padding: 20px; border-radius: 12px; text-align: center; margin-top: 20px;">
                 <p style="color: #fb7185; font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">Your CRM is full.</p>
-                <button class="primary-btn" style="margin: 0; padding: 12px; width: 100%; font-size: 0.95rem;" onclick="window.triggerUpgradeModal('Unlimited Clients')">⚡ Upgrade to Unlock</button>
+                <button class="primary-btn" style="margin: 0; padding: 12px; width: 100%; font-size: 0.95rem;" onclick="window.triggerUpgradeModal('Unlimited Clients')">Upgrade to Unlock</button>
             </div>
         </div>
     </div>
@@ -438,7 +438,7 @@
         <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
             <button id="closeMaterialsModal" class="close-btn">&times;</button>
             <h2>Materials Catalog</h2>
-            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Update your default material prices.</p>
+            <p class="subtitle" style="margin-bottom:20px; font-size: 0.95rem; color: #38bdf8;">Update these national averages to match your local supplier before bidding.</p>
             <div class="input-group" style="margin-bottom: 15px;">
                 <select id="cat-manage-select" class="glass-input"></select>
             </div>
@@ -460,12 +460,12 @@
                         <option value="bag">Bag</option>
                         <option value="piece">Piece</option>
                     </select>
-                    <button id="addCustomMatBtn" class="primary-btn" style="margin-top: 0; padding: 10px; flex: 1; font-size: 0.9rem;">⚡ Add Material</button>
+                    <button id="addCustomMatBtn" class="primary-btn" style="margin-top: 0; padding: 10px; flex: 1; font-size: 0.9rem;">Add Material</button>
                 </div>
             </div>
             
             <div id="materials-manage-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-            <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">⚡ Save Prices</button>
+            <button class="primary-btn" id="saveMaterialsBtn" style="margin-top: 20px; padding: 15px; width: 100%;">Save Prices</button>
         </div>
     </div>
 
@@ -605,7 +605,6 @@
     <div id="upgradeModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="text-align: center;">
             <button class="close-btn" onclick="document.getElementById('upgradeModal').classList.remove('show')">&times;</button>
-            <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
             <h2 style="margin-bottom: 10px;">Upgrade to Pro</h2>
             <p class="subtitle" style="margin-bottom: 25px; font-size: 0.95rem; color: #38bdf8;" id="upgradeModalFeatureText">Unlock unlimited scaling for your business.</p>
             <ul style="text-align: left; margin-bottom: 30px; font-size: 0.95rem; color: #f8fafc; line-height: 1.8; list-style: none; padding: 0;">
@@ -665,6 +664,16 @@
     <div id="pwa-prompt" class="pwa-prompt" style="display: none;">
         <span class="close-pwa">&times;</span>
         <p></p>
+    </div>
+
+    <div id="pricingAgreementModal" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content glass-panel">
+            <h2 style="color: #fbbf24; margin-bottom: 15px;">Pricing Disclaimer</h2>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: #f8fafc; text-align: left; margin-bottom: 25px;">
+                IronMargins provides national average material prices strictly as a baseline for estimating. Material costs fluctuate daily and vary wildly by region. By using this software, you agree that it is your sole responsibility to verify all material and labor costs before submitting a binding proposal to a client. IronMargins LLC is not liable for lost profits due to pricing inaccuracies.
+            </p>
+            <button id="agreePricingBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">I Agree</button>
+        </div>
     </div>
 
     <footer class="site-footer">
