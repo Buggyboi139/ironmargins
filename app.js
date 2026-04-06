@@ -86,6 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('agreePricingBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('agreePricingBtn');
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+        if (window.currentUser) {
+            await window.supabaseClient.from('users').update({ pricing_agreed: true }).eq('id', window.currentUser.id);
+        }
+        document.getElementById('pricingAgreementModal').classList.remove('show');
+    });
+
     const sideMenu = document.getElementById('sideMenu');
     const sideMenuOverlay = document.getElementById('sideMenuOverlay');
     
@@ -224,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(btn) {
             btn.textContent = 'Saved!';
-            setTimeout(() => btn.textContent = '⚡ Save as Custom Template', 2000);
+            setTimeout(() => btn.textContent = 'Save as Custom Template', 2000);
         }
     };
 
@@ -361,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         nameInput.value = '';
         priceInput.value = '';
-        addCustomMatBtn.textContent = '⚡ Add Material';
+        addCustomMatBtn.textContent = 'Add Material';
         renderManageList();
     });
 
@@ -384,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         saveMaterialsBtn.textContent = 'Saved!';
         setTimeout(() => {
-            saveMaterialsBtn.textContent = '⚡ Save Prices';
+            saveMaterialsBtn.textContent = 'Save Prices';
             materialsModal?.classList.remove('show');
         }, 1000);
     });
@@ -418,13 +428,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const existingDefault = window.materialsDb[mat.category].find(m => m.name === mat.name);
                 if (existingDefault) {
                     existingDefault.price = parseFloat(mat.price);
+                    existingDefault.isNationalAvg = false;
                 } else {
                     if (!window.materialsDb[mat.category].find(m => m.id === `custom_${mat.id}`)) {
                         window.materialsDb[mat.category].push({
                             id: `custom_${mat.id}`,
                             name: `${mat.name}`,
                             unit: mat.unit,
-                            price: parseFloat(mat.price)
+                            price: parseFloat(mat.price),
+                            isNationalAvg: false
                         });
                     }
                 }
@@ -571,11 +583,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.currentUser || !window.supabaseClient) return;
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('company_name, phone, address, payment_link, logo_data, custom_terms, subscription_status')
+            .select('company_name, phone, address, payment_link, logo_data, custom_terms, subscription_status, pricing_agreed')
             .eq('id', window.currentUser.id)
             .single();
 
         if (data && !error) {
+            if (data.pricing_agreed === false) {
+                document.getElementById('pricingAgreementModal').classList.add('show');
+            }
+
             window.isPro = ['active', 'trialing'].includes(String(data.subscription_status).toLowerCase().trim());
             localStorage.setItem('im_is_pro', window.isPro ? 'true' : 'false');
             
@@ -854,12 +870,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const c = o.closest('.custom-select-container');
             c.querySelector('.custom-select-text').textContent = o.textContent; 
             c.querySelector('.item-select').value = o.dataset.value;
+            const priceInput = row.querySelector('.price-input');
             if (o.dataset.value === 'CUSTOM') { 
                 c.style.display = 'none'; 
                 row.querySelector('.custom-mat-wrapper').style.display = 'flex'; 
+                priceInput.style.color = '';
             } else { 
-                row.querySelector('.price-input').value = parseFloat(o.dataset.price).toFixed(2); 
+                priceInput.value = parseFloat(o.dataset.price).toFixed(2); 
                 row.querySelector('.unit').textContent = o.dataset.unit + 's'; 
+                const isUnverified = o.dataset.unverified === 'true';
+                if(isUnverified) {
+                    priceInput.style.color = '#fbbf24';
+                } else {
+                    priceInput.style.color = '';
+                }
             }
             window.calculateRowQuantity(row, row.dataset.category); 
             o.parentElement.classList.remove('show'); 
@@ -916,6 +940,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('materials.json')
         .then(res => res.json())
         .then(data => { 
+            for (let cat in data) {
+                data[cat].forEach(item => item.isNationalAvg = true);
+            }
             window.materialsDb = data; 
             window.initApp(); 
         })
