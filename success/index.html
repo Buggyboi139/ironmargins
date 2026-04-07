@@ -457,7 +457,7 @@
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paymentLink)}`;
                     const qrContainer = document.createElement('div');
                     qrContainer.style.textAlign = 'right';
-                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${escapeHTML(qrUrl)}" style="width: 105px; height: 105px; border-radius: 10px;">`;
+                    qrContainer.innerHTML = `<div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Scan to Pay Deposit</div><img src="${escapeHTML(qrUrl)}" crossorigin="anonymous" style="width: 105px; height: 105px; border-radius: 10px;">`;
                     document.querySelector('.pdf-quote-box').appendChild(qrContainer);
                 }
             }
@@ -654,7 +654,18 @@
                                 scale: 2, 
                                 useCORS: true, 
                                 scrollY: 0,
-                                ignoreElements: (node) => ['IFRAME', 'SCRIPT', 'NOSCRIPT'].includes(node.tagName?.toUpperCase())
+                                imageTimeout: 5000,
+                                ignoreElements: (node) => {
+                                    const tag = node.tagName?.toUpperCase();
+                                    if (['IFRAME', 'SCRIPT', 'NOSCRIPT'].includes(tag)) return true;
+                                    
+                                    if (tag === 'IMG') {
+                                        if (node.width <= 1 || node.height <= 1 || node.style?.display === 'none') {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                }
                             },
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
