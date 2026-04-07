@@ -651,14 +651,23 @@
                             pagebreak:    { mode: ['css', 'legacy'] },
                             filename:     filename,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+                            html2canvas:  { 
+                                scale: 2, 
+                                useCORS: true, 
+                                scrollY: 0,
+                                ignoreElements: (node) => ['IFRAME', 'SCRIPT', 'NOSCRIPT'].includes(node.tagName?.toUpperCase())
+                            },
                             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                         };
                     
+                        const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+                    
+                        pdfObj.save(filename);
+                    
                         if (currentUser && currentBidId && window.supabaseClient && isPro) {
-                            const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-                            
+                            const pdfBlob = pdfObj.output('blob');
                             const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
+                            
                             window.supabaseClient.storage
                                 .from('signed_pdfs')
                                 .upload(fileNameStr, pdfBlob, { contentType: 'application/pdf' })
@@ -672,10 +681,8 @@
                                             pdf_url: publicUrlData.publicUrl 
                                         }).eq('id', currentBidId).then();
                                     }
-                                });
+                                }).catch(() => {});
                         }
-                    
-                        await html2pdf().from(element).set(opt).save();
                     
                     } catch (e) {
                         console.error('PDF Generation Error:', e);
