@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="dark">
+    <title>IronMargins | Precision Estimating & Margin Software</title>
+    <meta name="description" content="Calculate accurate material costs, labor burden, and overhead effortlessly. Standardize your bids and protect your profit margins.">
+    <meta name="theme-color" content="#05070a">
+    <link rel="icon" type="image/png" href="icons/logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero { text-align: center; padding: 80px 20px 40px; max-width: 900px; margin: 0 auto; }
+        .hero h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 20px; }
+        .hero p { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; line-height: 1.6; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 60px; padding: 0 20px; }
+        .feat-card { background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-glass); padding: 30px; border-radius: 24px; text-align: left; }
+        .feat-card h3 { color: #38bdf8; margin-bottom: 15px; font-size: 1.2rem; }
+        .feat-card p { color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; }
+        .pricing-section { padding: 40px 20px 80px; text-align: center; }
+        .pricing-section h2 { font-size: 2.5rem; margin-bottom: 15px; }
+        .pricing-section p { color: var(--text-muted); margin-bottom: 40px; }
+        .price-card { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero { padding: 40px 15px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="left-color-bar"></div>
+    
+    <nav>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="/" class="logo-container">
+                <img src="icons/logo_nb.png" alt="IronMargins Logo" class="logo-img">
+                <span class="logo-text">IronMargins</span>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button id="authBtn" class="nav-link neutral">Sign In</button>
+            <a href="/app/" class="nav-link" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Launch App</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>Precision Estimating for <br><span style="background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Professional Contractors</span></h1>
+        <p>A lightweight, powerful bidding tool designed for General Contractors, Remodelers, and Tradespeople. Standardize your material costs, calculate your true labor burden, and generate retail-ready client proposals in minutes.</p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="/app/" class="primary-btn" style="margin-top: 0; padding: 16px 40px; width: auto; text-decoration: none;">Start Estimating Free</a>
+        </div>
+    </header>
+
+    <section class="feature-grid">
+        <div class="feat-card">
+            <h3>Consolidated Proposals</h3>
+            <p>Calculate your overhead and profit internally, then generate clean, retail-ready PDF proposals for your clients with consolidated line items to protect your pricing strategy.</p>
+        </div>
+        <div class="feat-card">
+            <h3>True Labor Burden</h3>
+            <p>Stop losing money on payroll taxes and worker's comp. IronMargins calculates your true labor burden automatically so every hour worked is actually profitable.</p>
+        </div>
+        <div class="feat-card">
+            <h3>Localized Material Catalogs</h3>
+            <p>Start with our national average database, then easily adjust prices to match your local suppliers. Build estimates faster without constantly checking supplier websites.</p>
+        </div>
+    </section>
+
+    <section class="pricing-section">
+        <h2>Simple, Transparent Pricing</h2>
+        <p>Start for free. Upgrade when you're ready to scale your business.</p>
+
+        <div class="dashboard-grid" style="max-width: 900px; margin: 0 auto; text-align: left;">
+            <div class="dash-card price-card">
+                <div>
+                    <div class="gt-label">Starter</div>
+                    <div class="gt-value" style="font-size: 3rem;">$0<span style="font-size: 1rem; color: var(--text-muted); font-weight: 600;"> / forever</span></div>
+                    <div class="line-items" style="margin-top: 20px;">
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Up to 3 Saved Bids</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Local Browser Storage</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Watermarked PDF Proposals</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Full Estimating Calculator</span></div>
+                    </div>
+                </div>
+                <a href="/app/" class="secondary-btn" style="width: 100%; margin-top: 30px; text-decoration: none; text-align: center; display: block;">Try it Free</a>
+            </div>
+
+            <div class="dash-card profit-card price-card" style="border-color: rgba(16, 185, 129, 0.4);">
+                <div>
+                    <div class="gt-label" style="color: #34d399;">Pro Business</div>
+                    <div class="gt-value" style="color: #10b981; font-size: 3rem;">$14.99<span style="font-size: 1rem; color: rgba(16,185,129,0.7); font-weight: 600;"> / month</span></div>
+                    <div class="line-items" style="margin-top: 20px; background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.2);">
+                        <div class="item-row" style="border:none; padding: 8px 0; color: #f8fafc;"><span>✓ <strong>Unwatermarked, Branded PDFs</strong></span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Unlimited Cloud-Saved Bids</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Unlimited Client CRM</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Job Closeout & Profit Tracking</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Custom Bid Templates</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Export to QuickBooks (CSV)</span></div>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('authBtn').click()" class="primary-btn" style="width: 100%; margin-top: 30px; padding: 15px;">Create Pro Account</button>
+            </div>
+        </div>
+        <p style="font-size: 0.85rem; margin-top: 20px;">Cancel anytime. Secure payments handled by Stripe.</p>
+    </section>
+  
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button id="closeAuthModal" class="close-btn">&times;</button>
+            <h2 id="authTitle">Create Account</h2>
+            <p class="auth-subtitle">Sign up to access cloud saves and pro features.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Email Address</label>
+                <input type="email" id="authEmail" class="glass-input" placeholder="you@example.com">
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>Password</label>
+                <input type="password" id="authPassword" class="glass-input" placeholder="••••••••">
+            </div>
+            <div style="text-align: right; margin-top: -15px; margin-bottom: 20px;">
+                <span id="authForgotPassword" style="color: #38bdf8; cursor: pointer; font-size: 0.85rem; display: none;">Forgot Password?</span>
+            </div>
+            <button id="authSubmitBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Sign Up</button>
+            <p class="auth-switch">
+                <span id="authSwitchText">Already have an account? </span>
+                <span id="authToggleMode" style="color: #38bdf8; cursor: pointer; font-weight: 700;">Sign In</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="updatePasswordModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2 id="updatePasswordTitle">Set New Password</h2>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>New Password</label>
+                <input type="password" id="newPasswordInput" class="glass-input" placeholder="••••••••">
+            </div>
+            <button id="updatePasswordBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Update</button>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IronMargins LLC. All rights reserved.</p>
+            <p style="font-size: 0.85rem; color: #64748b; line-height: 1.5; margin-top: 5px; margin-bottom: 5px;">
+                Phone: (507) 782-0010<br>
+                Support: <a href="mailto:support@ironmargins.com" style="color: #38bdf8; text-decoration: none;">support@ironmargins.com</a><br>
+                1327 Elder Lane<br>
+                Des Moines, IA 50315
+            </p>
+            <div class="footer-links">
+                <a href="/pwa">Install App</a>
+                <a href="/contact">Contact Us</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/cookies">Cookie Policy</a>
+                <a href="/refund">Refund Policy</a> 
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('authToggleMode');
+            if(toggleBtn && toggleBtn.textContent === 'Sign Up') {
+                toggleBtn.click();
+            }
+
+            window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    window.location.href = '/app/';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
