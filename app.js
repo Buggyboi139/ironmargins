@@ -397,9 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.serviceWorker.register('sw.js');
     }
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
