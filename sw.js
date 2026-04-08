@@ -1,17 +1,19 @@
-const CACHE_NAME = 'ironmargins-v4';
+const CACHE_NAME = 'ironmargins-v5'; // Bumped version to v5 to force cache refresh
 const ASSETS = [
     '/',
     '/index.html',
     '/styles.css',
-    '/app.js',
-    '/auth.js',
-    '/builder.js',
-    '/calculate.js',
-    '/bids.js',
-    '/invoices.js',
-    '/analytics.js',
-    '/materials.json',
-    '/templates.json',
+    '/app/',
+    '/app/index.html',
+    '/app/app.js',
+    '/app/auth.js',
+    '/app/builder.js',
+    '/app/calculate.js',
+    '/app/bids.js',
+    '/app/invoices.js',
+    '/app/analytics.js',
+    '/app/materials.json',
+    '/app/templates.json',
     '/icons/logo.png',
     '/icons/logo_nb.png'
 ];
