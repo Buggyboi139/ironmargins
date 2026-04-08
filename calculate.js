@@ -43,9 +43,7 @@ window.saveDataForPdf = function() {
 
 window.generateInvoices = async function(bidId) {
     if (!window.currentUser || !window.supabaseClient) return;
-    if (!window.isPro) {
-        return; 
-    }
+    if (!window.isPro) return; 
 
     const { data: existingInvoices } = await window.supabaseClient
         .from('invoices')
@@ -99,9 +97,7 @@ window.generateInvoices = async function(bidId) {
         dueDate.setDate(dueDate.getDate() + (30 * (i + 1)));
         
         let currentProgAmtCents = baseProgAmtCents;
-        if (i === progQty - 1) {
-            currentProgAmtCents = remAmtCents;
-        }
+        if (i === progQty - 1) currentProgAmtCents = remAmtCents;
         remAmtCents -= currentProgAmtCents;
 
         invoices.push({
@@ -136,9 +132,7 @@ window.generateInvoices = async function(bidId) {
 
     if (invoices.length > 0) {
         const { error } = await window.supabaseClient.from('invoices').insert(invoices);
-        if (error) {
-            alert("Failed to generate invoices: " + error.message);
-        }
+        if (error) alert("Failed to generate invoices: " + error.message);
     }
 };
 
@@ -161,7 +155,6 @@ window.renderDownloadOptions = async function() {
     }
 
     const isPro = window.isPro;
-
     let warningEl = document.getElementById('branding-warning');
     if (isPro && !localStorage.getItem('im_global_company')) {
         if (!warningEl) {
@@ -190,13 +183,9 @@ window.renderDownloadOptions = async function() {
     downloadBtn.onclick = async () => {
         window.saveDataForPdf();
         const totalAmount = parseFloat(localStorage.getItem('im_grandTotal')) || 0;
-        
         let saveAllowed = true;
-        if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) {
-            saveAllowed = false; 
-        } else {
-            await window.saveBidToCloud(totalAmount, false);
-        }
+        if (!window.isPro && window.bidCount >= 3 && !window.currentBidId) saveAllowed = false; 
+        else await window.saveBidToCloud(totalAmount, false);
         
         if (window.currentBidId) {
             await window.generateInvoices(window.currentBidId);
@@ -208,7 +197,6 @@ window.renderDownloadOptions = async function() {
                 is_watermarked: window.isPro ? 'false' : 'true'
             });
         }
-
         window.location.href = './success';
     };
 };
@@ -222,9 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
         const csvEscape = (text) => {
             let sanitized = text || '';
-            if (/^[=+\-@]/.test(sanitized)) {
-                sanitized = "'" + sanitized;
-            }
+            if (/^[=+\-@]/.test(sanitized)) sanitized = "'" + sanitized;
             return `"${sanitized.replace(/"/g, '""')}"`;
         };
 
@@ -237,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const name = isCustom ? r.querySelector('.custom-mat-input').value : r.querySelector('.custom-select-text').textContent;
                     const qty = parseFloat(r.querySelector('.qty-input').value)||0;
                     const price = parseFloat(r.querySelector('.price-input').value)||0;
-                    
                     if (qty > 0) csvData += `Materials,${csvEscape(name)},${qty},${price},${qty*price}\n`;
                     c += qty * price;
                 }); 
@@ -263,10 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const qty = parseFloat(entry.querySelector('.qty-input').value)||0;
                 const price = parseFloat(entry.querySelector('.price-input').value)||0;
                 const phase = entry.querySelector('.phase-select')?.value || 'General';
-                
                 const cost = qty * price;
                 if (qty > 0) csvData += `Labor,${csvEscape(name)} [${phase}],${qty},${price},${cost}\n`;
-                
                 baseLabor += cost;
                 if(!laborByPhase[phase]) laborByPhase[phase] = 0;
                 laborByPhase[phase] += cost;
@@ -316,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('im_subs', JSON.stringify(subsList));
 
         const format = (n) => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        
         const total = breakeven + markup + taxAmount;
         localStorage.setItem('im_grandTotal', total);
 
@@ -372,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (taxAmount > 0) clientHTML += `<div class="item-row" style="font-size: 0.95rem; padding: 6px 0; border: none; color: var(--text-muted);"><span>• Estimated Sales Tax (${taxRate}%)</span> <span>${format(taxAmount)}</span></div>`;
 
         document.getElementById('client-dynamic-breakdown').innerHTML = clientHTML;
-        
         window.updatePaymentSchedule();
 
         if (window.gtag) {
@@ -383,30 +364,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         document.getElementById('setup-view').classList.replace('active-view', 'hidden-view');
-
         setTimeout(() => { 
             document.getElementById('results-view').classList.replace('hidden-view', 'active-view'); 
-            
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
-            
         }, 300);
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
     };
 
-    document.getElementById('exportCSVBtn').onclick = () => {
+    document.getElementById('exportCSVBtn').onclick = async () => {
         if (!window.isPro) return window.triggerUpgradeModal('QuickBooks CSV Export');
-        
         const csv = localStorage.getItem('im_csvData') || 'No data generated';
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', 'QuickBooks_Import.csv');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const fileName = 'QuickBooks_Import.csv';
+
+        if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            try {
+                const { Filesystem, Directory, Encoding } = window.Capacitor.Plugins;
+                const { Share } = window.Capacitor.Plugins;
+                const result = await Filesystem.writeFile({
+                    path: fileName,
+                    data: csv,
+                    directory: Directory.Cache,
+                    encoding: Encoding.UTF8
+                });
+                await Share.share({
+                    title: 'Export IronMargins CSV',
+                    url: result.uri,
+                    dialogTitle: 'Save or Share CSV'
+                });
+            } catch (e) {
+                alert("Error sharing file: " + e.message);
+            }
+        } else {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', fileName);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
     };
 });
