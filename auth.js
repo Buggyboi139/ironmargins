@@ -168,6 +168,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (!window.currentUser) return;
+            
+            const confirm1 = confirm("WARNING: This will permanently delete your account, all saved bids, clients, and templates. This action cannot be undone.");
+            if (!confirm1) return;
+            
+            const confirm2 = prompt("Type DELETE to confirm account deletion:");
+            if (confirm2 !== 'DELETE') return;
+
+            deleteAccountBtn.textContent = 'Deleting...';
+            deleteAccountBtn.disabled = true;
+
+            try {
+                const { error } = await window.supabaseClient.rpc('delete_user_account');
+                if (error) throw error;
+                
+                alert("Account deleted successfully.");
+                await window.supabaseClient.auth.signOut();
+                window.location.reload();
+            } catch (err) {
+                alert("Error deleting account: " + err.message);
+                deleteAccountBtn.textContent = 'Permanently Delete Account';
+                deleteAccountBtn.disabled = false;
+            }
+        });
+    }
+
     window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
         if (session && session.user) {
             window.currentUser = session.user;
