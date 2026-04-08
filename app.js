@@ -400,23 +400,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    if (isMobile && !isStandalone) {
-        const prompt = document.getElementById('pwa-prompt');
-        if (prompt && !localStorage.getItem('im_pwa_dismissed')) {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-            prompt.style.display = 'block';
-            
-            const pText = prompt.querySelector('p');
-            if (pText) {
-                if (isIOS) {
-                    pText.innerHTML = 'Install IronMargins! Tap the <strong>Share</strong> icon at the bottom of Safari, then select <strong>Add to Home Screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
-                } else if (isChrome) {
-                    pText.innerHTML = 'Install IronMargins! Open your browser menu and select <strong>Add to Home screen</strong>. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">See how to install</a>';
-                } else {
-                    pText.innerHTML = 'For the best mobile experience, please install this app using <strong>Google Chrome</strong> or Safari. <br><br><a href="/pwa" style="color:#38bdf8; text-decoration:underline;">Learn why and how</a>';
-                }
-            }
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+    
+    if (isMobile && !isStandalone && !isNative) {
+        const pwaPrompt = document.getElementById('pwa-prompt');
+        if (pwaPrompt && localStorage.getItem('im_pwa_dismissed') !== 'true') {
+            pwaPrompt.style.display = 'block';
         }
     }
 
