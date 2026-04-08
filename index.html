@@ -530,7 +530,7 @@
             </div>
             <button class="primary-btn" id="saveProfileBtn" style="margin-top: 0; padding: 15px; width: 100%;">Save Profile</button>
             <div style="margin-top: 20px; text-align: center;">
-                <a href="https://billing.stripe.com/p/login/3cI4gB94XcDba9I7oe0co00" target="_blank" style="color: #94a3b8; font-size: 0.9rem; text-decoration: underline;">Manage Subscription & Billing</a>
+                <a id="stripePortalLink" href="https://billing.stripe.com/p/login/3cI4gB94XcDba9I7oe0co00" target="_blank" style="color: #94a3b8; font-size: 0.9rem; text-decoration: underline;">Manage Subscription & Billing</a>
             </div>
         </div>
     </div>
@@ -624,7 +624,7 @@
                 <li>✓ Custom Bid Templates</li>
                 <li>✓ QuickBooks CSV Export</li>
             </ul>
-            <button class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;" onclick="window.location.href='https://buy.stripe.com/aFadRb4OH32BepY0ZQ0co04?client_reference_id=' + (window.currentUser ? window.currentUser.id : '')">Upgrade Now - $14.99/mo</button>
+            <button id="upgradeActionBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Upgrade Now - $14.99/mo</button>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 15px;">Cancel anytime.</p>
         </div>
     </div>
@@ -719,6 +719,7 @@
     <script src="calculate.js"></script>
     <script src="invoices.js"></script>
     <script src="analytics.js"></script>
+    <script src="billing.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
