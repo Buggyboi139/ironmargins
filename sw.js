@@ -12,8 +12,8 @@ const ASSETS = [
     '/analytics.js',
     '/materials.json',
     '/templates.json',
-    '/logo.png',
-    '/logo_nb.png'
+    '/icons/logo.png',
+    '/icons/logo_nb.png'
 ];
 
 self.addEventListener('install', event => {
