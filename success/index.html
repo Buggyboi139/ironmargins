@@ -45,6 +45,14 @@
             color: var(--text-main);
             background-color: #05070a;
             min-height: 100dvh;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            overscroll-behavior-y: none;
+        }
+        input, textarea, [contenteditable] {
+            user-select: auto;
+            -webkit-user-select: auto;
         }
         
         iframe, object, embed {
@@ -67,7 +75,7 @@
                               radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.05) 0, transparent 50%);
         }
         .ui-layer { position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; transition: opacity 0.3s ease; }
-        nav { width: 100%; padding: 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
+        nav { width: 100%; padding: calc(24px + env(safe-area-inset-top)) 40px 24px 40px; display: flex; justify-content: center; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-glass); }
         .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .container { max-width: 800px; width: 100%; padding: 60px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .success-card { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); backdrop-filter: blur(20px); border: 1px solid var(--border-highlight); border-radius: 32px; padding: 50px; width: 100%; max-width: 500px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
@@ -633,10 +641,8 @@
 
                     try {
                         window.scrollTo(0, 0);
-                        
                         document.body.style.overflow = 'visible';
                         document.documentElement.style.overflow = 'visible';
-                        
                         element.classList.add('pdf-export');
                     
                         await new Promise(r => setTimeout(r, 100));
@@ -658,7 +664,6 @@
                                 ignoreElements: (node) => {
                                     const tag = node.tagName?.toUpperCase();
                                     if (['IFRAME', 'SCRIPT', 'NOSCRIPT'].includes(tag)) return true;
-                                    
                                     if (tag === 'IMG') {
                                         if (node.width <= 1 || node.height <= 1 || node.style?.display === 'none') {
                                             return true;
@@ -671,9 +676,31 @@
                         };
                     
                         const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
-                    
-                        pdfObj.save(filename);
-                    
+
+                        if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                            try {
+                                const pdfBase64 = pdfObj.output('datauristring');
+                                const base64Data = pdfBase64.split(',')[1];
+                                const { Filesystem, Directory } = window.Capacitor.Plugins;
+                                const { Share } = window.Capacitor.Plugins;
+
+                                const savedFile = await Filesystem.writeFile({
+                                    path: filename,
+                                    data: base64Data,
+                                    directory: Directory.Cache
+                                });
+
+                                await Share.share({
+                                    title: 'IronMargins Proposal',
+                                    url: savedFile.uri,
+                                });
+                            } catch (err) {
+                                alert("Error sharing PDF: " + err.message);
+                            }
+                        } else {
+                            pdfObj.save(filename);
+                        }
+
                         if (currentUser && currentBidId && window.supabaseClient && isPro) {
                             const pdfBlob = pdfObj.output('blob');
                             const fileNameStr = `${currentUser.id}/${currentBidId}_${Date.now()}.pdf`;
@@ -693,7 +720,6 @@
                                     }
                                 }).catch(() => {});
                         }
-                    
                     } catch (e) {
                         console.error('PDF Generation Error:', e);
                         window.print();
