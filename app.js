@@ -13,20 +13,6 @@ window.escapeHTML = function(str) {
     return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
 };
 
-window.triggerUpgradeModal = function(featureName) {
-    const m = document.getElementById('upgradeModal');
-    if(m) {
-        document.getElementById('upgradeModalFeatureText').textContent = `Upgrade to unlock ${featureName}.`;
-        m.classList.add('show');
-        
-        if (window.gtag) {
-            gtag('event', 'paywall_viewed', {
-                locked_feature: featureName
-            });
-        }
-    }
-};
-
 window.saveCustomMaterialToCloud = async function(category, name, price, unit) {
     if (!window.currentUser || !window.supabaseClient) return;
     const uniqueKey = `${category}_${name}_${price}`;
