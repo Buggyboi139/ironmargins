@@ -306,10 +306,6 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
 .cookie-content a { color: #38bdf8; text-decoration: underline; font-weight: 600; }
 .cookie-btn { background: var(--gradient-primary); color: #0f172a; border: none; padding: 10px 24px; font-size: 0.9rem; font-weight: 700; border-radius: 20px; cursor: pointer; transition: transform 0.2s; }
 
-.pwa-prompt { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%); border: 1px solid var(--border-highlight); border-radius: 12px; padding: 15px 35px 15px 15px; color: var(--text-main); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; font-size: 0.85rem; max-width: 320px; animation: fadeIn 0.5s ease; }
-.pwa-prompt strong { color: #38bdf8; }
-.close-pwa { position: absolute; top: 8px; right: 12px; cursor: pointer; font-size: 1.2rem; color: var(--text-muted); padding: 5px; }
-
 @keyframes fadeInCookie { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
