@@ -385,17 +385,58 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
         transform: none;
     }
     
+html, body {
+    overflow-x: hidden !important;
+    width: 100%;
+    position: relative;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
+    .toggles-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    .toggles-grid label {
+        flex: 0 1 auto !important; 
+        max-width: 100% !important;
+    }
+
+
+    .dashboard-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        padding: 0 !important;
+        gap: 20px !important;
+    }
+
+    .dash-card, .price-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important; 
+    }
+
     nav {
         flex-wrap: wrap;
         padding: 15px !important;
     }
+    
     .nav-actions {
         width: 100%;
         justify-content: space-between;
         margin-top: 15px;
         gap: 8px;
     }
+    
     .nav-link {
         flex: 1;
         text-align: center;
@@ -405,28 +446,11 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
 
     .input-row {
         flex-direction: column !important;
-        gap: 15px;
+        gap: 15px !important;
     }
+    
     .input-row .input-group {
         width: 100% !important;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr !important;
-        gap: 20px;
-    }
-    
-    .module-content > div[style*="display: flex"] {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 12px !important;
-    }
-    
-    .hero h1 {
-        font-size: 2.2rem !important;
-    }
-    .hero p {
-        font-size: 1rem !important;
     }
 }
 
