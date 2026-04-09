@@ -404,6 +404,45 @@ html, body {
         width: 100% !important;
     }
 
+    .module-content div[style*="display: flex"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        width: 100% !important;
+    }
+
+    input, select, textarea, .glass-input {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .module-content div[style*="display: flex"] label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+
+    .add-row-btn, .primary-btn, .secondary-btn {
+        white-space: normal !important;
+        height: auto !important;
+        padding: 12px !important;
+        line-height: 1.4 !important;
+    }
+
+    #client-display-name {
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    .modal-content {
+        width: 95% !important;
+        max-width: 100% !important;
+        padding: 20px !important;
+        margin: 10px auto !important;
+    }
+
     .toggles-grid label {
         flex: 0 1 auto !important; 
         max-width: 100% !important;
