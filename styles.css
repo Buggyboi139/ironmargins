@@ -181,7 +181,6 @@ nav {
     .secondary-btn:hover { background: rgba(255,255,255,0.05); color: #f8fafc; border-color: #f8fafc; }
     .bid-action-btn:hover { background: rgba(255,255,255,0.1); }
     .close-btn:hover { color: #f8fafc; }
-    .close-pwa:hover { color: var(--text-main); }
     .cookie-btn:hover { transform: translateY(-2px); }
     .footer-links a:hover { color: #38bdf8; text-decoration: underline; }
 }
