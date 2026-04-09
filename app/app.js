@@ -396,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
     }
-}
 
     const cookieBanner = document.getElementById('cookieBanner');
     const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
