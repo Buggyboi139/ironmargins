@@ -396,32 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
     }
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
-    
-    if (isMobile && !isStandalone && !isNative) {
-        const pwaPrompt = document.getElementById('pwa-prompt');
-        if (pwaPrompt && localStorage.getItem('im_pwa_dismissed') !== 'true') {
-            pwaPrompt.style.display = 'block';
-        }
-    }
-
-    const closePwaBtn = document.querySelector('.close-pwa');
-    if (closePwaBtn) {
-        closePwaBtn.addEventListener('click', async (e) => {
-            e.target.closest('.pwa-prompt').style.display = 'none';
-            localStorage.setItem('im_pwa_dismissed', 'true');
-            if (window.currentUser && window.supabaseClient) {
-                try {
-                    await window.supabaseClient.auth.updateUser({
-                        data: { pwa_dismissed: true }
-                    });
-                } catch(err) {}
-            }
-        });
-    }
+}
 
     const cookieBanner = document.getElementById('cookieBanner');
     const acceptCookiesBtn = document.getElementById('acceptCookiesBtn');
