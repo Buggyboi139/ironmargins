@@ -103,7 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = authPassword.value;
 
         if (!email || !password) {
-            alert("Please enter both email and password.");
+            window.showToast('Please enter both email and password.', 'error');
+            return;
+        }
+        if (isSignUpMode && password.length < 8) {
+            window.showToast('Password must be at least 8 characters.', 'error');
             return;
         }
 
@@ -115,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { error } = await window.supabaseClient.auth.signUp({ email, password });
                 if (error) throw error;
                 if (window.gtag) window.gtag('event', 'sign_up');
-                alert("Account created! You can now log in.");
+                window.showToast('Account created! Check your email to confirm before signing in.', 'success', 5000);
                 authToggleMode.click();
             } else {
                 const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
@@ -126,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 authPassword.value = '';
             }
         } catch (err) {
-            alert("Error: " + err.message);
+            window.showToast(err.message, 'error');
         } finally {
             authSubmitBtn.disabled = false;
             authSubmitBtn.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
@@ -138,16 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
         authForgotPassword.addEventListener('click', async () => {
             const email = document.getElementById('authEmail').value.trim();
             if (!email) {
-                alert("Enter your email address in the field first.");
+                window.showToast('Enter your email address in the field first.', 'error');
                 return;
             }
             const { error } = await window.supabaseClient.auth.resetPasswordForEmail(email, {
                 redirectTo: window.location.origin,
             });
             if (error) {
-                alert(error.message);
+                window.showToast(error.message, 'error');
             } else {
-                alert("Check your inbox for the reset link.");
+                window.showToast('Check your inbox for the reset link.', 'success');
             }
         });
     }
@@ -156,14 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (updatePasswordBtn) {
         updatePasswordBtn.addEventListener('click', async () => {
             const newPassword = document.getElementById('newPasswordInput').value;
-            if (!newPassword) return;
-            
-            const { error } = await window.supabaseClient.auth.updateUser({ password: newPassword });
-            if (error) {
-                alert(error.message);
-            } else {
-                alert("Password updated.");
-                document.getElementById('updatePasswordModal').classList.remove('show');
+            if (!newPassword) { window.showToast('Please enter a new password.', 'error'); return; }
+            if (newPassword.length < 8) { window.showToast('Password must be at least 8 characters.', 'error'); return; }
+
+            updatePasswordBtn.textContent = 'Updating...';
+            updatePasswordBtn.disabled = true;
+            try {
+                const { error } = await window.supabaseClient.auth.updateUser({ password: newPassword });
+                if (error) {
+                    window.showToast(error.message, 'error');
+                } else {
+                    window.showToast('Password updated successfully.', 'success');
+                    document.getElementById('updatePasswordModal').classList.remove('show');
+                }
+            } finally {
+                updatePasswordBtn.textContent = 'Update';
+                updatePasswordBtn.disabled = false;
             }
         });
     }
@@ -172,12 +184,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteAccountBtn) {
         deleteAccountBtn.addEventListener('click', async () => {
             if (!window.currentUser) return;
-            
-            const confirm1 = confirm("WARNING: This will permanently delete your account, all saved bids, clients, and templates. This action cannot be undone.");
-            if (!confirm1) return;
-            
-            const confirm2 = prompt("Type DELETE to confirm account deletion:");
-            if (confirm2 !== 'DELETE') return;
+
+            const confirmed = await window.showConfirm('WARNING: This will permanently delete your account, all saved bids, clients, and templates. This action cannot be undone.');
+            if (!confirmed) return;
+
+            const typed = await window.showPrompt('Type DELETE to confirm account deletion:');
+            if (typed !== 'DELETE') {
+                if (typed !== null) window.showToast('Confirmation did not match. Account not deleted.', 'error');
+                return;
+            }
 
             deleteAccountBtn.textContent = 'Deleting...';
             deleteAccountBtn.disabled = true;
@@ -185,12 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const { error } = await window.supabaseClient.rpc('delete_user_account');
                 if (error) throw error;
-                
-                alert("Account deleted successfully.");
+
+                window.showToast('Account deleted successfully.', 'success');
                 await window.supabaseClient.auth.signOut();
                 window.location.reload();
             } catch (err) {
-                alert("Error deleting account: " + err.message);
+                window.showToast('Error deleting account: ' + err.message, 'error');
                 deleteAccountBtn.textContent = 'Permanently Delete Account';
                 deleteAccountBtn.disabled = false;
             }

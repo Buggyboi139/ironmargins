@@ -89,14 +89,24 @@ window.toggleInvoicePaid = async function(id, newStatus) {
     const update = { is_paid: newStatus };
     if (newStatus) update.paid_date = new Date().toISOString().split('T')[0];
     else update.paid_date = null;
-    await window.supabaseClient.from('invoices').update(update).eq('id', id);
-    window.fetchInvoices(window._currentInvoiceFilter || 'all');
+    try {
+        const { error } = await window.supabaseClient.from('invoices').update(update).eq('id', id);
+        if (error) { window.showToast('Error updating invoice: ' + error.message, 'error'); return; }
+        window.fetchInvoices(window._currentInvoiceFilter || 'all');
+    } catch(err) {
+        window.showToast('Network error: ' + err.message, 'error');
+    }
 };
 
 window.deleteInvoice = async function(id) {
-    if (!confirm('Delete this invoice?')) return;
-    await window.supabaseClient.from('invoices').delete().eq('id', id);
-    window.fetchInvoices(window._currentInvoiceFilter || 'all');
+    if (!await window.showConfirm('Delete this invoice? This cannot be undone.')) return;
+    try {
+        const { error } = await window.supabaseClient.from('invoices').delete().eq('id', id);
+        if (error) { window.showToast('Error deleting invoice: ' + error.message, 'error'); return; }
+        window.fetchInvoices(window._currentInvoiceFilter || 'all');
+    } catch(err) {
+        window.showToast('Network error: ' + err.message, 'error');
+    }
 };
 
 window.filterInvoices = function(filter) {

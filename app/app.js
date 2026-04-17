@@ -13,6 +13,56 @@ window.escapeHTML = function(str) {
     return String(str).replace(/[&<>'"]/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[match]);
 };
 
+window.showToast = function(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3500;
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'app-toast app-toast--' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('app-toast--visible'));
+    setTimeout(function() {
+        toast.classList.remove('app-toast--visible');
+        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, duration);
+};
+
+window.showConfirm = function(message) {
+    return new Promise(function(resolve) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay show';
+        overlay.style.zIndex = '9998';
+        overlay.innerHTML = '<div class="glass-panel" style="max-width:400px;text-align:center;"><p class="confirm-dialog-body">' + window.escapeHTML(message) + '</p><div class="confirm-dialog-actions"><button class="secondary-btn confirm-cancel-btn">Cancel</button><button class="primary-btn confirm-ok-btn">Confirm</button></div></div>';
+        document.body.appendChild(overlay);
+        overlay.querySelector('.confirm-ok-btn').onclick = function() { document.body.removeChild(overlay); resolve(true); };
+        overlay.querySelector('.confirm-cancel-btn').onclick = function() { document.body.removeChild(overlay); resolve(false); };
+    });
+};
+
+window.showPrompt = function(message, defaultValue) {
+    defaultValue = defaultValue || '';
+    return new Promise(function(resolve) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay show';
+        overlay.style.zIndex = '9998';
+        overlay.innerHTML = '<div class="glass-panel" style="max-width:400px;"><p class="confirm-dialog-body">' + window.escapeHTML(message) + '</p><input type="text" class="glass-input prompt-dialog-input" value="' + window.escapeHTML(defaultValue) + '"><div class="confirm-dialog-actions"><button class="secondary-btn prompt-cancel-btn">Cancel</button><button class="primary-btn prompt-ok-btn">OK</button></div></div>';
+        document.body.appendChild(overlay);
+        const input = overlay.querySelector('.prompt-dialog-input');
+        input.focus();
+        input.select();
+        const submit = function() { const val = input.value.trim(); document.body.removeChild(overlay); resolve(val || null); };
+        overlay.querySelector('.prompt-ok-btn').onclick = submit;
+        overlay.querySelector('.prompt-cancel-btn').onclick = function() { document.body.removeChild(overlay); resolve(null); };
+        input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); if (e.key === 'Escape') { document.body.removeChild(overlay); resolve(null); } });
+    });
+};
+
 window.saveCustomMaterialToCloud = async function(category, name, price, unit) {
     if (!window.currentUser || !window.supabaseClient) return;
     const uniqueKey = `${category}_${name}_${price}`;
@@ -550,10 +600,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.saveFullTemplate = async function() {
-        if (!window.currentUser || !window.supabaseClient) return alert('Sign in to save templates.');
+        if (!window.currentUser || !window.supabaseClient) { window.showToast('Sign in to save templates.', 'info'); return; }
         if (!window.isPro) return window.triggerUpgradeModal('Custom Templates');
-        
-        const name = prompt('Enter a name for this new template:');
+
+        const name = await window.showPrompt('Enter a name for this new template:');
         if (!name) return;
 
         window.saveState(true);
@@ -575,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
             template_data: bidData
         }]);
 
-        if (error) alert('Error saving template: ' + error.message);
+        if (error) { window.showToast('Error saving template: ' + error.message, 'error'); return; }
         
         if(btn) {
             btn.textContent = 'Saved!';
@@ -638,14 +688,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.renameMyTemplate = async function(id, currentName) {
-        const newName = prompt("Rename template:", currentName);
+        const newName = await window.showPrompt('Rename template:', currentName);
         if (!newName || newName === currentName) return;
         const { error } = await window.supabaseClient.from('user_templates').update({ name: newName }).eq('id', id);
         if (!error) window.fetchMyTemplates();
     };
 
     window.deleteMyTemplate = async function(id) {
-        if (!confirm("Delete this template? This cannot be undone.")) return;
+        if (!await window.showConfirm('Delete this template? This cannot be undone.')) return;
         const { error } = await window.supabaseClient.from('user_templates').delete().eq('id', id);
         if (!error) window.fetchMyTemplates();
     };
@@ -700,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = nameInput.value.trim();
         const price = parseFloat(priceInput.value);
         
-        if(!name || isNaN(price)) return alert("Please enter a valid material name and price.");
+        if(!name || isNaN(price)) { window.showToast('Please enter a valid material name and price.', 'error'); return; }
         
         addCustomMatBtn.textContent = 'Adding...';
         
@@ -816,21 +866,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteClient = async function(id) {
-        if(!confirm("Delete this client? This cannot be undone.")) return;
-        const { error } = await window.supabaseClient.from('clients').delete().eq('id', id);
-        if(!error) {
-            window.fetchClients();
-            const activeClientId = document.getElementById('client-id');
-            if (activeClientId && activeClientId.value === id) {
-                activeClientId.value = '';
-                const displayInput = document.getElementById('client-display-name');
-                if (displayInput) displayInput.textContent = '+';
-                localStorage.removeItem('im_clientName');
-                localStorage.removeItem('im_clientAddress');
-                window.saveState();
+        if(!await window.showConfirm('Delete this client? This cannot be undone.')) return;
+        try {
+            const { error } = await window.supabaseClient.from('clients').delete().eq('id', id);
+            if(!error) {
+                window.fetchClients();
+                const activeClientId = document.getElementById('client-id');
+                if (activeClientId && activeClientId.value === id) {
+                    activeClientId.value = '';
+                    const displayInput = document.getElementById('client-display-name');
+                    if (displayInput) displayInput.textContent = '+';
+                    localStorage.removeItem('im_clientName');
+                    localStorage.removeItem('im_clientAddress');
+                    window.saveState();
+                }
+            } else {
+                window.showToast('Error deleting client: ' + error.message, 'error');
             }
+        } catch(err) {
+            window.showToast('Network error: ' + err.message, 'error');
         }
-        else alert("Error deleting client: " + error.message);
     };
 
     window.fetchClients = async function() {
@@ -971,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('new-client-email')?.value || '';
         const notes = document.getElementById('new-client-notes')?.value || '';
 
-        if (!name) return alert('Client Name is required.');
+        if (!name) { window.showToast('Client Name is required.', 'error'); return; }
 
         const btn = document.getElementById('btn-save-client');
         const origText = btn.textContent;
@@ -992,12 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!error) {
                 if(window.resetClientForm) window.resetClientForm();
-                await window.fetchClients(); 
+                await window.fetchClients();
             } else {
-                alert('Database Error: ' + error.message);
+                window.showToast('Database Error: ' + error.message, 'error');
             }
         } catch (err) {
-            alert('Network or execution error: ' + err.message);
+            window.showToast('Network or execution error: ' + err.message, 'error');
         } finally {
             if (btn) {
                 btn.textContent = origText;
@@ -1093,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         localStorage.setItem('im_logo', base64);
                     } catch (err) {
-                        alert('Storage limit reached. Cannot save logo.');
+                        window.showToast('Storage limit reached. Cannot save logo.', 'error');
                     }
                     if (logoPreview) {
                         logoPreview.src = base64;
@@ -1112,8 +1167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetBtn = document.getElementById('resetBidBtn');
     if(resetBtn) {
-        resetBtn.onclick = () => { 
-            if(confirm("Clear this bid and start fresh?")) { 
+        resetBtn.onclick = async () => {
+            if(await window.showConfirm('Clear this bid and start fresh?')) {
                 window.currentBidId = null;
                 document.querySelectorAll('#setup-view input[type="text"], #setup-view input[type="number"]:not(.inline-pct), #setup-view input[type="date"], #setup-view textarea').forEach(el => el.value = '');
                 

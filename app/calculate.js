@@ -206,6 +206,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('progress-payments').addEventListener('input', window.updatePaymentSchedule);
 
     document.getElementById('calculateBtn').onclick = () => {
+        const calcBtn = document.getElementById('calculateBtn');
+        const hasItems = document.querySelectorAll('.module-container.active .calc-row').length > 0 ||
+            document.querySelectorAll('.labor-entry').length > 0 ||
+            document.querySelectorAll('.sub-entry').length > 0;
+        if (!hasItems) {
+            window.showToast('Add at least one item before calculating.', 'error');
+            return;
+        }
+        if (calcBtn) { calcBtn.textContent = 'Calculating\u2026'; calcBtn.disabled = true; }
         let raw = 0, cons = 0;
         let csvData = "Product/Service,Description,Quantity,Rate,Amount\n";
         const csvEscape = (text) => {
@@ -372,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
 
         if (typeof window.renderDownloadOptions === 'function') window.renderDownloadOptions();
+        if (calcBtn) { calcBtn.textContent = 'Calculate Bid'; calcBtn.disabled = false; }
     };
 
     document.getElementById('exportCSVBtn').onclick = async () => {
@@ -395,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dialogTitle: 'Save or Share CSV'
                 });
             } catch (e) {
-                alert("Error sharing file: " + e.message);
+                window.showToast('Error sharing file: ' + e.message, 'error');
             }
         } else {
             const blob = new Blob([csv], { type: 'text/csv' });

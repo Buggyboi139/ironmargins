@@ -34,15 +34,17 @@ body {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
     overscroll-behavior-y: none;
 }
 
 input, textarea, [contenteditable] {
     user-select: auto;
     -webkit-user-select: auto;
+}
+
+:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
 }
 
 body::before {
@@ -186,7 +188,7 @@ nav {
 }
 
 .container { max-width: 900px; margin: 0 auto; padding: 50px 20px; flex: 1; width: 100%; align-self: center; }
-.view-section { transition: opacity 0.4s ease, transform: 0.4s ease; width: 100%; }
+.view-section { transition: opacity 0.4s ease, transform 0.4s ease; width: 100%; }
 .hidden-view { opacity: 0; transform: translateY(20px); pointer-events: none; position: absolute; visibility: hidden; z-index: -1; }
 .active-view { opacity: 1; transform: translateY(0); pointer-events: all; position: relative; visibility: visible; z-index: 1; }
 
@@ -369,28 +371,14 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
         justify-content: flex-start;
         text-align: left;
     }
-    
     .title-banner-container h1 {
         font-size: 2rem;
         padding-right: 50px;
     }
-
     .help-link-banner {
         top: 5px;
         transform: none;
     }
-    
-html, body {
-    overflow-x: hidden !important;
-    width: 100%;
-    position: relative;
-}
-
-*, *::before, *::after {
-    box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
     .toggles-grid {
         display: flex !important;
         flex-wrap: wrap !important;
@@ -398,25 +386,20 @@ html, body {
         gap: 10px !important;
         width: 100% !important;
     }
-
     .module-content div[style*="display: flex"] {
         flex-direction: column !important;
         align-items: flex-start !important;
         width: 100% !important;
     }
-
     input, select, textarea, .glass-input {
         max-width: 100% !important;
         min-width: 0 !important;
         width: 100% !important;
     }
-
     .toggles-grid label {
-        flex: 0 1 auto !important; 
+        flex: 0 1 auto !important;
         max-width: 100% !important;
     }
-
-
     .dashboard-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -424,43 +407,35 @@ html, body {
         padding: 0 !important;
         gap: 20px !important;
     }
-
     .dash-card, .price-card {
         width: 100% !important;
         min-width: 0 !important;
         margin: 0 !important;
-        overflow: hidden !important; 
+        overflow: hidden !important;
     }
-
     nav {
         flex-wrap: wrap;
         padding: 15px !important;
     }
-    
     .nav-actions {
         width: 100%;
         justify-content: space-between;
         margin-top: 15px;
         gap: 8px;
     }
-    
     .nav-link {
         flex: 1;
         text-align: center;
         padding: 8px !important;
         font-size: 0.85rem !important;
     }
-
     .input-row {
         flex-direction: column !important;
         gap: 15px !important;
     }
-    
     .input-row .input-group {
         width: 100% !important;
     }
-
-@media (max-width: 768px) {
     .feature-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -468,7 +443,6 @@ html, body {
         padding: 0 15px !important;
         box-sizing: border-box !important;
     }
-    
     .feat-card {
         width: 100% !important;
         min-width: 0 !important;
@@ -476,3 +450,42 @@ html, body {
     }
 }
 
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+    max-width: 360px;
+    width: calc(100% - 30px);
+}
+
+.app-toast {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 1px solid var(--border-highlight);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #f8fafc;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: all;
+    line-height: 1.4;
+}
+
+.app-toast--visible { opacity: 1; transform: translateX(0); }
+.app-toast--success { border-color: rgba(16, 185, 129, 0.6); }
+.app-toast--error { border-color: rgba(251, 113, 133, 0.6); color: #fda4af; }
+.app-toast--info { border-color: rgba(56, 189, 248, 0.5); }
+
+.confirm-dialog-actions { display: flex; gap: 12px; margin-top: 20px; }
+.confirm-dialog-actions .secondary-btn { flex: 1; }
+.confirm-dialog-actions .primary-btn { flex: 1; margin-top: 0; padding: 12px; }
+.confirm-dialog-body { color: #f8fafc; font-size: 1rem; line-height: 1.6; white-space: pre-wrap; }
+.prompt-dialog-input { margin: 15px 0 5px; }

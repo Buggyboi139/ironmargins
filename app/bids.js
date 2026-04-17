@@ -20,8 +20,10 @@ window.refreshSavedBids = async function() {
         return;
     }
 
-    if (window.fetchUserProfile) await window.fetchUserProfile();
-    if (window.fetchClients) await window.fetchClients();
+    await Promise.all([
+        window.fetchUserProfile ? window.fetchUserProfile() : Promise.resolve(),
+        window.fetchClients ? window.fetchClients() : Promise.resolve()
+    ]);
 
     activeList.innerHTML = '<div class="dropdown-empty">Loading bids...</div>';
 
@@ -187,7 +189,7 @@ window.handleLoadBid = async function(bidId) {
 
 window.duplicateBid = async function(bidId) {
     if (!window.isPro && window.bidCount >= 3) return window.triggerUpgradeModal('Unlimited Saved Bids');
-    if (!confirm("Duplicate Bid?\n\nThis will create an exact copy of this estimate in your active list. Proceed?")) return;
+    if (!await window.showConfirm('Duplicate this bid? An exact copy will be created in your active list.')) return;
     
     if (window.closeSideMenu) window.closeSideMenu();
     await window.loadBidFromCloud(bidId);
@@ -207,12 +209,18 @@ window.duplicateBid = async function(bidId) {
 };
 
 window.deleteBid = async function(bidId) {
-    if (!confirm("Delete Bid?\n\nThis will permanently erase this estimate. This action cannot be undone. Proceed?")) return;
-    
-    const { error } = await window.supabaseClient.from('bids').delete().eq('id', bidId);
-    if (!error) {
-        if (window.currentBidId === bidId) window.currentBidId = null;
-        window.refreshSavedBids();
+    if (!await window.showConfirm('Permanently delete this estimate? This cannot be undone.')) return;
+
+    try {
+        const { error } = await window.supabaseClient.from('bids').delete().eq('id', bidId);
+        if (!error) {
+            if (window.currentBidId === bidId) window.currentBidId = null;
+            window.refreshSavedBids();
+        } else {
+            window.showToast('Error deleting bid: ' + error.message, 'error');
+        }
+    } catch(err) {
+        window.showToast('Network error: ' + err.message, 'error');
     }
 };
 
@@ -286,8 +294,12 @@ window.openCloseout = async function(bidId) {
 window.submitCloseout = async function() {
     if (!window.activeCloseoutBidId) return;
 
+    const submitBtn = document.getElementById('submitCloseoutBtn');
+    if (submitBtn) { submitBtn.textContent = 'Saving...'; submitBtn.disabled = true; }
+
+    try {
     const { data, error: fetchError } = await window.supabaseClient.from('bids').select('*').eq('id', window.activeCloseoutBidId).single();
-    if (fetchError || !data) return;
+    if (fetchError || !data) { if (submitBtn) { submitBtn.textContent = 'Close Out Job'; submitBtn.disabled = false; } return; }
 
     const taxAmount = data.bid_data.taxAmount || 0;
     let totalBid = data.total_amount || 0;
@@ -324,6 +336,14 @@ window.submitCloseout = async function() {
         document.getElementById('resetBidBtn').click();
         window.refreshSavedBids();
         window.switchBidTab('closed');
+        window.showToast('Job closed out successfully.', 'success');
+    } else {
+        window.showToast('Error saving closeout: ' + error.message, 'error');
+    }
+    } catch(err) {
+        window.showToast('Network error: ' + err.message, 'error');
+    } finally {
+        if (submitBtn) { submitBtn.textContent = 'Close Out Job'; submitBtn.disabled = false; }
     }
 };
 
