@@ -368,12 +368,12 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
 
 @media (max-width: 768px) {
     .title-banner-container {
-        justify-content: flex-start;
-        text-align: left;
+        justify-content: center;
+        text-align: center;
     }
     .title-banner-container h1 {
         font-size: 2rem;
-        padding-right: 50px;
+        padding: 0 45px; 
     }
     .help-link-banner {
         top: 5px;
