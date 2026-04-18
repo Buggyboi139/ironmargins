@@ -444,7 +444,7 @@ window.loadState = function(dataOverride) {
 
 document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('/sw.js');
     }
 
     const cookieBanner = document.getElementById('cookieBanner');
