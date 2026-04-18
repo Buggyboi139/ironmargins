@@ -1384,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(() => window.initApp());
 
-    fetch('templates.json')
+    fetch('/templates.json')
         .then(res => res.json())
         .then(data => { window.starterTemplates = data; })
         .catch(() => { window.starterTemplates = []; });
