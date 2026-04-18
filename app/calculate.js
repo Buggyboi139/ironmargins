@@ -197,7 +197,7 @@ window.renderDownloadOptions = async function() {
                 is_watermarked: window.isPro ? 'false' : 'true'
             });
         }
-        window.location.href = './success';
+        window.location.href = '/success/';
     };
 };
 
