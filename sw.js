@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironmargins-v9';
+const CACHE_NAME = 'ironmargins-v10';
 const ASSETS = [
     '/',
     '/index.html',
