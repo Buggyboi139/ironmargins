@@ -342,7 +342,6 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
     .nav-bid-item { flex-direction: column; align-items: stretch; gap: 15px; }
     .bid-actions { justify-content: flex-end; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
     .inline-pct { margin: 5px 0; }
-    label[style*="display: flex"] { flex-wrap: wrap; }
 }
 .help-link-banner {
     position: absolute;
