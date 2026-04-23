@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironmargins-v5'; // Bumped version to v5 to force cache refresh
+const CACHE_NAME = 'ironmargins-v6';
 const ASSETS = [
     '/',
     '/index.html',
