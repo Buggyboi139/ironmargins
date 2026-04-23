@@ -412,6 +412,13 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
         margin: 0 !important;
         overflow: hidden !important;
     }
+    .tax-checkbox-container {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    }    
     nav {
         flex-wrap: wrap;
         padding: 15px !important;
