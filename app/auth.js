@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     authBtn.addEventListener('click', async () => {
         if (window.currentUser) {
             await window.supabaseClient.auth.signOut();
+            window.location.reload();
         } else {
             authModal.classList.add('show');
         }
@@ -121,17 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.gtag) window.gtag('event', 'sign_up');
                 window.showToast('Account created! Check your email to confirm before signing in.', 'success', 5000);
                 authToggleMode.click();
+                authSubmitBtn.disabled = false;
+                authSubmitBtn.textContent = 'Sign Up';
             } else {
                 const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 if (window.gtag) window.gtag('event', 'login');
-                authModal.classList.remove('show');
-                authEmail.value = '';
-                authPassword.value = '';
+                
+                if (typeof window.saveState === 'function') {
+                    window.saveState(true);
+                }
+                window.location.reload();
             }
         } catch (err) {
             window.showToast(err.message, 'error');
-        } finally {
             authSubmitBtn.disabled = false;
             authSubmitBtn.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
         }
