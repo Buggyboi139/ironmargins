@@ -343,6 +343,7 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
     .bid-actions { justify-content: flex-end; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
     .inline-pct { margin: 5px 0; }
 }
+
 .help-link-banner {
     position: absolute;
     right: 0;
@@ -363,6 +364,80 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
     color: #38bdf8;
     background: rgba(56, 189, 248, 0.1);
     border-color: #38bdf8;
+}
+
+.glass-toggle {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.3s ease;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.glass-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #94a3b8;
+    border-radius: 50%;
+    transition: 0.3s ease;
+}
+
+.glass-toggle:checked {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.glass-toggle:checked::after {
+    left: 22px;
+    background: #38bdf8;
+}
+
+.glass-checkbox {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.glass-checkbox:checked {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+}
+
+.glass-checkbox:checked::after {
+    content: '✔';
+    position: absolute;
+    color: #38bdf8;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.tax-checkbox-container {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
 
 @media (max-width: 768px) {
@@ -412,13 +487,6 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
         margin: 0 !important;
         overflow: hidden !important;
     }
-    .tax-checkbox-container {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    }    
     nav {
         flex-wrap: wrap;
         padding: 15px !important;
