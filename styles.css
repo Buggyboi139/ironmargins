@@ -465,7 +465,7 @@ input[type="file"].glass-input::-webkit-file-upload-button { background: rgba(56
         align-items: flex-start !important;
         width: 100% !important;
     }
-    input, select, textarea, .glass-input {
+    input:not([type="checkbox"]), select, textarea, .glass-input {
         max-width: 100% !important;
         min-width: 0 !important;
         width: 100% !important;
