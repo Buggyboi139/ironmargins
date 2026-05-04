@@ -3,77 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Study Arena</title>
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://bat.bing.net https://connect.facebook.net https://googleads.g.doubleclick.net https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://bat.bing.com https://c.bing.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://www.google.com;">
+    <title>IronMargins | Precision Estimating &amp; Margin Software</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4WWZ1PYH4Q"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-4WWZ1PYH4Q');
+    </script>
+    <script>
+      (function(w, d, t, u, o) {
+        w[u] = w[u] || [];
+        o.ts = (new Date).getTime();
+        var n = d.createElement(t);
+        n.src = "https://bat.bing.net/bat.js?ti=" + o.ti + ("uetq" != u ? "&q=" + u : "");
+        n.async = 1;
+        n.onload = n.onreadystatechange = function() {
+          var s = this.readyState;
+          s && "loaded" !== s && "complete" !== s || (o.q = w[u], w[u] = new UET(o), w[u].push("pageLoad"), n.onload = n.onreadystatechange = null)
+        };
+        var i = d.getElementsByTagName(t)[0];
+        i.parentNode.insertBefore(n, i);
+      })(window, document, "script", "uetq", {ti: "343242788", enableAutoSpaTracking: true});
+    </script>
+    <meta name="description" content="Calculate accurate material costs, labor burden, and overhead effortlessly. Standardize your bids and protect your profit margins.">
+    <meta name="theme-color" content="#05070a">
+    <link rel="icon" type="image/png" href="icons/logo.png">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero { text-align: center; padding: 80px 20px 40px; max-width: 900px; margin: 0 auto; }
+        .hero h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 20px; }
+        .hero p { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; line-height: 1.6; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto 60px; padding: 0 20px; }
+        .feat-card { background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-glass); padding: 30px; border-radius: 24px; text-align: left; }
+        .feat-card h3 { color: #38bdf8; margin-bottom: 15px; font-size: 1.2rem; }
+        .feat-card p { color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; }
+        .pricing-section { padding: 40px 20px 80px; text-align: center; }
+        .pricing-section h2 { font-size: 2.5rem; margin-bottom: 15px; }
+        .pricing-section p { color: var(--text-muted); margin-bottom: 40px; }
+        .price-card { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero { padding: 40px 15px 20px; }
+        }
+    </style>
 </head>
 <body>
     <div id="left-color-bar"></div>
-
+    
     <nav>
-        <div class="logo-container">
-            <span class="logo-text">Study Arena</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="/" class="logo-container">
+                <img src="icons/logo_nb.png" alt="IronMargins Logo" class="logo-img">
+                <span class="logo-text">IronMargins</span>
+            </a>
         </div>
         <div class="nav-actions">
-            <button id="theme-toggle" class="nav-link neutral">Toggle Theme</button>
+            <button id="authBtn" class="nav-link neutral">Sign In</button>
+            <a href="/app/" class="nav-link" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Launch App</a>
         </div>
     </nav>
 
-    <main class="container">
-        <section id="config-section" class="control-panel active-view">
-            <h1>Configuration</h1>
-            <p class="subtitle">Set up your study environment</p>
-            
-            <div class="calc-row">
-                <div class="input-group">
-                    <label for="exam-select">Select Exam</label>
-                    <select id="exam-select" class="glass-input">
-                        <option value="cysa">CySA+</option>
-                        <option value="secplus">Security+</option>
-                        <option value="casp">CASP+</option>
-                    </select>
-                </div>
-            </div>
+    <header class="hero">
+        <h1>Precision Estimating for <br><span style="background: var(--gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Professional Contractors</span></h1>
+        <p>Built by a former contractor to standardize material costs, calculate your true labor burden, and generate retail-ready client proposals in minutes.</p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="/app/" class="primary-btn" style="margin-top: 0; padding: 16px 40px; width: auto; text-decoration: none;">Start Estimating Free</a>
+        </div>
+    </header>
 
-            <div class="calc-row">
-                <div class="input-group">
-                    <label for="api-key">OpenRouter API Key (BYOK)</label>
-                    <div style="display: flex; gap: 10px; width: 100%;">
-                        <input type="password" id="api-key" class="glass-input" placeholder="sk-or-v1-...">
-                        <button id="save-key-btn" class="secondary-btn">Save</button>
+    <section class="feature-grid">
+        <div class="feat-card">
+            <h3>Consolidated Proposals</h3>
+            <p>Calculate your overhead and profit internally, then generate clean, retail-ready PDF proposals for your clients with consolidated line items to protect your pricing strategy.</p>
+        </div>
+        <div class="feat-card">
+            <h3>True Labor Burden</h3>
+            <p>Stop losing money on payroll taxes and worker's comp. IronMargins calculates your true labor burden automatically so every hour worked is actually profitable.</p>
+        </div>
+        <div class="feat-card">
+            <h3>Enterprise Security, Founder-Led Support</h3>
+            <p>Your data is secured by industry-standard cloud infrastructure (powered by Supabase) and can be exported at any time. When you need support, you skip the corporate phone tree and talk directly to the developer who built the app.</p>
+        </div>
+    </section>
+
+    <section class="pricing-section">
+        <h2>Simple, Transparent Pricing</h2>
+        <p>Start for free. Upgrade when you're ready to scale your business.</p>
+
+        <div class="dashboard-grid" style="max-width: 900px; margin: 0 auto; text-align: left;">
+            <div class="dash-card price-card">
+                <div>
+                    <div class="gt-label">Starter</div>
+                    <div class="gt-value" style="font-size: 3rem;">$0<span style="font-size: 1rem; color: var(--text-muted); font-weight: 600;"> / forever</span></div>
+                    <div class="line-items" style="margin-top: 20px;">
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Up to 3 Saved Bids</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Local Browser Storage</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Watermarked PDF Proposals</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Full Estimating Calculator</span></div>
                     </div>
                 </div>
+                <a href="/app/" class="secondary-btn" style="width: 100%; margin-top: 30px; text-decoration: none; text-align: center; display: block;">Try it Free</a>
             </div>
 
-            <button id="start-btn" class="primary-btn">Start Study Mode</button>
-        </section>
-
-        <section id="quiz-section" class="control-panel hidden-view">
-            <div class="category-selector">
-                <span class="category-title-label">Question <span id="current-q-num">1</span> of <span id="total-q-num"></span></span>
-            </div>
-            
-            <h2 id="question-text" style="margin-bottom: 25px; font-size: 1.4rem; line-height: 1.5;"></h2>
-            
-            <div id="options-container"></div>
-            
-            <div class="controls" style="display: flex; justify-content: space-between; margin-top: 30px;">
-                <button id="prev-btn" class="secondary-btn" disabled>Previous</button>
-                <button id="next-btn" class="secondary-btn">Next</button>
-            </div>
-
-            <div id="feedback-card" class="hidden-view" style="margin-top: 30px;">
-                <h3 id="feedback-verdict" style="font-size: 1.5rem; margin-bottom: 10px;"></h3>
-                <p id="feedback-definition" style="color: var(--text-muted); line-height: 1.6; margin-bottom: 20px;"></p>
-                <button id="ai-tutor-btn" class="secondary-btn" style="width: 100%;">Explain with AI Tutor</button>
-                
-                <div id="ai-response-container" class="hidden-view" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border-glass);">
-                    <p id="ai-response-text" style="color: #38bdf8; line-height: 1.5;"></p>
+            <div class="dash-card profit-card price-card" style="border-color: rgba(16, 185, 129, 0.4);">
+                <div>
+                    <div class="gt-label" style="color: #34d399;">Pro Business</div>
+                    <div class="gt-value" style="color: #10b981; font-size: 3rem;">$14.99<span style="font-size: 1rem; color: rgba(16,185,129,0.7); font-weight: 600;"> / month</span></div>
+                    <div class="line-items" style="margin-top: 20px; background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.2);">
+                        <div class="item-row" style="border:none; padding: 8px 0; color: #f8fafc;"><span>✓ <strong>Unwatermarked, Branded PDFs</strong></span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Unlimited Cloud-Saved Bids</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Unlimited Client CRM</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Job Closeout & Profit Tracking</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Custom Bid Templates</span></div>
+                        <div class="item-row" style="border:none; padding: 8px 0;"><span>✓ Export to QuickBooks (CSV)</span></div>
+                    </div>
                 </div>
+                <button onclick="document.getElementById('authBtn').click()" class="primary-btn" style="width: 100%; margin-top: 30px; padding: 15px;">Create Pro Account</button>
             </div>
-        </section>
-    </main>
+        </div>
+        <p style="font-size: 0.85rem; margin-top: 20px;">Billed monthly. Auto-renews each month unless canceled before the renewal date. Cancel anytime. Secure payments handled by <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: none;">Stripe</a>.</p>
+    </section>
+  
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button id="closeAuthModal" class="close-btn">&times;</button>
+            <h2 id="authTitle">Create Account</h2>
+            <p class="auth-subtitle">Sign up to access cloud saves and pro features.</p>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label>Email Address</label>
+                <input type="email" id="authEmail" class="glass-input" placeholder="you@example.com">
+            </div>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>Password</label>
+                <input type="password" id="authPassword" class="glass-input" placeholder="••••••••">
+            </div>
+            <div style="text-align: right; margin-top: -15px; margin-bottom: 20px;">
+                <span id="authForgotPassword" style="color: #38bdf8; cursor: pointer; font-size: 0.85rem; display: none;">Forgot Password?</span>
+            </div>
+            <button id="authSubmitBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Sign Up</button>
+            <p class="auth-switch">
+                <span id="authSwitchText">Already have an account? </span>
+                <span id="authToggleMode" style="color: #38bdf8; cursor: pointer; font-weight: 700;">Sign In</span>
+            </p>
+        </div>
+    </div>
 
-    <script src="api.js"></script>
-    <script src="app.js"></script>
+    <div id="updatePasswordModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2 id="updatePasswordTitle">Set New Password</h2>
+            <div class="input-group" style="margin-bottom: 25px;">
+                <label>New Password</label>
+                <input type="password" id="newPasswordInput" class="glass-input" placeholder="••••••••">
+            </div>
+            <button id="updatePasswordBtn" class="primary-btn" style="margin-top: 0; padding: 15px; width: 100%;">Update</button>
+        </div>
+    </div>
+
+    <div class="about-section" style="padding: 40px 20px; text-align: left; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <h2 style="margin-bottom: 15px; color: #f8fafc; font-size: 1.8rem;">Why I Built IronMargins</h2>
+        <p style="color: #cbd5e1; line-height: 1.8; font-size: 1rem; margin-bottom: 15px;">
+            Before writing a single line of code for this app, I ran my own custom furniture crafting business. I know exactly what it feels like to win a bid, finish the job, and realize that hidden labor burdens and material waste completely ate your profit.
+        </p>
+        <p style="color: #cbd5e1; line-height: 1.8; font-size: 1rem; margin-bottom: 15px;">
+            I built IronMargins to solve my own bottom-line problems because the existing software out there was bloated, expensive, and built by tech companies who have never swung a hammer or worked in a shop.
+        </p>
+        <p style="color: #cbd5e1; line-height: 1.8; font-size: 1rem; margin-bottom: 15px;">
+            When you use this software, your data is backed by enterprise-grade security and you own it all via CSV exports. But when you have a problem or need a feature, there are no corporate phone trees. You email support, and you talk directly to me.
+        </p>
+        <p style="color: #cbd5e1; line-height: 1.8; font-size: 1rem; font-weight: 600;">
+            — Dakota Mason, Founder
+        </p>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 IronMargins LLC. All rights reserved.</p>
+            <p style="font-size: 0.85rem; color: #64748b; line-height: 1.5; margin-top: 5px; margin-bottom: 5px;">
+                Support: <a href="mailto:support@ironmargins.com" style="color: #38bdf8; text-decoration: none;">support@ironmargins.com</a>
+            </p>
+            <div class="footer-links">
+                <a href="/pwa">Install App</a>
+                <a href="/contact">Contact Us</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/cookies">Cookie Policy</a>
+                <a href="/refund">Refund Policy</a> 
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app/auth.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('authToggleMode');
+            if(toggleBtn && toggleBtn.textContent === 'Sign Up') {
+                toggleBtn.click();
+            }
+
+            window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    window.location.href = '/app/';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
